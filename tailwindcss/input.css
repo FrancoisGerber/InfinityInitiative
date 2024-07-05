@@ -1,3 +1,26 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+#action-button {
+  cursor: pointer;
+}
+
+#action-button:active {
+  transform: scale(0.8);
+  transition: transform 0.1s;
+}
+
+#action-button:not(:active) {
+  transform: scale(1);
+  transition: transform 0.1s;
+}
+
+html {
+  overflow-y: hidden !important;
+}
+
+.h-almost {
+  height: 90vh !important;
+  max-height: 90vh !important;
+}

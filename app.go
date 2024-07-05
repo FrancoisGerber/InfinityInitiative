@@ -1,8 +1,9 @@
 package main
 
 import (
+	"InfinityInitiative/data"
+	"InfinityInitiative/data/models"
 	"InfinityInitiative/routes"
-	"InfinityInitiative/views"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -18,12 +19,20 @@ func main() {
 	e.Use(middleware.CORS())
 
 	// Static files and templates
-	e.Static("/assets", "views/static")
-	e.Renderer = templates.ParseTemplates()
+	e.Static("/assets", "views/assets")
 
 	// Router
 	routes.Router(e)
 
+	// Connect to database
+	data.Init()
+	migrations()
+
 	// Start Server
 	e.Logger.Fatal(e.Start(":8069"))
+}
+
+// Database auto migrations
+func migrations() {
+	models.MigrateUser()
 }

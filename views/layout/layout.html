@@ -1,0 +1,45 @@
+{{block "layout" .}}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Infinity Initiative</title>
+    <link rel="icon" type="image/x-icon" href="/assets/img/favicon.png" />
+    <link href="/assets/css/styles.css" rel="stylesheet" />
+    <script src="/assets/js/htmx.min.js"></script>
+  </head>
+  <body>
+    <!-- left drawer -->
+    <div class="drawer lg:drawer-open">
+      <input id="sidebar" type="checkbox" class="drawer-toggle" />
+      <div class="drawer-content">
+        <!-- right drawer -->
+        <div class="drawer drawer-end">
+          <input id="chatbar" type="checkbox" class="drawer-toggle peer" />
+          <div class="drawer-content">
+            <!-- Page content here -->
+            {{template "navbar" .}}
+            <div
+              class="container relative max-w-6xl px-4 py-6 mx-auto sm:px-6 lg:px-8 overflow-y-auto"
+            >
+              {{block "content" .}}{{end}}
+            </div>
+          </div>
+          <div
+            class="drawer-side peer-checked:pointer-events-auto peer-checked:visible peer-checked:sticky peer-checked:w-auto"
+          >
+            <label for="chatbar" class="drawer-overlay"></label>
+            {{template "chatbar" .}}
+          </div>
+        </div>
+        <!-- right drawer -->
+      </div>
+      <div class="drawer-side">
+        <label for="sidebar" class="drawer-overlay"></label>
+        {{template "sidebar" .}}
+      </div>
+    </div>
+  </body>
+</html>
+{{end}}

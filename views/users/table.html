@@ -1,0 +1,15 @@
+{{block "table" .}}
+<table class="table">
+  <thead>
+    <tr>
+      <th>Username</th>
+      <th>Email</th>
+      <th>Password</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {{range .Page}} {{template "table-row" .}} {{end}}
+  </tbody>
+</table>
+{{end}}

@@ -1,0 +1,70 @@
+{{block "chatbar" .}}
+<div class="bg-base-200 text-base-content min-h-full w-80 p-4">
+  <div class="overflow-y-auto h-almost" id="chatlist">
+    {{template "chat" .}}
+    <br />
+    {{template "chat" .}}
+    <br />
+    {{template "chat" .}}
+    <br />
+    {{template "chat" .}}
+    <br />
+    {{template "chat" .}}
+    <br />
+    {{template "chat" .}}
+    <br />
+    {{template "chat" .}}
+    <br />
+    {{template "chat" .}}
+    <br />
+    {{template "chat" .}}
+    <br />
+    {{template "chat" .}}
+    <br />
+    {{template "chat" .}}
+    <br />
+    {{template "chat" .}}
+    <br />
+    {{template "chat" .}}
+    <br />
+    {{template "chat" .}}
+    <br />
+    {{template "chat" .}}
+    <br />
+    {{template "chat" .}}
+    <br />
+    {{template "chat" .}}
+    <br />
+    {{template "chat" .}}
+    <br />
+    {{template "chat" .}}
+    <br />
+    {{template "chat" .}}
+    <br />
+    {{template "chat" .}}
+    <br />
+    {{template "chat" .}}
+    <br />
+    {{template "chat" .}}
+    <br />
+  </div>
+  <label class="input input-bordered flex items-center mt-3">
+    <input
+      type="text"
+      class="grow"
+      placeholder="Enter Message..."
+      hx-trigger="click"
+    />
+    <kbd class="kbd kbd-md">⏎</kbd>
+  </label>
+</div>
+
+<script>
+  function scroll() {
+    var element = document.getElementById("chatlist");
+    element.scrollTop = element.scrollHeight;
+  }
+
+  scroll();
+</script>
+{{end}}

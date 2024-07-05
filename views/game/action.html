@@ -1,0 +1,24 @@
+{{block "action" .}}
+<div class="card bg-neutral text-neutral-content shadow-xl">
+  <div class="card-body items-center text-center">
+    <h2 class="card-title">
+      Mining
+      <div class="badge badge-outline gap-2">Level: 100</div>
+    </h2>
+    <img
+      src="/assets/img/skills/mining.png"
+      id="action-button"
+      class="w-5/12"
+    />
+    <progress
+      class="progress progress-primary w-5/12 min-h-10"
+      value="70"
+      max="100"
+    ></progress>
+    <div class="join">
+      <span class="join-item rounded bg-gray-700 p-1">100 XP Needed</span>
+      <span class="join-item rounded bg-gray-900 p-1">90%</span>
+    </div>
+  </div>
+</div>
+{{end}}

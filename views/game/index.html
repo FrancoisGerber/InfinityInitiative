@@ -1,0 +1,14 @@
+{{template "layout" .}}
+<br />
+{{define "content"}}
+<div class="grid lg:grid-cols-2 grid-cols-1 gap-4">
+  <div>
+    <div class="divider">Action</div>
+    {{template "action" .}}
+  </div>
+  <div>
+    <div class="divider">Options</div>
+    {{template "recipes" .}}
+  </div>
+</div>
+{{end}}

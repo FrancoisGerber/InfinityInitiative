@@ -1,0 +1,99 @@
+{{block "navbar" .}}
+<div class="navbar bg-neutral text-neutral-content">
+  <div class="navbar-start">
+    <label
+      for="sidebar"
+      tabindex="0"
+      role="button"
+      class="btn btn-ghost btn-circle lg:hidden"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-5 w-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M4 6h16M4 12h16M4 18h7"
+        />
+      </svg>
+    </label>
+    <img src="/assets/img/favicon.png" class="mx-2 hidden lg:block" />
+    <h1 class="text-xl font-bold hidden lg:block">Infinity Initiative</h1>
+  </div>
+  <div class="navbar-center"></div>
+  <div class="navbar-end">
+    <div class="btn btn-outline btn-primary mx-2">
+      <span>10</span>
+      <img src="/assets/img/skills/mining.png" class="h-7 mx-1" />
+      <span>Mining Ore</span>
+      <span class="loading loading-bars loading-sm"></span>
+    </div>
+
+    <button class="btn btn-ghost btn-circle mx-1 hidden lg:block">
+      <label for="chatbar" class="cursor-pointer">
+        <div class="indicator">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="size-6"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z"
+            />
+          </svg>
+          <span class="badge badge-xs badge-primary indicator-item"></span>
+        </div>
+      </label>
+    </button>
+
+    <button class="btn btn-ghost btn-circle mx-1 hidden lg:block">
+      <div class="indicator">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+          />
+        </svg>
+        <span class="badge badge-xs badge-primary indicator-item"></span>
+      </div>
+    </button>
+    <div class="dropdown dropdown-end mx-2">
+      <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
+        <div class="w-10 rounded-full">
+          <img
+            src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg"
+          />
+        </div>
+      </div>
+      <ul
+        tabindex="0"
+        class="menu menu-sm dropdown-content bg-neutral rounded-box z-[1] mt-3 w-52 p-2 shadow"
+      >
+        <li><label for="chatbar">Chat</label></li>
+        <li><a>Notifications</a></li>
+        <li><a>Profile</a></li>
+        <li><a>Settings</a></li>
+        <li><a>Logout</a></li>
+      </ul>
+    </div>
+  </div>
+</div>
+{{end}}
