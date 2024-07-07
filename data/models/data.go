@@ -6,6 +6,7 @@ type Data struct {
 	DropdownData interface{}
 	RowsAffected int64
 	ActivePage   string
+	Id           int64
 }
 
 var Classes = []string{

@@ -1,0 +1,30 @@
+{{template "layout" .}}
+<br />
+{{define "content"}}
+<div class="grid grid-cols-1 gap-4">
+  <div class="divider">Monsters</div>
+  <div class="flex flex-row justify-start">
+    <button class="btn btn-info mr-5" id="create" hx-get="/monsters/create" hx-trigger="click" hx-target="#table_edit" onclick="tableEdit.showModal()">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+      </svg>
+    </button>
+  </div>
+  <div class="overflow-x-auto bg-neutral text-neutral-content rounded-lg shadow-xl">{{template "table" .}}</div>
+</div>
+
+<dialog id="tableEdit" class="modal">
+  <div class="modal-box w-11/12" style="max-width: 70rem">
+    <form method="dialog">
+      <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+    </form>
+    <div id="table_edit"></div>
+  </div>
+</dialog>
+
+<dialog id="tableDelete" class="modal">
+  <div class="modal-box">
+    <div id="table_delete"></div>
+  </div>
+</dialog>
+{{end}}

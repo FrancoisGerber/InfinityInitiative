@@ -17,6 +17,9 @@ func SetupEndpoints(g *echo.Group) {
 	g.GET("/items/create", CreateItem)
 	g.GET("/items/delete/:id", ConfirmDeleteItem)
 	g.DELETE("/items/:id", DeleteItem)
+	g.GET("/items/recipe/:id", EditRecipe)
+	g.POST("/items/recipe", SaveRecipe)
+	g.GET("/items/recipe/add", AddRecipe)
 }
 
 func GetAll(c echo.Context) error {
@@ -147,4 +150,96 @@ func DeleteItem(c echo.Context) error {
 	c.Response().WriteHeader(300)
 
 	return nil
+}
+
+func EditRecipe(c echo.Context) error {
+	c.Echo().Renderer = templates.ParseTemplates([]string{
+		"views/layout/*.html",
+		"views/items/*.html",
+	})
+
+	id := c.Param("id")
+	ItemId, _ := strconv.ParseInt(id, 36, 64)
+
+	recipes := models.GetRecipesForParentItem(ItemId)
+
+	items := models.GetAllItems()
+
+	var recipesVM []struct {
+		models.Recipe
+		Items []models.Item
+	}
+
+	for _, recipe := range recipes {
+		recipeVM := struct {
+			models.Recipe
+			Items []models.Item
+		}{
+			Recipe: recipe,
+			Items:  items,
+		}
+
+		recipesVM = append(recipesVM, recipeVM)
+	}
+
+	data := models.Data{
+		Page: recipesVM,
+		Id:   ItemId,
+	}
+
+	return c.Render(http.StatusOK, "recipe-edit", data)
+}
+
+func AddRecipe(c echo.Context) error {
+	c.Echo().Renderer = templates.ParseTemplates([]string{
+		"views/layout/*.html",
+		"views/items/*.html",
+	})
+	items := models.GetAllItems()
+
+	recipeVM := struct {
+		models.Recipe
+		Items []models.Item
+	}{
+		Recipe: models.Recipe{},
+		Items:  items,
+	}
+
+	return c.Render(http.StatusOK, "recipe-edit-row", recipeVM)
+}
+
+func SaveRecipe(c echo.Context) error {
+	form, _ := c.FormParams()
+
+	partenItemId := form["ParentItemID"][0]
+
+	_, err := models.DeleteRecipesOfParentItem(int64(parseInt(partenItemId)))
+
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "Could Not Delete Recipes for Parent Item")
+	}
+
+	for index, itemId := range form["ItemId"] {
+		recipe := models.Recipe{
+			ParentItemId: uint(parseInt(partenItemId)),
+			ItemId:       uint(parseInt(itemId)),
+			Amount:       int64(parseInt(form["Amount"][index])),
+		}
+
+		_, err = recipe.Create()
+
+		if err != nil {
+			return c.String(http.StatusInternalServerError, "Could Not Save Recipe")
+		}
+	}
+
+	c.Response().Header().Set("HX-Redirect", "/items")
+	c.Response().WriteHeader(300)
+
+	return nil
+}
+
+func parseInt(val string) int {
+	valInt, _ := strconv.Atoi(val)
+	return valInt
 }

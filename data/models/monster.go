@@ -28,13 +28,13 @@ func MigrateMonsters() {
 }
 
 func GetAllMonsters() (models []Monster) {
-	data.DB.Find(&models)
+	data.DB.Preload("Level").Find(&models)
 
 	return models
 }
 
 func GetMonster(id int64) (model Monster) {
-	data.DB.First(&model, "id = ?", id)
+	data.DB.Preload("Level").First(&model, "id = ?", id)
 
 	return model
 }

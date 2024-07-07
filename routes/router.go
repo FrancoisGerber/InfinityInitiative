@@ -5,6 +5,7 @@ import (
 	"InfinityInitiative/routes/game"
 	"InfinityInitiative/routes/items"
 	"InfinityInitiative/routes/levels"
+	"InfinityInitiative/routes/monsters"
 	"InfinityInitiative/routes/recipes"
 	"InfinityInitiative/routes/roles"
 	"InfinityInitiative/routes/skills"
@@ -31,4 +32,5 @@ func Router(e *echo.Echo) {
 	items.SetupEndpoints(openGroup)
 	recipes.SetupEndpoints(openGroup)
 	characters.SetupEndpoints(openGroup)
+	monsters.SetupEndpoints(openGroup)
 }

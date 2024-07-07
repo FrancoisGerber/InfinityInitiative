@@ -61,3 +61,21 @@ func (model *Recipe) Delete() (int64, error) {
 
 	return result.RowsAffected, nil
 }
+
+func GetRecipesForParentItem(itemId int64) (models []Recipe) {
+	data.DB.Preload("Item").Preload("ParentItem").Find(&models, "parent_item_id = ?", itemId)
+
+	return models
+}
+
+func DeleteRecipesOfParentItem(itemId int64) (int64, error) {
+	recipe := Recipe{}
+
+	result := data.DB.Delete(&recipe, "parent_item_id = ?", itemId)
+
+	if result.Error != nil {
+		return 0, result.Error
+	}
+
+	return result.RowsAffected, nil
+}

@@ -1,0 +1,119 @@
+{{block "table-edit" .}}
+<h3 class="text-lg font-bold">{{if .Page.ID}} Edit {{else}} Create {{end}} Monster</h3>
+<div>
+  <form method="dialog" hx-post="/monsters">
+    <input type="hidden" name="ID" value="{{.Page.ID}}" />
+    <div class="grid lg:grid-cols-2 grid-cols-1 gap-4">
+      <div>
+        <div class="divider">Basic Info</div>
+        <label class="flex gap-2 items-center mt-5 mb-5 input input-bordered">
+          <div class="label">
+            <span class="label-text">Monster Name</span>
+          </div>
+
+          <input type="text" class="grow" placeholder="Name" name="Name" value="{{.Page.Name}}" />
+        </label>
+
+        <label class="flex gap-2 items-center mt-5 mb-5 input input-bordered">
+          <div class="label">
+            <span class="label-text">Description</span>
+          </div>
+
+          <input type="text" class="grow" placeholder="Description" name="Description" value="{{.Page.Description}}" />
+        </label>
+
+        <div class="flex">
+          <div class="avatar">
+            <div class="h-20 w-20 rounded">
+              {{if .Page.Image}}
+              <img src="{{.Page.Image}}" />
+              {{else}}
+              <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg" />
+              {{end}}
+            </div>
+          </div>
+          <label class="flex gap-2 items-center ml-5 mt-5 mb-5 w-full input input-bordered">
+            <div class="label">
+              <span class="label-text">Image Url</span>
+            </div>
+
+            <input type="text" class="grow" placeholder="Image Url" name="Image" value="{{.Page.Image}}" />
+          </label>
+        </div>
+        <label class="flex gap-2 mt-5 mb-5 w-full form-control">
+          <div class="label">
+            <span class="label-text">Level</span>
+          </div>
+          <select class="w-full select select-bordered" placeholder="Level" name="LevelId" value="{{.Page.LevelId}}">
+            {{$SelectedLevelId := .Page.LevelId}} {{range .DropdownData.Levels}}
+            <option {{if eq .ID $SelectedLevelId}} selected {{end}} value="{{.ID}}">{{.Name}} - {{.ExperienceNeeded}}</option>
+            {{end}}
+          </select>
+        </label>
+
+        <label class="flex gap-2 items-center mt-5 mb-5 input input-bordered">
+          <div class="label">
+            <span class="label-text">Experience Gained</span>
+          </div>
+
+          <input type="number" class="grow" placeholder="Experience Gained" name="ExperienceGained" value="{{.Page.ExperienceGained}}" />
+        </label>
+      </div>
+
+      <div>
+        <div class="divider">Statistics</div>
+        <label class="flex gap-2 items-center mt-5 mb-5 input input-bordered">
+          <div class="label">
+            <span class="label-text">Health</span>
+          </div>
+
+          <input type="number" class="grow" placeholder="Health" name="Health" value="{{.Page.Health}}" />
+        </label>
+
+        <label class="flex gap-2 items-center mt-5 mb-5 input input-bordered">
+          <div class="label">
+            <span class="label-text">Max Health</span>
+          </div>
+
+          <input type="number" class="grow" placeholder="Max Health" name="MaxHealth" value="{{.Page.MaxHealth}}" />
+        </label>
+
+        <label class="flex gap-2 items-center mt-5 mb-5 input input-bordered">
+          <div class="label">
+            <span class="label-text">Attack</span>
+          </div>
+
+          <input type="number" class="grow" placeholder="Attack" name="Attack" value="{{.Page.Attack}}" />
+        </label>
+
+        <label class="flex gap-2 items-center mt-5 mb-5 input input-bordered">
+          <div class="label">
+            <span class="label-text">Strength</span>
+          </div>
+
+          <input type="number" class="grow" placeholder="Strength" name="Strength" value="{{.Page.Strength}}" />
+        </label>
+
+        <label class="flex gap-2 items-center mt-5 mb-5 input input-bordered">
+          <div class="label">
+            <span class="label-text">Defence</span>
+          </div>
+
+          <input type="number" class="grow" placeholder="Defence" name="Defence" value="{{.Page.Defence}}" />
+        </label>
+
+        <label class="flex gap-2 items-center mt-5 mb-5 input input-bordered">
+          <div class="label">
+            <span class="label-text">Armour Rating</span>
+          </div>
+
+          <input type="number" class="grow" placeholder="Armour Rating" name="ArmourRating" value="{{.Page.ArmourRating}}" />
+        </label>
+      </div>
+    </div>
+    <div class="modal-action">
+      <button class="mr-2 btn btn-primary">Save</button>
+    </div>
+  </form>
+</div>
+{{end}}
