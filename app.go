@@ -34,5 +34,14 @@ func main() {
 
 // Database auto migrations
 func migrations() {
+	models.MigrateRoles()
 	models.MigrateUser()
+	models.MigrateLevels()
+	models.MigrateItems()
+	models.MigrateSkills()
+	models.MigrateRecipes()
+	models.MigrateMonsters()
+	models.MigrateCharacters()
+	models.MigrateInventorys()
+	models.MigrateCharacterSkills()
 }

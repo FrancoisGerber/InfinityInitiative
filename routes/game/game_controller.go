@@ -1,6 +1,7 @@
 package game
 
 import (
+	"InfinityInitiative/data/models"
 	templates "InfinityInitiative/views"
 	"net/http"
 
@@ -8,7 +9,7 @@ import (
 )
 
 func SetupEndpoints(g *echo.Group) {
-	g.GET("/", GamePage)
+	g.GET("/game/:skillName", GamePage)
 
 }
 
@@ -18,5 +19,11 @@ func GamePage(c echo.Context) error {
 		"views/game/*.html",
 	})
 
-	return c.Render(http.StatusOK, "index.html", nil)
+	skillName := c.Param("skillName")
+	data := models.Data{
+		Page:       skillName,
+		ActivePage: skillName,
+	}
+
+	return c.Render(http.StatusOK, "index.html", data)
 }

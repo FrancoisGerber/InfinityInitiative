@@ -1,39 +1,37 @@
 {{block "table-edit" .}}
-<h3 class="text-lg font-bold">
-  {{if .Page.Username}} Edit {{else}} Create {{end}} User
-</h3>
+<h3 class="text-lg font-bold">{{if .Page.Username}} Edit {{else}} Create {{end}} User</h3>
 <div>
   <form method="dialog" hx-post="/users">
     <input type="hidden" name="ID" value="{{.Page.ID}}" />
     <input type="hidden" name="Image" value="{{.Page.Image}}" />
 
     <label class="input input-bordered flex items-center gap-2 mb-5 mt-5">
-      <input
-        type="text"
-        class="grow"
-        placeholder="Username"
-        name="Username"
-        value="{{.Page.Username}}"
-      />
+      <input type="text" class="grow" placeholder="Username" name="Username" value="{{.Page.Username}}" />
     </label>
     <label class="input input-bordered flex items-center gap-2 mb-5 mt-5">
-      <input
-        type="text"
-        class="grow"
-        placeholder="Email"
-        name="Email"
-        value="{{.Page.Email}}"
-      />
+      <input type="text" class="grow" placeholder="Email" name="Email" value="{{.Page.Email}}" />
     </label>
     <label class="input input-bordered flex items-center gap-2 mb-5 mt-5">
-      <input
-        type="password"
-        class="grow"
-        placeholder="Password"
-        name="Password"
-        value="{{.Page.Password}}"
-      />
+      <input type="password" class="grow" placeholder="Password" name="Password" value="{{.Page.Password}}" />
     </label>
+    <div class="flex">
+      <div class="avatar">
+        <div class="h-20 w-20 rounded">
+          {{if .Page.Image}}
+          <img src="{{.Page.Image}}" />
+          {{else}}
+          <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg" />
+          {{end}}
+        </div>
+      </div>
+      <label class="flex gap-2 items-center ml-5 mt-5 mb-5 w-full input input-bordered">
+        <div class="label">
+          <span class="label-text">Image Url</span>
+        </div>
+
+        <input type="text" class="grow" placeholder="Image Url" name="Image" value="{{.Page.Image}}" />
+      </label>
+    </div>
     <div class="modal-action">
       <button class="btn btn-primary mr-2">Save</button>
     </div>

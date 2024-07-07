@@ -1,0 +1,16 @@
+{{block "table-delete" .}}
+<h3 class="text-lg font-bold">Are you sure?</h3>
+<p class="py-4">Confirm that you are sure you want to delete {{.Page.Name}}.</p>
+<div class="modal-action">
+  <form method="dialog">
+    <button
+      class="btn btn-error mr-2"
+      hx-delete="/items/{{.Page.ID}}"
+      hx-trigger="click"
+    >
+      Yes
+    </button>
+    <button class="btn btn-primary">No</button>
+  </form>
+</div>
+{{end}}

@@ -1,9 +1,15 @@
 package routes
 
 import (
+	"InfinityInitiative/routes/characters"
+	"InfinityInitiative/routes/game"
+	"InfinityInitiative/routes/items"
+	"InfinityInitiative/routes/levels"
+	"InfinityInitiative/routes/recipes"
+	"InfinityInitiative/routes/roles"
+	"InfinityInitiative/routes/skills"
 	"InfinityInitiative/routes/users"
 
-	"InfinityInitiative/routes/game"
 	"github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 )
@@ -19,4 +25,10 @@ func Router(e *echo.Echo) {
 	//Routes
 	game.SetupEndpoints(openGroup)
 	users.SetupEndpoints(openGroup)
+	roles.SetupEndpoints(openGroup)
+	levels.SetupEndpoints(openGroup)
+	skills.SetupEndpoints(openGroup)
+	items.SetupEndpoints(openGroup)
+	recipes.SetupEndpoints(openGroup)
+	characters.SetupEndpoints(openGroup)
 }

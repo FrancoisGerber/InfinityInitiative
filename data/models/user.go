@@ -13,22 +13,24 @@ type User struct {
 	Email    string `gorm:"unique" json:"Email" form:"Email" query:"Email"`
 	Password string `json:"Password" form:"Password" query:"Password"`
 	Image    string `json:"Image" form:"Image" query:"Image"`
+	RoleId   uint   `json:"RoleId" form:"RoleId" query:"RoleId"`
+	Role     Role   `json:"Role" form:"Role" query:"Role"`
 }
 
 func MigrateUser() {
 	data.DB.AutoMigrate(&User{})
 }
 
-func GetAllUsers() (users []User) {
-	data.DB.Find(&users)
+func GetAllUsers() (models []User) {
+	data.DB.Find(&models)
 
-	return users
+	return models
 }
 
-func GetUser(id int64) (user User) {
-	data.DB.First(&user, "id = ?", id)
+func GetUser(id int64) (model User) {
+	data.DB.First(&model, "id = ?", id)
 
-	return user
+	return model
 }
 
 func (model *User) Create() (int64, error) {

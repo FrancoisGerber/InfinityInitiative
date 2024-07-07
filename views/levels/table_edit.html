@@ -1,0 +1,33 @@
+{{block "table-edit" .}}
+<h3 class="text-lg font-bold">
+  {{if .Page.Name}} Edit {{else}} Create {{end}} Level
+</h3>
+<div>
+  <form method="dialog" hx-post="/levels">
+    <input type="hidden" name="ID" value="{{.Page.ID}}" />
+
+    <label class="input input-bordered flex items-center gap-2 mb-5 mt-5">
+      <input
+        type="number"
+        class="grow"
+        placeholder="Name"
+        name="Name"
+        value="{{.Page.Name}}"
+      />
+    </label>
+    <label class="input input-bordered flex items-center gap-2 mb-5 mt-5">
+      <input
+        type="number"
+        class="grow"
+        placeholder="Experience Needed"
+        name="ExperienceNeeded"
+        value="{{.Page.ExperienceNeeded}}"
+      />
+    </label>
+
+    <div class="modal-action">
+      <button class="btn btn-primary mr-2">Save</button>
+    </div>
+  </form>
+</div>
+{{end}}

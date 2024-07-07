@@ -1,0 +1,37 @@
+{{block "table-edit" .}}
+<h3 class="text-lg font-bold">{{if .Page.ID}} Edit {{else}} Create {{end}} Recipe</h3>
+<div>
+  <form method="dialog" hx-post="/recipes">
+    <input type="hidden" name="ID" value="{{.Page.ID}}" />
+
+    <label class="gap-2 mt-5 mb-5 w-full form-control">
+      <div class="label">
+        <span class="label-text">Parent Item</span>
+      </div>
+      <select class="w-full select select-bordered" placeholder="Parent Item" name="ParentItemId" value="{{.Page.ParentItemId}}">
+        {{$SelectedParentItemId := .Page.ParentItemId}} {{range .DropdownData.Items}}
+        <option {{if eq .ID $SelectedParentItemId}} selected {{end}} value="{{.ID}}">{{.Name}}</option>
+        {{end}}
+      </select>
+    </label>
+
+    <label class="gap-2 mt-5 mb-5 w-full form-control">
+      <div class="label">
+        <span class="label-text">Item</span>
+      </div>
+      <select class="w-full select select-bordered" placeholder="Item" name="ItemId" value="{{.Page.ItemId}}">
+        {{$SelectedItemId := .Page.ItemId}} {{range .DropdownData.Items}}
+        <option {{if eq .ID $SelectedItemId}} selected {{end}} value="{{.ID}}">{{.Name}}</option>
+        {{end}}
+      </select>
+    </label>
+
+    <label class="flex gap-2 items-center mt-5 mb-5 input input-bordered">
+      <input type="number" class="grow" placeholder="Amount" name="Amount" value="{{.Page.Amount}}" />
+    </label>
+    <div class="modal-action">
+      <button class="mr-2 btn btn-primary">Save</button>
+    </div>
+  </form>
+</div>
+{{end}}

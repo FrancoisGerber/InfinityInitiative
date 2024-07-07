@@ -1,0 +1,14 @@
+{{block "table" .}}
+<table class="table">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Experience Needed</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {{range .Page}} {{template "table-row" .}} {{end}}
+  </tbody>
+</table>
+{{end}}

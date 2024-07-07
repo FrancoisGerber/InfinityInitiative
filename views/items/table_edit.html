@@ -1,0 +1,57 @@
+{{block "table-edit" .}}
+<h3 class="text-lg font-bold">{{if .Page.Name}} Edit {{else}} Create {{end}} Item</h3>
+<div>
+  <form method="dialog" hx-post="/items">
+    <input type="hidden" name="ID" value="{{.Page.ID}}" />
+    <input type="hidden" name="Runtime" value="0" />
+
+    <label class="input input-bordered flex items-center gap-2 mb-5 mt-5">
+      <input type="text" class="grow" placeholder="Name" name="Name" value="{{.Page.Name}}" />
+    </label>
+    <label class="input input-bordered flex items-center gap-2 mb-5 mt-5">
+      <input type="text" class="grow" placeholder="Type" name="Type" value="{{.Page.Type}}" />
+    </label>
+
+    <label class="input input-bordered flex items-center gap-2 mb-5 mt-5">
+      <input type="text" class="grow" placeholder="Description" name="Description" value="{{.Page.Description}}" />
+    </label>
+
+     <div class="flex">
+      <div class="avatar">
+        <div class="h-20 w-20 rounded">
+          {{if .Page.Image}}
+          <img src="{{.Page.Image}}" />
+          {{else}}
+          <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg" />
+          {{end}}
+        </div>
+      </div>
+      <label class="flex gap-2 items-center ml-5 mt-5 mb-5 w-full input input-bordered">
+        <div class="label">
+          <span class="label-text">Image Url</span>
+        </div>
+
+        <input type="text" class="grow" placeholder="Image Url" name="Image" value="{{.Page.Image}}" />
+      </label>
+    </div>
+    <label class="form-control gap-2 mb-5 mt-5 w-full">
+      <select class="select select-bordered w-full" placeholder="Level" name="LevelId" value="{{.Page.LevelId}}">
+        {{$SelectedLevelId := .Page.LevelId}} {{range .DropdownData.Levels}}
+        <option {{if eq .ID $SelectedLevelId}} selected {{end}} value="{{.ID}}">Level {{.Name}} - {{.ExperienceNeeded}}xp</option>
+        {{end}}
+      </select>
+    </label>
+
+    <label class="input input-bordered flex items-center gap-2 mb-5 mt-5">
+      <input type="number" class="grow" placeholder="Experience Gained" name="ExperienceGained" value="{{.Page.ExperienceGained}}" />
+    </label>
+
+    <label class="input input-bordered flex items-center gap-2 mb-5 mt-5">
+      <input type="text" class="grow" placeholder="Runtime" name="RuntimeString" value="{{.Page.RuntimeString}}" />
+    </label>
+    <div class="modal-action">
+      <button class="btn btn-primary mr-2">Save</button>
+    </div>
+  </form>
+</div>
+{{end}}

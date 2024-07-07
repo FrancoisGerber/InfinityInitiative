@@ -27,7 +27,8 @@ func GetAll(c echo.Context) error {
 	users := models.GetAllUsers()
 
 	data := models.Data{
-		Page: users,
+		Page:       users,
+		ActivePage: "users",
 	}
 
 	return c.Render(http.StatusOK, "index.html", data)

@@ -1,0 +1,17 @@
+{{block "table" .}}
+<table class="table">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Level</th>
+      <th>Experience Gained</th>
+      <th>Runtime</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {{range .Page}} {{template "table-row" .}} {{end}}
+  </tbody>
+</table>
+{{end}}

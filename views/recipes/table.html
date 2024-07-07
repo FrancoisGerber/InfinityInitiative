@@ -1,0 +1,15 @@
+{{block "table" .}}
+<table class="table">
+  <thead>
+    <tr>
+      <th>Parent Item</th>
+      <th>Item</th>
+      <th>Amount</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {{range .Page}} {{template "table-row" .}} {{end}}
+  </tbody>
+</table>
+{{end}}

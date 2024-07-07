@@ -36,17 +36,18 @@
     </div>
   </li>
   <li class="menu-title mt-10">Information</li>
-  <li><a>Character Profile</a></li>
+  <li><a>Character Sheet</a></li>
   <li><a>Bank</a></li>
+  <li><a>Quests</a></li>
   <li class="menu-title mt-5">Game</li>
   <li>
     <details open>
       <summary>Combat</summary>
       <ul>
-        <li><a>Slayer</a></li>
+        <li><a class="{{if eq .ActivePage "Combat"}}active{{end}}" href="/game/Combat">Battle PvE</a></li>
         <li><a>Raids</a></li>
         <li><a>Dungeons</a></li>
-        <li><a>Initiative War</a></li>
+        <li><a>Initiative War PvP</a></li>
       </ul>
     </details>
   </li>
@@ -55,13 +56,13 @@
     <details open>
       <summary>Skills</summary>
       <ul>
-        <li><a href="/">Mining</a></li>
-        <li><a>Woodcutting</a></li>
-        <li><a>Fishing</a></li>
-        <li><a>Smelting</a></li>
-        <li><a>Crafting</a></li>
-        <li><a>Cooking</a></li>
-        <li><a>Farming</a></li>
+        <li><a class="{{if eq .ActivePage "Mining"}}active{{end}}" href="/game/Mining">Mining</a></li>
+        <li><a class="{{if eq .ActivePage "Woodcutting"}}active{{end}}" href="/game/Woodcutting">Woodcutting</a></li>
+        <li><a class="{{if eq .ActivePage "Fishing"}}active{{end}}" href="/game/Fishing">Fishing</a></li>
+        <li><a class="{{if eq .ActivePage "Smithing"}}active{{end}}" href="/game/Smithing">Smithing</a></li>
+        <li><a class="{{if eq .ActivePage "Crafting"}}active{{end}}" href="/game/Crafting">Crafting</a></li>
+        <li><a class="{{if eq .ActivePage "Cooking"}}active{{end}}" href="/game/Cooking">Cooking</a></li>
+        <li><a class="{{if eq .ActivePage "Farming"}}active{{end}}" href="/game/Farming">Farming</a></li>
       </ul>
     </details>
   </li>
@@ -71,12 +72,13 @@
   <li><a>Initiatives</a></li>
   <li><a>House</a></li>
   <li class="menu-title mt-5">Database</li>
-  <li><a>Skills</a></li>
-  <li><a>Items</a></li>
-  <li><a>Recipes</a></li>
-  <li><a>Monsters</a></li>
-  <li><a href="/users">Users</a></li>
-  <li><a href="/users">Characters</a></li>
-  <li><a>Roles</a></li>
+  <li><a class="{{if eq .ActivePage "levels"}}active{{end}}" href="/levels">Levels</a></li>
+  <li><a class="{{if eq .ActivePage "skills"}}active{{end}}" href="/skills">Skills</a></li>
+  <li><a class="{{if eq .ActivePage "recipes"}}active{{end}}" href="/recipes">Recipes</a></li>
+  <li><a class="{{if eq .ActivePage "items"}}active{{end}}" href="/items">Items</a></li>
+  <li><a class="{{if eq .ActivePage "monsters"}}active{{end}}" href="/monsters">Monsters</a></li>
+  <li><a class="{{if eq .ActivePage "roles"}}active{{end}}" href="/roles">Roles</a></li>
+  <li><a class="{{if eq .ActivePage "users"}}active{{end}}" href="/users">Users</a></li>
+  <li><a class="{{if eq .ActivePage "characters"}}active{{end}}" href="/characters">Characters</a></li>
 </ul>
 {{end}}
