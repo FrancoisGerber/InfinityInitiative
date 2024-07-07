@@ -2,6 +2,7 @@ package users
 
 import (
 	"InfinityInitiative/data/models"
+	"InfinityInitiative/utils"
 	"InfinityInitiative/views"
 	"net/http"
 	"strconv"
@@ -26,9 +27,12 @@ func GetAll(c echo.Context) error {
 
 	users := models.GetAllUsers()
 
+	userId := c.Get("UserId").(uint)
+
 	data := models.Data{
 		Page:       users,
 		ActivePage: "users",
+		Character:  models.GetCharacterForUser(int64(userId)),
 	}
 
 	return c.Render(http.StatusOK, "index.html", data)
@@ -41,9 +45,10 @@ func EditUser(c echo.Context) error {
 	})
 
 	id := c.Param("id")
-	Id, _ := strconv.ParseInt(id, 36, 64)
+	Id, _ := strconv.Atoi(id)
 
-	user := models.GetUser(Id)
+	user := models.GetUser(int64(Id))
+	user.Password = ""
 
 	data := models.Data{
 		Page: user,
@@ -60,6 +65,8 @@ func SaveUser(c echo.Context) error {
 	}
 
 	var err error
+
+	user.Password = utils.HashPassword(user.Password)
 
 	if user.ID != 0 {
 		_, err = user.Update()

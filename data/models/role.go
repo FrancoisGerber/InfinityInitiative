@@ -14,6 +14,20 @@ type Role struct {
 
 func MigrateRoles() {
 	data.DB.AutoMigrate(&Role{})
+
+	admin := GetRoleByName("Admin")
+	if admin.ID == 0 {
+		data.DB.Create(&Role{
+			Name: "Admin",
+		})
+	}
+
+	user := GetRoleByName("User")
+	if user.ID == 0 {
+		data.DB.Create(&Role{
+			Name: "User",
+		})
+	}
 }
 
 func GetAllRoles() (models []Role) {
@@ -24,6 +38,12 @@ func GetAllRoles() (models []Role) {
 
 func GetRole(id int64) (model Role) {
 	data.DB.First(&model, "id = ?", id)
+
+	return model
+}
+
+func GetRoleByName(name string) (model Role) {
+	data.DB.First(&model, "name = ?", name)
 
 	return model
 }

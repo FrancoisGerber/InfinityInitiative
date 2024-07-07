@@ -26,9 +26,12 @@ func GetAll(c echo.Context) error {
 
 	recipes := models.GetAllRecipes()
 
+	userId := c.Get("UserId").(uint)
+
 	data := models.Data{
 		Page:       recipes,
 		ActivePage: "recipes",
+		Character:  models.GetCharacterForUser(int64(userId)),
 	}
 
 	return c.Render(http.StatusOK, "index.html", data)

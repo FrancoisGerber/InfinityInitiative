@@ -4,7 +4,10 @@ import (
 	"InfinityInitiative/data"
 	"InfinityInitiative/data/models"
 	"InfinityInitiative/routes"
+	"InfinityInitiative/utils"
 
+	"github.com/gorilla/sessions"
+	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -17,6 +20,7 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORS())
+	e.Use(session.Middleware(sessions.NewCookieStore(utils.Secret)))
 
 	// Static files and templates
 	e.Static("/assets", "views/assets")

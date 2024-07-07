@@ -2,6 +2,7 @@ package models
 
 import (
 	"InfinityInitiative/data"
+	"InfinityInitiative/utils"
 
 	"gorm.io/gorm"
 )
@@ -19,6 +20,16 @@ type User struct {
 
 func MigrateUser() {
 	data.DB.AutoMigrate(&User{})
+
+	admin := GetUserByEmail("admin@admin.com")
+	if admin.ID == 0 {
+		data.DB.Create(&User{
+			Username: "admin",
+			Email:    "admin@admin.com",
+			Password: utils.HashPassword("admin"),
+			RoleId:   1,
+		})
+	}
 }
 
 func GetAllUsers() (models []User) {
@@ -30,6 +41,11 @@ func GetAllUsers() (models []User) {
 func GetUser(id int64) (model User) {
 	data.DB.First(&model, "id = ?", id)
 
+	return model
+}
+
+func GetUserByEmail(email string) (model User) {
+	data.DB.First(&model, "email = ?", email)
 	return model
 }
 

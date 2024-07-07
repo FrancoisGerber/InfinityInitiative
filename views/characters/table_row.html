@@ -1,15 +1,13 @@
 {{block "table-row" .}}
 <tr class="hover">
   <td>
-  <div class="flex items-center gap-3">
+    <div class="flex items-center gap-3">
       <div class="avatar">
         <div class="mask mask-squircle h-12 w-12">
           {{if .Image}}
           <img src="{{.Image}}" />
           {{else}}
-          <img
-            src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg"
-          />
+          <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg" />
           {{end}}
         </div>
       </div>
@@ -17,27 +15,14 @@
     </div>
   </td>
   <td>{{.Class}}</td>
+  <td>{{.Level.Name}}</td>
+  <td>{{.ExperiencePoints}}</td>
   <td>{{.Gold}}</td>
   <td>{{.Diamonds}}</td>
-  <td>{{.Level.Name}}</td>
   <td>{{.User.Username}}</td>
   <th>
-    <button
-      class="btn btn-ghost btn-sm"
-      id="edit"
-      hx-get="/characters/{{.ID}}"
-      hx-trigger="click"
-      hx-target="#table_edit"
-      onclick="tableEdit.showModal()"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke-width="1.5"
-        stroke="currentColor"
-        class="size-6"
-      >
+    <button class="btn btn-ghost btn-sm" id="edit" hx-get="/characters/{{.ID}}" hx-trigger="click" hx-target="#table_edit" onclick="tableEdit.showModal()">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
         <path
           stroke-linecap="round"
           stroke-linejoin="round"
@@ -45,22 +30,8 @@
         />
       </svg>
     </button>
-    <button
-      class="btn btn-ghost btn-sm"
-      id="delete"
-      hx-get="/characters/delete/{{.ID}}"
-      hx-trigger="click"
-      hx-target="#table_delete"
-      onclick="tableDelete.showModal()"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke-width="1.5"
-        stroke="currentColor"
-        class="size-6"
-      >
+    <button class="btn btn-ghost btn-sm" id="delete" hx-get="/characters/delete/{{.ID}}" hx-trigger="click" hx-target="#table_delete" onclick="tableDelete.showModal()">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
         <path
           stroke-linecap="round"
           stroke-linejoin="round"

@@ -1,14 +1,19 @@
 {{template "layout" .}}
-<br />
 {{define "content"}}
 <div class="grid lg:grid-cols-2 grid-cols-1 gap-4">
   <div>
     <div class="divider">Action</div>
-    {{template "action" .}}
+    <div id="actionSection">{{template "action" .}}</div>
+
+    <div class="divider">Statistics</div>
+    <div id="statisticsSection">{{template "statistics" .}}</div>
   </div>
   <div>
-    <div class="divider">Options</div>
+    <div class="divider">Resources</div>
     {{template "recipes" .}}
+
+    <div class="divider">Inventory</div>
+    <div id="inventorySection">{{template "inventory" .}}</div>
   </div>
 </div>
 {{end}}

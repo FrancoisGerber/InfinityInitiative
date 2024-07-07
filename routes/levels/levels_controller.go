@@ -26,9 +26,12 @@ func GetAll(c echo.Context) error {
 
 	levels := models.GetAllLevels()
 
+	userId := c.Get("UserId").(uint)
+
 	data := models.Data{
 		Page:       levels,
 		ActivePage: "levels",
+		Character:  models.GetCharacterForUser(int64(userId)),
 	}
 
 	return c.Render(http.StatusOK, "index.html", data)

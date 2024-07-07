@@ -2,23 +2,33 @@
 <div class="card bg-neutral text-neutral-content shadow-xl">
   <div class="card-body items-center text-center">
     <h2 class="card-title">
-      {{.Page}}
-      <div class="badge badge-outline gap-2">Level: 100</div>
+      {{.Page.Skill.Name}}
+      <div class="badge badge-outline gap-2">Level: {{.Page.Level.Name}}</div>
     </h2>
+    {{if .Page.ActiveItem.Name}}
     <img
-      src="/assets/img/skills/{{.Page}}.png"
+      src="{{.Page.ActiveItem.Image}}"
       id="action-button"
       class="w-5/12"
+      hx-indicator=".running-action"
+      hx-trigger="click"
+      hx-target="#actionSection"
+      hx-post="/game/action/{{.Page.ActiveItem.ID}}"
     />
-    <progress
-      class="progress progress-primary w-5/12 min-h-10"
-      value="70"
-      max="100"
-    ></progress>
+    <h3 class="font-bold">{{.Page.ActiveItem.Name}}</h3>
+    {{else}}
+    <img src="{{.Page.Skill.Image}}" class="w-5/12" />
+    <h3 class="text-error font-bold">Select a resource</h3>
+    {{end}}
+
+    <span class="loading loading-bars text-primary loading-lg htmx-indicator running-action"></span>
+    <progress class="progress progress-primary w-5/12 min-h-10" value="{{.Page.ExperiencePoints}}" max="{{.Page.NextLevel.ExperienceNeeded}}"></progress>
+
     <div class="join">
-      <span class="join-item rounded bg-gray-700 p-1">100 XP Needed</span>
-      <span class="join-item rounded bg-gray-900 p-1">90%</span>
+      <span class="join-item rounded bg-gray-700 p-1">{{.Page.NextLevel.ExperienceNeeded}} XP Needed</span>
+      <span class="join-item rounded bg-gray-900 p-1">{{.Page.ExperiencePoints}} XP</span>
     </div>
   </div>
 </div>
+
 {{end}}

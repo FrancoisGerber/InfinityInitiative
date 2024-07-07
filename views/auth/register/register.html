@@ -1,0 +1,56 @@
+{{template "auth_layout" .}} {{define "auth_content"}}
+
+<div class="hero bg-default min-h-screen">
+  <div class="hero-content flex-col">
+    <img src="/assets/img/favicon.png" class="w-4/12 mx-auto my-2" />
+    <div class="text-center">
+      <h1 class="text-5xl font-bold">Register</h1>
+    </div>
+    <div class="card bg-neutral text-neutral-content shadow-xl w-full max-w-sm shrink-0">
+      <form class="card-body" hx-post="/register">
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Email</span>
+          </label>
+          <input type="email" name="Email" placeholder="Email" class="input input-bordered" required />
+        </div>
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Username</span>
+          </label>
+          <input type="text" name="Username" placeholder="Username" class="input input-bordered" required />
+        </div>
+
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Password</span>
+          </label>
+          <input type="password" name="Password" id="Password" placeholder="Password" class="input input-bordered" required />
+        </div>
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Verify Password</span>
+          </label>
+          <input type="password" name="VerifyPassword" id="VerifyPassword" placeholder="Verify Password" class="input input-bordered" required onchange="check()" />
+        </div>
+        <div class="form-control mt-6">
+          <button class="btn btn-primary">Register</button>
+          <a class="btn my-2" href="/login">Login</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  function check() {
+    var input = document.getElementById("VerifyPassword");
+    if (input.value != document.getElementById("Password").value) {
+      input.setCustomValidity("Password Must be the same.");
+    } else {
+      // input is valid -- reset the error message
+      input.setCustomValidity("");
+    }
+  }
+</script>
+{{end}}

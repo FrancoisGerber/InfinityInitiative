@@ -26,9 +26,12 @@ func GetAll(c echo.Context) error {
 
 	characters := models.GetAllCharacters()
 
+	userId := c.Get("UserId").(uint)
+
 	data := models.Data{
 		Page:       characters,
 		ActivePage: "characters",
+		Character:  models.GetCharacterForUser(int64(userId)),
 	}
 
 	return c.Render(http.StatusOK, "index.html", data)

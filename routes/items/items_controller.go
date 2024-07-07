@@ -2,6 +2,7 @@ package items
 
 import (
 	"InfinityInitiative/data/models"
+	"InfinityInitiative/utils"
 	"InfinityInitiative/views"
 	"net/http"
 	"strconv"
@@ -30,9 +31,12 @@ func GetAll(c echo.Context) error {
 
 	items := models.GetAllItems()
 
+	userId := c.Get("UserId").(uint)
+
 	data := models.Data{
 		Page:       items,
 		ActivePage: "items",
+		Character:  models.GetCharacterForUser(int64(userId)),
 	}
 
 	return c.Render(http.StatusOK, "index.html", data)
@@ -50,11 +54,13 @@ func EditItem(c echo.Context) error {
 	item := models.GetItem(Id)
 
 	levels := models.GetAllLevels()
+	skills := models.GetAllSkills()
 
 	data := models.Data{
 		Page: item,
 		DropdownData: map[string]any{
 			"Levels":    levels,
+			"Skills":    skills,
 			"ItemTypes": models.ItemTypes,
 		},
 	}
@@ -104,11 +110,13 @@ func CreateItem(c echo.Context) error {
 	})
 
 	levels := models.GetAllLevels()
+	skills := models.GetAllSkills()
 
 	data := models.Data{
 		Page: models.Item{},
 		DropdownData: map[string]any{
 			"Levels":    levels,
+			"Skills":    skills,
 			"ItemTypes": models.ItemTypes,
 		},
 	}
@@ -197,7 +205,7 @@ func AddRecipe(c echo.Context) error {
 	})
 	items := models.GetAllItems()
 
-	recipeVM := struct {
+	recipeDto := struct {
 		models.Recipe
 		Items []models.Item
 	}{
@@ -205,7 +213,7 @@ func AddRecipe(c echo.Context) error {
 		Items:  items,
 	}
 
-	return c.Render(http.StatusOK, "recipe-edit-row", recipeVM)
+	return c.Render(http.StatusOK, "recipe-edit-row", recipeDto)
 }
 
 func SaveRecipe(c echo.Context) error {
@@ -213,7 +221,7 @@ func SaveRecipe(c echo.Context) error {
 
 	partenItemId := form["ParentItemID"][0]
 
-	_, err := models.DeleteRecipesOfParentItem(int64(parseInt(partenItemId)))
+	_, err := models.DeleteRecipesOfParentItem(int64(utils.ParseInt(partenItemId)))
 
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "Could Not Delete Recipes for Parent Item")
@@ -221,9 +229,9 @@ func SaveRecipe(c echo.Context) error {
 
 	for index, itemId := range form["ItemId"] {
 		recipe := models.Recipe{
-			ParentItemId: uint(parseInt(partenItemId)),
-			ItemId:       uint(parseInt(itemId)),
-			Amount:       int64(parseInt(form["Amount"][index])),
+			ParentItemId: uint(utils.ParseInt(partenItemId)),
+			ItemId:       uint(utils.ParseInt(itemId)),
+			Amount:       int64(utils.ParseInt(form["Amount"][index])),
 		}
 
 		_, err = recipe.Create()
@@ -237,9 +245,4 @@ func SaveRecipe(c echo.Context) error {
 	c.Response().WriteHeader(300)
 
 	return nil
-}
-
-func parseInt(val string) int {
-	valInt, _ := strconv.Atoi(val)
-	return valInt
 }

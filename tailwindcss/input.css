@@ -17,10 +17,22 @@
 }
 
 html {
-  overflow-y: hidden !important;
+  /* overflow-y: hidden !important; */
 }
 
 .h-almost {
   height: 90vh !important;
   max-height: 90vh !important;
+}
+
+.max-h-10 {
+  max-height: 10% !important;
+}
+
+.htmx-request {
+  display: block !important;
+}
+
+.htmx-indicator{
+  display:none;
 }

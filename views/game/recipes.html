@@ -4,10 +4,11 @@
   class="collapse collapse-arrow collapse-open bg-neutral text-neutral-content shadow-xl"
 >
   <input type="checkbox" />
-  <div class="collapse-title text-xl font-medium">Recipes</div>
   <div class="collapse-content">
     <ul class="menu bg-base-200 rounded-box">
-      {{template "recipe_item" .}}
+      {{range .DropdownData.Items}}
+        {{template "recipe_item" .}}
+      {{end}}
     </ul>
   </div>
 </div>

@@ -15,6 +15,16 @@ type Level struct {
 
 func MigrateLevels() {
 	data.DB.AutoMigrate(&Level{})
+
+	for levelName := range 100 {
+		level := GetLevelByName(int64(levelName))
+		if level.ID == 0 && levelName > 0 {
+			data.DB.Create(&Level{
+				Name:             int64(levelName),
+				ExperienceNeeded: int64(((levelName - 1) * 1000) * levelName),
+			})
+		}
+	}
 }
 
 func GetAllLevels() (models []Level) {
@@ -25,6 +35,12 @@ func GetAllLevels() (models []Level) {
 
 func GetLevel(id int64) (model Level) {
 	data.DB.First(&model, "id = ?", id)
+
+	return model
+}
+
+func GetLevelByName(name int64) (model Level) {
+	data.DB.First(&model, "name = ?", name)
 
 	return model
 }

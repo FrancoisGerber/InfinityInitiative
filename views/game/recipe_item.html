@@ -1,14 +1,18 @@
 {{block "recipe_item" .}}
 <li>
-  <a class="active">
-    <img src="/assets/img/skills/Mining.png" />
+  <a hx-trigger="click" hx-target="#actionSection" hx-get="/game/action/{{.ID}}" class="{{if eq .ActiveItem.ID .ID}} active {{end}}">
+    <img class="max-w-10 w-10" src="{{.Image}}" />
     <div>
-      <span class="rounded bg-gray-700 p-1">Lv. 1</span>
-      <span class="rounded m-2 font-bold">Iron Ore</span>
+      <span class="rounded bg-gray-700 p-1">Lv. {{.Level.Name}}</span>
+      <span class="rounded m-2 font-bold">{{.Name}}</span>
+
     </div>
     <div class="justify-self-end">
-      <span class="rounded bg-gray-700 p-1">10 XP</span>
-      <span class="rounded bg-gray-700 p-1">5s</span>
+      {{range .Recipes}}
+      <span class="rounded bg-gray-700 p-1">{{.Amount}}x {{.Item.Name}}</span>
+      {{end}}
+      <span class="rounded bg-gray-700 p-1">{{.ExperienceGained}} XP</span>
+      <span class="rounded bg-gray-700 p-1">{{.RuntimeString}}</span>
     </div>
   </a>
 </li>

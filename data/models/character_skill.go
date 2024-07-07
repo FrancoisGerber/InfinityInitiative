@@ -23,13 +23,13 @@ func MigrateCharacterSkills() {
 }
 
 func GetAllCharacterSkills() (models []CharacterSkill) {
-	data.DB.Find(&models)
+	data.DB.Preload("Level").Preload("Character").Preload("Skill").Find(&models)
 
 	return models
 }
 
 func GetCharacterSkill(id int64) (model CharacterSkill) {
-	data.DB.First(&model, "id = ?", id)
+	data.DB.Preload("Level").Preload("Character").Preload("Skill").First(&model, "id = ?", id)
 
 	return model
 }
@@ -62,4 +62,36 @@ func (model *CharacterSkill) Delete() (int64, error) {
 	}
 
 	return result.RowsAffected, nil
+}
+
+func GetCharacterProgress(characterId uint, skillId uint) (model CharacterSkill) {
+	data.DB.Preload("Level").Preload("Character").Preload("Skill").First(&model, "character_id = ? and skill_id = ?", characterId, skillId)
+
+	if model.ID == 0 {
+		level1 := GetLevelByName(1)
+
+		model = CharacterSkill{
+			CharacterId:      characterId,
+			LevelId:          level1.ID,
+			SkillId:          skillId,
+			ExperiencePoints: 0,
+		}
+
+		model.Create()
+		model = GetCharacterSkill(int64(model.ID))
+	}
+
+	return model
+}
+
+func CalcCharacterTotalXP(characterId uint) int64 {
+	var TotalExperiencePoints int64 = 0
+
+	data.DB.Raw(`
+		select sum(experience_points) as TotalExperiencePoints
+		from character_skills
+		where character_id = ?
+	`, characterId).Scan(&TotalExperiencePoints)
+
+	return TotalExperiencePoints
 }

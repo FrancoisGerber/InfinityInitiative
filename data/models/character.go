@@ -26,6 +26,8 @@ type Character struct {
 	Defence          float64 `json:"Defence" form:"Defence" query:"Defence"`
 	ArmourRating     float64 `json:"ArmourRating" form:"ArmourRating" query:"ArmourRating"`
 	ExperiencePoints int64   `json:"ExperiencePoints" form:"ExperiencePoints" query:"ExperiencePoints"`
+	ActiveItemId     uint    `json:"ActiveItemId" form:"ActiveItemId" query:"ActiveItemId"`
+	ActiveItem       Item    `json:"ActiveItem" form:"ActiveItem" query:"ActiveItem"`
 }
 
 func MigrateCharacters() {
@@ -33,13 +35,13 @@ func MigrateCharacters() {
 }
 
 func GetAllCharacters() (models []Character) {
-	data.DB.Preload("User").Preload("Level").Find(&models)
+	data.DB.Preload("User").Preload("Level").Preload("ActiveItem").Find(&models)
 
 	return models
 }
 
 func GetCharacter(id int64) (model Character) {
-	data.DB.Preload("User").Preload("Level").First(&model, "id = ?", id)
+	data.DB.Preload("User").Preload("Level").Preload("ActiveItem").First(&model, "id = ?", id)
 
 	return model
 }
@@ -72,4 +74,10 @@ func (model *Character) Delete() (int64, error) {
 	}
 
 	return result.RowsAffected, nil
+}
+
+func GetCharacterForUser(userId int64) (model Character) {
+	data.DB.Preload("User").Preload("Level").Preload("ActiveItem").First(&model, "user_id = ?", userId)
+
+	return model
 }

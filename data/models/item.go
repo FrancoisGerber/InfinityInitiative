@@ -19,6 +19,8 @@ type Item struct {
 	ExperienceGained int64         `json:"ExperienceGained" form:"ExperienceGained" query:"ExperienceGained"`
 	Runtime          time.Duration `json:"Runtime" form:"Runtime" query:"Runtime"`
 	RuntimeString    string        `json:"RuntimeString" form:"RuntimeString" query:"RuntimeString"`
+	SkillId          int           `json:"SkillId" form:"SkillId" query:"SkillId"`
+	Skill            Skill         `json:"Skill" form:"Skill" query:"Skill"`
 }
 
 func MigrateItems() {
@@ -26,13 +28,19 @@ func MigrateItems() {
 }
 
 func GetAllItems() (models []Item) {
-	data.DB.Preload("Level").Find(&models)
+	data.DB.Preload("Level").Preload("Skill").Find(&models)
+
+	return models
+}
+
+func GetAllItemsForSkill(skillId uint) (models []Item) {
+	data.DB.Preload("Level").Preload("Skill").Find(&models, "skill_id = ?", skillId)
 
 	return models
 }
 
 func GetItem(id int64) (model Item) {
-	data.DB.Preload("Level").First(&model, "id = ?", id)
+	data.DB.Preload("Level").Preload("Skill").First(&model, "id = ?", id)
 
 	return model
 }

@@ -62,3 +62,9 @@ func (model *Skill) Delete() (int64, error) {
 
 	return result.RowsAffected, nil
 }
+
+func GetSkillByName(name string) (model Skill) {
+	data.DB.First(&model, "name = ?", name)
+
+	return model
+}

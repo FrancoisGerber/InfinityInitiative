@@ -7,30 +7,30 @@
       <div class="avatar">
         <div class="w-24 rounded">
           <img
-            src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg"
+              src="{{.Character.Image}}"
           />
         </div>
       </div>
       <div class="w-full">
-        <h1 class="text-xl font-bold">Username</h1>
+        <h1 class="text-xl font-bold">{{.Character.Name}}</h1>
 
-        <div class="badge badge-outline my-1 p-2">Lv. 99</div>
-        <div class="badge badge-accent badge-outline my-1 p-2">Warrior</div>
+        <div class="badge badge-outline my-1 p-2">Lv. {{.Character.Level.Name}}</div>
+        <div class="badge badge-accent badge-outline my-1 p-2">{{.Character.Class}}</div>
         <br />
         <div class="badge badge-primary badge-outline my-1 p-2">
           <img src="/assets/img/premium.png" class="h-4" />
-          <span>100</span>
+          <span>{{.Character.Diamonds}}</span>
         </div>
 
         <div class="badge badge-secondary badge-outline my-1 p-2">
           <img src="/assets/img/gold.png" class="h-4" />
-          <span>10,000</span>
+          <span>{{.Character.Gold}}</span>
         </div>
 
         <progress
           class="progress progress-error w-full"
-          value="40"
-          max="100"
+          value="{{.Character.Health}}"
+          max="{{.Character.MaxHealth}}"
         ></progress>
       </div>
     </div>

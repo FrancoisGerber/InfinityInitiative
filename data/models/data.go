@@ -7,6 +7,7 @@ type Data struct {
 	RowsAffected int64
 	ActivePage   string
 	Id           int64
+	Character    Character
 }
 
 var Classes = []string{

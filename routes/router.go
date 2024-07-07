@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"InfinityInitiative/routes/auth"
 	"InfinityInitiative/routes/characters"
 	"InfinityInitiative/routes/game"
 	"InfinityInitiative/routes/items"
@@ -10,27 +11,28 @@ import (
 	"InfinityInitiative/routes/roles"
 	"InfinityInitiative/routes/skills"
 	"InfinityInitiative/routes/users"
+	"InfinityInitiative/utils"
 
-	"github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 )
 
 func Router(e *echo.Echo) {
 	// Router groups
-	authGroup := e.Group("/admin")
+	closedGroup := e.Group("")
 	openGroup := e.Group("")
 
 	// Auth
-	authGroup.Use(echojwt.JWT([]byte("InfinityInitiative")))
+	closedGroup.Use(utils.SessionAuth)
 
 	//Routes
-	game.SetupEndpoints(openGroup)
-	users.SetupEndpoints(openGroup)
-	roles.SetupEndpoints(openGroup)
-	levels.SetupEndpoints(openGroup)
-	skills.SetupEndpoints(openGroup)
-	items.SetupEndpoints(openGroup)
-	recipes.SetupEndpoints(openGroup)
-	characters.SetupEndpoints(openGroup)
-	monsters.SetupEndpoints(openGroup)
+	auth.SetupEndpoints(openGroup)
+	game.SetupEndpoints(closedGroup)
+	users.SetupEndpoints(closedGroup)
+	roles.SetupEndpoints(closedGroup)
+	levels.SetupEndpoints(closedGroup)
+	skills.SetupEndpoints(closedGroup)
+	items.SetupEndpoints(closedGroup)
+	recipes.SetupEndpoints(closedGroup)
+	characters.SetupEndpoints(closedGroup)
+	monsters.SetupEndpoints(closedGroup)
 }
