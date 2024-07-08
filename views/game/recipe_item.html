@@ -1,6 +1,6 @@
 {{block "recipe_item" .}}
 <li>
-  <a hx-trigger="click" hx-target="#actionSection" hx-get="/game/action/{{.ID}}" class="{{if eq .ActiveItem.ID .ID}} active {{end}}">
+  <a hx-trigger="click" hx-swap="none" hx-get="/game/action/{{.ID}}" class="{{if eq .ActiveItem.ID .ID}} active {{end}}">
     <img class="max-w-10 w-10" src="{{.Image}}" />
     <div>
       <span class="rounded bg-gray-700 p-1">Lv. {{.Level.Name}}</span>

@@ -2,7 +2,7 @@
 <ul class="menu bg-base-200 text-base-content min-h-full w-80 p-4">
   <!-- Sidebar content here -->
   <li>
-    <div id="characterInfo" hx-swap-oob="true">{{template "character-info" .}}</div>
+    <div id="characterInfo">{{template "character-info" .}}</div>
   </li>
   <li class="menu-title mt-10">Information</li>
   <li><a>Character Sheet</a></li>
@@ -28,15 +28,7 @@
         {{range .Character.Skills}}
         <li><a class="{{if eq $ActivePage .Skill.Name}}active{{end}}" href="/game/{{.Skill.Name}}">{{.Skill.Name}} <div class="badge badge-neutral">Lvl {{.Level.Name}}</div></a></li>
         {{end}}
-
-        <!-- <li><a class="{{if eq .ActivePage "Mining"}}active{{end}}" href="/game/Mining">Mining</a></li> -->
-        <!-- <li><a class="{{if eq .ActivePage "Woodcutting"}}active{{end}}" href="/game/Woodcutting">Woodcutting</a></li> -->
-        <!-- <li><a class="{{if eq .ActivePage "Fishing"}}active{{end}}" href="/game/Fishing">Fishing</a></li> -->
-        <!-- <li><a class="{{if eq .ActivePage "Smithing"}}active{{end}}" href="/game/Smithing">Smithing</a></li> -->
-        <!-- <li><a class="{{if eq .ActivePage "Crafting"}}active{{end}}" href="/game/Crafting">Crafting</a></li> -->
-        <!-- <li><a class="{{if eq .ActivePage "Cooking"}}active{{end}}" href="/game/Cooking">Cooking</a></li> -->
-        <!-- <li><a class="{{if eq .ActivePage "Farming"}}active{{end}}" href="/game/Farming">Farming</a></li> -->
-      </ul>
+     </ul>
     </details>
   </li>
   <li class="menu-title mt-5">Locations</li>

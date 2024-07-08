@@ -61,6 +61,7 @@ func RunActiveAction(c echo.Context) error {
 
 	// Check if inventory is full
 	if inventoryCount >= 20 {
+		utils.ShowAlertError(c, "Your inventory if full!")
 		return nil
 	}
 
@@ -89,10 +90,12 @@ func RunActiveAction(c echo.Context) error {
 			inventoryItem := models.GetInventoryItemForCharacter(int64(recipeItem.ItemId), int64(character.ID))
 
 			if inventoryItem.ID == 0 {
+				utils.ShowAlertError(c, "You do not have enough resources to make this Item!")
 				return c.String(http.StatusBadRequest, "Not enough resources to make this Item!")
 			}
 
 			if inventoryItem.Amount < recipeItem.Amount {
+				utils.ShowAlertError(c, "You do not have enough resources to make this Item!")
 				return c.String(http.StatusBadRequest, "Not enough resources to make this Item!")
 			}
 
@@ -177,8 +180,7 @@ func RunActiveAction(c echo.Context) error {
 	// Load views
 	c.Render(http.StatusOK, "oob-action", data)
 	c.Render(http.StatusOK, "oob-side-bar", data)
-	c.Render(http.StatusOK, "oob-inventory", data)
-	return nil
+	return c.Render(http.StatusOK, "oob-inventory", data)
 }
 
 func GetActiveAction(c echo.Context) error {
@@ -198,7 +200,8 @@ func GetActiveAction(c echo.Context) error {
 
 	// Check character skill level
 	if characterSkill.Level.Name < item.Level.Name {
-		return c.String(http.StatusBadRequest, "You don't have the required level for this Item!")
+		utils.ShowAlertError(c, "You don't have the required level for this Item!")
+		return c.String(http.StatusBadRequest, "You don't have the required level for this Item!!!!")
 	}
 
 	// Check if character has required items for the action
@@ -207,10 +210,12 @@ func GetActiveAction(c echo.Context) error {
 			inventoryItem := models.GetInventoryItemForCharacter(int64(recipeItem.ItemId), int64(character.ID))
 
 			if inventoryItem.ID == 0 {
+				utils.ShowAlertError(c, "You do not have enough resources to make this Item!")
 				return c.String(http.StatusBadRequest, "Not enough resources to make this Item!")
 			}
 
 			if inventoryItem.Amount < recipeItem.Amount {
+				utils.ShowAlertError(c, "You do not have enough resources to make this Item!")
 				return c.String(http.StatusBadRequest, "Not enough resources to make this Item!")
 			}
 		}
@@ -239,8 +244,7 @@ func GetActiveAction(c echo.Context) error {
 	// Load views
 	c.Render(http.StatusOK, "oob-action-button", data)
 	c.Render(http.StatusOK, "oob-recipes", data)
-	return c.Render(http.StatusOK, "action", data)
-
+	return c.Render(http.StatusOK, "oob-action", data)
 }
 
 func loadCharacterProgress(userId int64, skillId uint) interface{} {
@@ -255,13 +259,13 @@ func loadCharacterProgress(userId int64, skillId uint) interface{} {
 		activeItem = character.ActiveItem
 	}
 
-	percentageXP := (float64(characterSkill.ExperiencePoints) / float64(nextLevel.ExperienceNeeded) * 100) / 2
+	percentageXP := characterSkill.ExperiencePoints - characterSkill.Level.ExperienceNeeded
 
 	characterSkillDto := struct {
 		models.CharacterSkill
 		NextLevel    models.Level
 		ActiveItem   models.Item
-		PercentageXP float64
+		PercentageXP int64
 	}{
 		characterSkill,
 		nextLevel,

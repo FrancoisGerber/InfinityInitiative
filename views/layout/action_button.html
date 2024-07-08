@@ -1,6 +1,5 @@
 {{block "action-button" .}}
-<div class="btn btn-outline btn-primary mx-2" hx-indicator=".running-action" hx-trigger="click" hx-target="#hiddenActionSection" hx-post="/game/action/{{.Character.ActiveItem.ID}}">
-  <span class="hidden" id="hiddenActionSection"></span>
+<div class="btn btn-outline btn-primary mx-2" hx-indicator=".running-action" hx-trigger="click" hx-swap="none" hx-post="/game/action/{{.Character.ActiveItem.ID}}">
   <img src="{{.Character.ActiveItem.Image}}" class="h-7 mx-1" />
   <span>{{.Character.ActiveItem.Name}}</span>
   <span class="loading loading-bars loading-sm htmx-indicator running-action"></span>

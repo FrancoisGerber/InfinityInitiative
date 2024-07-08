@@ -1,7 +1,6 @@
 {{ block "oob-action-button" . }}
-    <div id="action-button" hx-swap-oob="true">{{template "action-button" .}}</div>
+    <div id="action-button" hx-swap-oob="true" hx-swap="none">{{template "action-button" .}}</div>
 {{ end }}
-
 
 {{ block "oob-character-info" . }}
     <div id="characterInfo" hx-swap-oob="true">{{template "character-info" .}}</div>
@@ -10,3 +9,19 @@
 {{ block "oob-side-bar" . }}
     <div id="sidebarContent" hx-swap-oob="true">{{template "sidebar" .}}</div>
 {{ end }}
+
+{{ block "oob-alert" .}}
+    <div id="alerts" class="absolute top-16 right-2 z-50" hx-swap-oob="true" hx-get="/clearalert" hx-swap="delete" hx-trigger="load delay:5s">{{template "alert" .}}</div>
+{{end}}
+
+{{ block "oob-alert-success" .}}
+    <div id="alerts" class="absolute top-16 right-2 z-50" hx-swap-oob="true" hx-get="/clearalert" hx-swap="delete" hx-trigger="load delay:5s">{{template "alert-success" .}}</div>
+{{end}}
+
+{{ block "oob-alert-error" .}}
+    <div id="alerts" class="absolute top-16 right-2 z-50" hx-swap-oob="true" hx-get="/clearalert" hx-swap="delete" hx-trigger="load delay:5s">{{template "alert-error" .}}</div>
+{{end}}
+
+{{ block "oob-alert-empty" .}}
+    <div id="alerts" class="absolute top-16 right-2 z-50" hx-swap-oob="true"></div>
+{{end}}

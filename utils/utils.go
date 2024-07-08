@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"net/http"
 	"strconv"
 
 	"github.com/gorilla/sessions"
@@ -61,4 +62,16 @@ func CreateSessionUser(c echo.Context, userId uint) error {
 func ParseInt(val string) int {
 	valInt, _ := strconv.Atoi(val)
 	return valInt
+}
+
+func ShowAlert(c echo.Context, message string) {
+	c.Render(http.StatusOK, "oob-alert", struct{ Message string }{message})
+}
+
+func ShowAlertSuccess(c echo.Context, message string) {
+	c.Render(http.StatusOK, "oob-alert-success", struct{ Message string }{message})
+}
+
+func ShowAlertError(c echo.Context, message string) {
+	c.Render(http.StatusOK, "oob-alert-error", struct{ Message string }{message})
 }

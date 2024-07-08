@@ -14,6 +14,7 @@ func SetupEndpoints(g *echo.Group) {
 	g.GET("/logout", Logout)
 	g.GET("/register", Register)
 	g.POST("/register", PostRegister)
+	g.GET("/clearalert", ClearAlert)
 }
 
 func Login(c echo.Context) error {
@@ -89,5 +90,10 @@ func PostRegister(c echo.Context) error {
 	c.Response().Header().Set("HX-Redirect", "/login")
 	c.Response().WriteHeader(300)
 
+	return nil
+}
+
+func ClearAlert(c echo.Context) error {
+	c.Render(http.StatusOK, "oob-alert-empty", nil)
 	return nil
 }

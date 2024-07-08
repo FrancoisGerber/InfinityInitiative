@@ -10,6 +10,7 @@
     <script src="/assets/js/htmx.min.js"></script>
   </head>
   <body>
+    <div id="alerts" class="absolute top-16 right-2 z-50"></div>
     <!-- left drawer -->
     <div class="drawer lg:drawer-open">
       <input id="sidebar" type="checkbox" class="drawer-toggle" />
@@ -20,15 +21,9 @@
           <div class="drawer-content">
             <!-- Page content here -->
             {{template "navbar" .}}
-            <div
-              class="container relative max-w-6xl px-4 py-6 mx-auto sm:px-6 lg:px-8 overflow-x-auto overflow-y-auto max-h-screen"
-            >
-              {{block "content" .}}{{end}}
-            </div>
+            <div class="container relative max-w-6xl px-4 py-6 mx-auto sm:px-6 lg:px-8 overflow-x-auto overflow-y-auto max-h-screen">{{block "content" .}}{{end}}</div>
           </div>
-          <div
-            class="drawer-side peer-checked:pointer-events-auto peer-checked:visible peer-checked:sticky peer-checked:w-auto"
-          >
+          <div class="drawer-side peer-checked:pointer-events-auto peer-checked:visible peer-checked:sticky peer-checked:w-auto">
             <label for="chatbar" class="drawer-overlay"></label>
             {{template "chatbar" .}}
           </div>
@@ -37,7 +32,7 @@
       </div>
       <div class="drawer-side z-50">
         <label for="sidebar" class="drawer-overlay"></label>
-        <div id="sidebarContent" hx-swap-oob="true">{{template "sidebar" .}}</div>
+        <div id="sidebarContent">{{template "sidebar" .}}</div>
       </div>
     </div>
   </body>

@@ -8,11 +8,12 @@
     {{if .Page.ActiveItem.Name}}
     <img
       src="{{.Page.ActiveItem.Image}}"
-      id="action-button"
+      id="action-button-main"
       class="w-5/12"
       style="cursor: url({{.Page.Skill.Image}}), auto;"
       hx-indicator=".running-action"
       hx-trigger="click"
+      hx-swap="none"
       hx-post="/game/action/{{.Page.ActiveItem.ID}}"
     />
     <h3 class="font-bold">{{.Page.ActiveItem.Name}}</h3>
@@ -22,7 +23,7 @@
     {{end}}
 
     <span class="loading loading-bars text-primary loading-lg htmx-indicator running-action"></span>
-    <progress class="progress progress-primary w-5/12 min-h-10" value="{{.Page.PercentageXP}}" max="100"></progress>
+    <progress class="progress progress-primary w-5/12 min-h-10" value="{{.Page.PercentageXP}}" max="{{.Page.NextLevel.ExperienceNeeded}}"></progress>
 
     <div class="join">
       <span class="join-item rounded bg-gray-700 p-1">{{.Page.NextLevel.ExperienceNeeded}} XP Needed</span>

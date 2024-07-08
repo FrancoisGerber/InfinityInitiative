@@ -1,11 +1,9 @@
-{{block "statistics" .}}
+{{block "notes" .}}
 <div tabindex="0" class="collapse collapse-arrow bg-neutral text-neutral-content shadow-xl">
   <input type="checkbox" />
   <div class="collapse-title text-xl font-medium">Lvl {{.Character.Level.Name}} - {{.Character.ExperiencePoints}} XP</div>
   <div class="collapse-content">
-    <ul class="menu bg-base-200 rounded-box">
-      <li>Fish</li>
-    </ul>
+    <textarea class="textarea textarea-bordered w-full" placeholder="Notes"></textarea>
   </div>
 </div>
 {{end}}
