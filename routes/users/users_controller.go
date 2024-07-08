@@ -3,7 +3,7 @@ package users
 import (
 	"InfinityInitiative/data/models"
 	"InfinityInitiative/utils"
-	"InfinityInitiative/views"
+	templates "InfinityInitiative/views"
 	"net/http"
 	"strconv"
 
@@ -100,7 +100,7 @@ func ConfirmDeleteUser(c echo.Context) error {
 	})
 
 	id := c.Param("id")
-	Id, _ := strconv.ParseInt(id, 36, 64)
+	Id := int64(utils.ParseInt(id))
 
 	user := models.GetUser(Id)
 
@@ -113,7 +113,7 @@ func ConfirmDeleteUser(c echo.Context) error {
 
 func DeleteUser(c echo.Context) error {
 	id := c.Param("id")
-	Id, _ := strconv.ParseInt(id, 36, 64)
+	Id := int64(utils.ParseInt(id))
 
 	user := models.GetUser(Id)
 

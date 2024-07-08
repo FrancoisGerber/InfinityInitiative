@@ -1,6 +1,5 @@
-{{template "layout" .}}
-{{define "content"}}
-<div class="grid grid-cols-1 gap-4">
+{{template "layout" .}} {{define "content"}}
+<div class="grid grid-cols-1 gap-4 overflow-hidden max-h-almost">
   <div class="divider">Monsters</div>
   <div class="flex flex-row justify-start">
     <button class="btn btn-info mr-5" id="create" hx-get="/monsters/create" hx-trigger="click" hx-target="#table_edit" onclick="tableEdit.showModal()">
@@ -9,7 +8,7 @@
       </svg>
     </button>
   </div>
-  <div class="overflow-x-auto bg-neutral text-neutral-content rounded-lg shadow-xl">{{template "table" .}}</div>
+  <div class="overflow-x-auto overflow-y-auto max-h-96 bg-neutral text-neutral-content rounded-lg shadow-xl">{{template "table" .}}</div>
 </div>
 
 <dialog id="tableEdit" class="modal">

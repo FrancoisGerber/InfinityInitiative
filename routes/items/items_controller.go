@@ -3,9 +3,8 @@ package items
 import (
 	"InfinityInitiative/data/models"
 	"InfinityInitiative/utils"
-	"InfinityInitiative/views"
+	templates "InfinityInitiative/views"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -49,7 +48,7 @@ func EditItem(c echo.Context) error {
 	})
 
 	id := c.Param("id")
-	Id, _ := strconv.ParseInt(id, 36, 64)
+	Id := int64(utils.ParseInt(id))
 
 	item := models.GetItem(Id)
 
@@ -131,7 +130,7 @@ func ConfirmDeleteItem(c echo.Context) error {
 	})
 
 	id := c.Param("id")
-	Id, _ := strconv.ParseInt(id, 36, 64)
+	Id := int64(utils.ParseInt(id))
 
 	item := models.GetItem(Id)
 
@@ -144,7 +143,7 @@ func ConfirmDeleteItem(c echo.Context) error {
 
 func DeleteItem(c echo.Context) error {
 	id := c.Param("id")
-	Id, _ := strconv.ParseInt(id, 36, 64)
+	Id := int64(utils.ParseInt(id))
 
 	item := models.GetItem(Id)
 
@@ -167,7 +166,7 @@ func EditRecipe(c echo.Context) error {
 	})
 
 	id := c.Param("id")
-	ItemId, _ := strconv.ParseInt(id, 36, 64)
+	ItemId := int64(utils.ParseInt(id))
 
 	recipes := models.GetRecipesForParentItem(ItemId)
 

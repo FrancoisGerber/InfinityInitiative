@@ -2,9 +2,9 @@ package levels
 
 import (
 	"InfinityInitiative/data/models"
-	"InfinityInitiative/views"
+	"InfinityInitiative/utils"
+	templates "InfinityInitiative/views"
 	"net/http"
-	"strconv"
 
 	"github.com/labstack/echo/v4"
 )
@@ -44,7 +44,7 @@ func EditLevel(c echo.Context) error {
 	})
 
 	id := c.Param("id")
-	Id, _ := strconv.ParseInt(id, 36, 64)
+	Id := int64(utils.ParseInt(id))
 
 	level := models.GetLevel(Id)
 
@@ -96,7 +96,7 @@ func ConfirmDeleteLevel(c echo.Context) error {
 	})
 
 	id := c.Param("id")
-	Id, _ := strconv.ParseInt(id, 36, 64)
+	Id := int64(utils.ParseInt(id))
 
 	level := models.GetLevel(Id)
 
@@ -109,7 +109,7 @@ func ConfirmDeleteLevel(c echo.Context) error {
 
 func DeleteLevel(c echo.Context) error {
 	id := c.Param("id")
-	Id, _ := strconv.ParseInt(id, 36, 64)
+	Id := int64(utils.ParseInt(id))
 
 	level := models.GetLevel(Id)
 

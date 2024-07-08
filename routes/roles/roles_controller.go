@@ -2,9 +2,9 @@ package roles
 
 import (
 	"InfinityInitiative/data/models"
-	"InfinityInitiative/views"
+	"InfinityInitiative/utils"
+	templates "InfinityInitiative/views"
 	"net/http"
-	"strconv"
 
 	"github.com/labstack/echo/v4"
 )
@@ -44,7 +44,7 @@ func EditRole(c echo.Context) error {
 	})
 
 	id := c.Param("id")
-	Id, _ := strconv.ParseInt(id, 36, 64)
+	Id := int64(utils.ParseInt(id))
 
 	role := models.GetRole(Id)
 
@@ -96,7 +96,7 @@ func ConfirmDeleteRole(c echo.Context) error {
 	})
 
 	id := c.Param("id")
-	Id, _ := strconv.ParseInt(id, 36, 64)
+	Id := int64(utils.ParseInt(id))
 
 	role := models.GetRole(Id)
 
@@ -109,7 +109,7 @@ func ConfirmDeleteRole(c echo.Context) error {
 
 func DeleteRole(c echo.Context) error {
 	id := c.Param("id")
-	Id, _ := strconv.ParseInt(id, 36, 64)
+	Id := int64(utils.ParseInt(id))
 
 	role := models.GetRole(Id)
 

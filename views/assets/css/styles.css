@@ -4240,8 +4240,12 @@ html:has(.drawer-toggle:checked) {
   height: 1.75rem;
 }
 
-.max-h-10 {
-  max-height: 2.5rem;
+.max-h-96 {
+  max-height: 24rem;
+}
+
+.max-h-screen {
+  max-height: 100vh;
 }
 
 .min-h-10 {
@@ -4605,6 +4609,10 @@ html {
 
 .action-cursor {
   cursor: url(http://www.javascriptkit.com/dhtmltutors/cursor-hand.gif), auto;
+}
+
+.max-h-96{
+  max-height:39rem;
 }
 
 @media (min-width: 1024px) {

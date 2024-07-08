@@ -2,9 +2,9 @@ package characters
 
 import (
 	"InfinityInitiative/data/models"
-	"InfinityInitiative/views"
+	"InfinityInitiative/utils"
+	templates "InfinityInitiative/views"
 	"net/http"
-	"strconv"
 
 	"github.com/labstack/echo/v4"
 )
@@ -44,7 +44,7 @@ func EditCharacter(c echo.Context) error {
 	})
 
 	id := c.Param("id")
-	Id, _ := strconv.ParseInt(id, 36, 64)
+	Id := int64(utils.ParseInt(id))
 
 	character := models.GetCharacter(Id)
 	levels := models.GetAllLevels()
@@ -75,6 +75,13 @@ func SaveCharacter(c echo.Context) error {
 		_, err = character.Update()
 	} else {
 		_, err = character.Create()
+	}
+
+	user := models.GetUser(int64(character.UserId))
+
+	if user.ID != 0 {
+		user.Image = character.Image
+		_, err = user.Update()
 	}
 
 	if err != nil {
@@ -115,7 +122,7 @@ func ConfirmDeleteCharacter(c echo.Context) error {
 	})
 
 	id := c.Param("id")
-	Id, _ := strconv.ParseInt(id, 36, 64)
+	Id := int64(utils.ParseInt(id))
 
 	character := models.GetCharacter(Id)
 
@@ -128,7 +135,7 @@ func ConfirmDeleteCharacter(c echo.Context) error {
 
 func DeleteCharacter(c echo.Context) error {
 	id := c.Param("id")
-	Id, _ := strconv.ParseInt(id, 36, 64)
+	Id := int64(utils.ParseInt(id))
 
 	character := models.GetCharacter(Id)
 

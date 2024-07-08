@@ -48,3 +48,7 @@ html {
 .action-cursor {
   cursor: url(http://www.javascriptkit.com/dhtmltutors/cursor-hand.gif), auto;
 }
+
+.max-h-96{
+  max-height:39rem;
+}

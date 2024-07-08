@@ -2,9 +2,9 @@ package skills
 
 import (
 	"InfinityInitiative/data/models"
-	"InfinityInitiative/views"
+	"InfinityInitiative/utils"
+	templates "InfinityInitiative/views"
 	"net/http"
-	"strconv"
 
 	"github.com/labstack/echo/v4"
 )
@@ -44,7 +44,7 @@ func EditSkill(c echo.Context) error {
 	})
 
 	id := c.Param("id")
-	Id, _ := strconv.ParseInt(id, 36, 64)
+	Id := int64(utils.ParseInt(id))
 
 	skill := models.GetSkill(Id)
 
@@ -96,7 +96,7 @@ func ConfirmDeleteSkill(c echo.Context) error {
 	})
 
 	id := c.Param("id")
-	Id, _ := strconv.ParseInt(id, 36, 64)
+	Id := int64(utils.ParseInt(id))
 
 	skill := models.GetSkill(Id)
 
@@ -109,7 +109,7 @@ func ConfirmDeleteSkill(c echo.Context) error {
 
 func DeleteSkill(c echo.Context) error {
 	id := c.Param("id")
-	Id, _ := strconv.ParseInt(id, 36, 64)
+	Id := int64(utils.ParseInt(id))
 
 	skill := models.GetSkill(Id)
 

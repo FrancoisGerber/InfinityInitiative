@@ -2,9 +2,9 @@ package monsters
 
 import (
 	"InfinityInitiative/data/models"
-	"InfinityInitiative/views"
+	"InfinityInitiative/utils"
+	templates "InfinityInitiative/views"
 	"net/http"
-	"strconv"
 
 	"github.com/labstack/echo/v4"
 )
@@ -44,7 +44,7 @@ func EditMonster(c echo.Context) error {
 	})
 
 	id := c.Param("id")
-	Id, _ := strconv.ParseInt(id, 36, 64)
+	Id := int64(utils.ParseInt(id))
 
 	monster := models.GetMonster(Id)
 	levels := models.GetAllLevels()
@@ -111,7 +111,7 @@ func ConfirmDeleteMonster(c echo.Context) error {
 	})
 
 	id := c.Param("id")
-	Id, _ := strconv.ParseInt(id, 36, 64)
+	Id := int64(utils.ParseInt(id))
 
 	monster := models.GetMonster(Id)
 
@@ -124,7 +124,7 @@ func ConfirmDeleteMonster(c echo.Context) error {
 
 func DeleteMonster(c echo.Context) error {
 	id := c.Param("id")
-	Id, _ := strconv.ParseInt(id, 36, 64)
+	Id := int64(utils.ParseInt(id))
 
 	monster := models.GetMonster(Id)
 

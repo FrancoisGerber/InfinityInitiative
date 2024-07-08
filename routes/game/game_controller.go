@@ -171,6 +171,7 @@ func GetActiveAction(c echo.Context) error {
 		Character: models.GetCharacterForUser(int64(userId)),
 	}
 
+	c.Render(http.StatusOK, "oob-action-button", data)
 	c.Render(http.StatusOK, "oob-recipes", data)
 	return c.Render(http.StatusOK, "action", data)
 
