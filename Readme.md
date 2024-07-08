@@ -4,7 +4,7 @@
 
 ![Game Screen](./screenshots/gamepage.png)
 
-**Full game customization!**
+### Fully data driven and Open Source!
 ![Admin Screen](./screenshots/adminpage.png)
 
 ### Tech Used:
