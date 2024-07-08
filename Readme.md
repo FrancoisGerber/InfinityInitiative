@@ -1,6 +1,11 @@
 # Infinity Initiative
 
-## An Online text based fantasy idle MMORPG
+## A Browser text based fantasy idle MMORPG
+
+![Game Screen](./screenshots/gamepage.png)
+
+**Full game customization!**
+![Admin Screen](./screenshots/adminpage.png)
 
 ### Tech Used:
 - **Language:** Go
@@ -28,3 +33,5 @@
 
 **Build Binary for Prod:**
 `make build`
+
+
