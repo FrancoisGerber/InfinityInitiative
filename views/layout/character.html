@@ -1,0 +1,27 @@
+{{block "character-info" .}}
+<div class="flex">
+  <div class="avatar mr-3">
+    <div class="w-24 rounded">
+      <img src="{{.Character.Image}}"/>
+    </div>
+  </div>
+  <div class="w-full">
+    <h1 class="text-xl font-bold">{{.Character.Name}}</h1>
+
+    <div class="badge badge-outline my-1 p-2">Lv. {{.Character.Level.Name}}</div>
+    <div class="badge badge-accent badge-outline my-1 p-2">{{.Character.Class}}</div>
+    <br />
+    <div class="badge badge-secondary badge-outline my-1 p-2">
+      <img src="/assets/img/premium.png" class="h-4" />
+      <span>{{.Character.Diamonds}}</span>
+    </div>
+
+    <div class="badge badge-warning badge-outline my-1 p-2">
+      <img src="/assets/img/gold.png" class="h-4" />
+      <span>{{.Character.Gold}}</span>
+    </div>
+
+    <progress class="progress progress-error w-full" value="{{.Character.Health}}" max="{{.Character.MaxHealth}}"></progress>
+  </div>
+</div>
+{{end}}

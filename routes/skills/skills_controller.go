@@ -5,7 +5,6 @@ import (
 	"InfinityInitiative/views"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/labstack/echo/v4"
 )
@@ -64,16 +63,6 @@ func SaveSkill(c echo.Context) error {
 	}
 
 	var err error
-
-	if skill.RuntimeString != "" {
-		runtimeDuration, err := time.ParseDuration(skill.RuntimeString)
-
-		if err != nil {
-			return c.String(http.StatusBadRequest, "Cant Parse Runtime")
-		}
-
-		skill.Runtime = runtimeDuration
-	}
 
 	if skill.ID != 0 {
 		_, err = skill.Update()

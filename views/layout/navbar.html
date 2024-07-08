@@ -1,5 +1,5 @@
 {{block "navbar" .}}
-<div class="navbar bg-neutral text-neutral-content">
+<div class="navbar bg-neutral text-neutral-content sticky top-0 z-10">
   <div class="navbar-start">
     <label for="sidebar" tabindex="0" role="button" class="btn btn-ghost btn-circle lg:hidden">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -11,8 +11,8 @@
   </div>
   <div class="navbar-center"></div>
   <div class="navbar-end">
-    <div class="btn btn-outline btn-primary mx-2" hx-indicator=".running-action" hx-trigger="click" hx-target="#actionSection" hx-post="/game/action/{{.Character.ActiveItem.ID}}">
-      <span>0</span>
+    <div class="btn btn-outline btn-primary mx-2" hx-indicator=".running-action" hx-trigger="click" hx-target="#hiddenActionSection" hx-post="/game/action/{{.Character.ActiveItem.ID}}">
+      <span class="hidden" id="hiddenActionSection"></span>
       <img src="{{.Character.ActiveItem.Image}}" class="h-7 mx-1" />
       <span>{{.Character.ActiveItem.Name}}</span>
       <span class="loading loading-bars loading-sm htmx-indicator running-action"></span>

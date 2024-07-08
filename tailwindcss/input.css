@@ -25,6 +25,10 @@ html {
   max-height: 90vh !important;
 }
 
+.max-h-almost {
+  max-height: 80vh !important;
+}
+
 .max-h-10 {
   max-height: 10% !important;
 }
@@ -33,6 +37,14 @@ html {
   display: block !important;
 }
 
-.htmx-indicator{
-  display:none;
+.htmx-indicator {
+  display: none;
+}
+
+.tab {
+  height: 100% !important;
+}
+
+.action-cursor {
+  cursor: url(http://www.javascriptkit.com/dhtmltutors/cursor-hand.gif), auto;
 }

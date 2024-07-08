@@ -1,5 +1,4 @@
-{{template "layout" .}}
-{{define "content"}}
+{{template "layout" .}} {{define "content"}}
 <div class="grid lg:grid-cols-2 grid-cols-1 gap-4">
   <div>
     <div class="divider">Action</div>
@@ -10,10 +9,10 @@
   </div>
   <div>
     <div class="divider">Resources</div>
-    {{template "recipes" .}}
+    <div id="recipesSection">{{template "recipes" .}}</div>
 
-    <div class="divider">Inventory</div>
-    <div id="inventorySection">{{template "inventory" .}}</div>
+    <div class="divider">Character</div>
+    <div id="characterSection">{{template "inventory" .}}</div>
   </div>
 </div>
 {{end}}

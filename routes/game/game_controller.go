@@ -35,7 +35,8 @@ func GetGamePage(c echo.Context) error {
 		Page:       loadCharacterProgress(int64(userId), skill.ID),
 		ActivePage: skillName,
 		DropdownData: map[string]any{
-			"Items": loadFullItems(&skill, int64(userId)),
+			"Items":     loadFullItems(&skill, int64(userId)),
+			"Inventory": loadInventory(int64(userId)),
 		},
 		Character: models.GetCharacterForUser(int64(userId)),
 	}
@@ -64,6 +65,14 @@ func RunActiveAction(c echo.Context) error {
 	nextCharacterLevel := models.GetLevelByName(nextCharacterLevelName)
 
 	skills := models.GetAllSkills()
+	skill := models.GetSkill(int64(item.SkillId))
+
+	inventory := models.GetInventoryItemForCharacter(int64(item.ID), int64(character.ID))
+	inventoryCount := models.GetInventoryForCharacterLen(int64(character.ID))
+
+	if inventoryCount >= 20 {
+		return nil
+	}
 
 	// Wait for action to run
 	time.Sleep(item.Runtime)
@@ -97,13 +106,38 @@ func RunActiveAction(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, "Could Not Update Character")
 	}
 
-	//TODO: Add Item to Character Inventory
+	if inventory.ID == 0 {
+		inventoryItem := models.Inventory{
+			Character: character,
+			Item:      item,
+			Amount:    1,
+			Equipped:  false,
+		}
+
+		_, err = inventoryItem.Create()
+	} else {
+		inventory.Amount += 1
+
+		_, err = inventory.Update()
+	}
+
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "Could Not Update Inventory")
+	}
 
 	data := models.Data{
 		Page: loadCharacterProgress(int64(userId), uint(item.SkillId)),
+		DropdownData: map[string]any{
+			"Items":     loadFullItems(&skill, int64(userId)),
+			"Inventory": loadInventory(int64(userId)),
+		},
+		Character: models.GetCharacterForUser(int64(userId)),
 	}
 
-	return c.Render(http.StatusOK, "action", data)
+	c.Render(http.StatusOK, "oob-action", data)
+	c.Render(http.StatusOK, "oob-character-info", data)
+	c.Render(http.StatusOK, "oob-inventory", data)
+	return nil
 }
 
 func GetActiveAction(c echo.Context) error {
@@ -116,6 +150,7 @@ func GetActiveAction(c echo.Context) error {
 	item := models.GetItem(int64(utils.ParseInt(itemId)))
 	userId := c.Get("UserId").(uint)
 	character := models.GetCharacterForUser(int64(userId))
+	skill := models.GetSkill(int64(item.SkillId))
 
 	//TODO: Check if item recipe resources is in inventory
 	//TODO: Check if CharacterSkill level >= item level
@@ -127,16 +162,18 @@ func GetActiveAction(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, "Could Not Update Character")
 	}
 
-	// data := models.Data{
-	// 	Page: loadCharacterProgress(int64(userId), uint(item.SkillId)),
-	// }
+	data := models.Data{
+		Page: loadCharacterProgress(int64(userId), uint(item.SkillId)),
+		DropdownData: map[string]any{
+			"Items":     loadFullItems(&skill, int64(userId)),
+			"Inventory": loadInventory(int64(userId)),
+		},
+		Character: models.GetCharacterForUser(int64(userId)),
+	}
 
-	// return c.Render(http.StatusOK, "action", data)
+	c.Render(http.StatusOK, "oob-recipes", data)
+	return c.Render(http.StatusOK, "action", data)
 
-	c.Response().Header().Set("HX-Redirect", "/game/"+item.Skill.Name)
-	c.Response().WriteHeader(http.StatusSeeOther)
-
-	return nil
 }
 
 func loadCharacterProgress(userId int64, skillId uint) interface{} {
@@ -191,4 +228,11 @@ func loadFullItems(skill *models.Skill, userId int64) interface{} {
 	}
 
 	return itemDtos
+}
+
+func loadInventory(userId int64) []models.Inventory {
+	character := models.GetCharacterForUser(userId)
+	inventory := models.GetInventoryForCharacter(int64(character.ID))
+
+	return inventory
 }

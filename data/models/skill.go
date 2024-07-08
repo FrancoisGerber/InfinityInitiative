@@ -2,19 +2,15 @@ package models
 
 import (
 	"InfinityInitiative/data"
-	"time"
 
 	"gorm.io/gorm"
 )
 
 type Skill struct {
 	gorm.Model
-	ID               uint          `json:"ID" form:"ID" query:"ID"`
-	Name             string        `json:"Name" form:"Name" query:"Name"`
-	Image            string        `json:"Image" form:"Image" query:"Image"`
-	ExperienceGained int64         `json:"ExperienceGained" form:"ExperienceGained" query:"ExperienceGained"`
-	Runtime          time.Duration `json:"Runtime" form:"Runtime" query:"Runtime"`
-	RuntimeString    string        `json:"RuntimeString" form:"RuntimeString" query:"RuntimeString"`
+	ID    uint   `json:"ID" form:"ID" query:"ID"`
+	Name  string `json:"Name" form:"Name" query:"Name"`
+	Image string `json:"Image" form:"Image" query:"Image"`
 }
 
 func MigrateSkills() {

@@ -10,9 +10,9 @@
       src="{{.Page.ActiveItem.Image}}"
       id="action-button"
       class="w-5/12"
+      style="cursor: url({{.Page.Skill.Image}}), auto;"
       hx-indicator=".running-action"
       hx-trigger="click"
-      hx-target="#actionSection"
       hx-post="/game/action/{{.Page.ActiveItem.ID}}"
     />
     <h3 class="font-bold">{{.Page.ActiveItem.Name}}</h3>

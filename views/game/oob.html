@@ -1,0 +1,13 @@
+{{ block "oob-inventory" . }}
+<div id="characterSection" hx-swap-oob="true">{{ template "inventory" . }}</div>
+{{ end }}
+
+
+{{ block "oob-recipes" . }}
+<div id="recipesSection" hx-swap-oob="true">{{ template "recipes" . }}</div>
+{{ end }}
+
+
+{{ block "oob-action" . }}
+<div id="actionSection" hx-swap-oob="true">{{template "action" .}}</div>
+{{ end }}

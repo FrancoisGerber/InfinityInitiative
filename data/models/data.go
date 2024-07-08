@@ -27,4 +27,5 @@ var ItemTypes = []string{
 	"Armor",
 	"Accessory",
 	"Resource",
+	"Enemy",
 }

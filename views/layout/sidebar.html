@@ -1,39 +1,8 @@
 {{block "sidebar" .}}
-
 <ul class="menu bg-base-200 text-base-content min-h-full w-80 p-4">
   <!-- Sidebar content here -->
   <li>
-    <div class="flex">
-      <div class="avatar">
-        <div class="w-24 rounded">
-          <img
-              src="{{.Character.Image}}"
-          />
-        </div>
-      </div>
-      <div class="w-full">
-        <h1 class="text-xl font-bold">{{.Character.Name}}</h1>
-
-        <div class="badge badge-outline my-1 p-2">Lv. {{.Character.Level.Name}}</div>
-        <div class="badge badge-accent badge-outline my-1 p-2">{{.Character.Class}}</div>
-        <br />
-        <div class="badge badge-primary badge-outline my-1 p-2">
-          <img src="/assets/img/premium.png" class="h-4" />
-          <span>{{.Character.Diamonds}}</span>
-        </div>
-
-        <div class="badge badge-secondary badge-outline my-1 p-2">
-          <img src="/assets/img/gold.png" class="h-4" />
-          <span>{{.Character.Gold}}</span>
-        </div>
-
-        <progress
-          class="progress progress-error w-full"
-          value="{{.Character.Health}}"
-          max="{{.Character.MaxHealth}}"
-        ></progress>
-      </div>
-    </div>
+    <div id="characterInfo" hx-swap-oob="true">{{template "character-info" .}}</div>
   </li>
   <li class="menu-title mt-10">Information</li>
   <li><a>Character Sheet</a></li>
@@ -51,7 +20,6 @@
       </ul>
     </details>
   </li>
-
   <li>
     <details open>
       <summary>Skills</summary>
@@ -82,3 +50,9 @@
   <li><a class="{{if eq .ActivePage "characters"}}active{{end}}" href="/characters">Characters</a></li>
 </ul>
 {{end}}
+
+{{ block "oob-character-info" . }}
+    <div id="characterInfo" hx-swap-oob="true">{{template "character-info" .}}</div>
+{{ end }}
+
+

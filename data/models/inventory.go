@@ -22,13 +22,13 @@ func MigrateInventorys() {
 }
 
 func GetAllInventorys() (models []Inventory) {
-	data.DB.Find(&models)
+	data.DB.Preload("Character").Preload("Item").Find(&models)
 
 	return models
 }
 
 func GetInventory(id int64) (model Inventory) {
-	data.DB.First(&model, "id = ?", id)
+	data.DB.Preload("Character").Preload("Item").First(&model, "id = ?", id)
 
 	return model
 }
@@ -61,4 +61,28 @@ func (model *Inventory) Delete() (int64, error) {
 	}
 
 	return result.RowsAffected, nil
+}
+
+func GetInventoryForCharacter(id int64) (models []Inventory) {
+	data.DB.Preload("Character").Preload("Item").Find(&models, "character_id = ?", id)
+
+	return models
+}
+
+func GetInventoryItemForCharacter(itemId int64, characterId int64) (model Inventory) {
+	data.DB.Preload("Character").Preload("Item").Find(&model, "item_id = ? and character_id = ?", itemId, characterId)
+
+	return model
+}
+
+func GetInventoryForCharacterLen(id int64) int64 {
+	var Count int64
+
+	data.DB.Raw(`
+		select count(id) as Count
+		from inventories
+		where character_id = ?
+	`, id).Scan(&Count)
+
+	return Count
 }
