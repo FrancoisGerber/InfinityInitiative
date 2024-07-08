@@ -95,3 +95,9 @@ func CalcCharacterTotalXP(characterId uint) int64 {
 
 	return TotalExperiencePoints
 }
+
+func GetAllCharacterSkillsPerCharacter(characterId int64) (models []CharacterSkill) {
+	data.DB.Preload("Level").Preload("Character").Preload("Skill").Find(&models, "character_id = ?", characterId)
+
+	return models
+}

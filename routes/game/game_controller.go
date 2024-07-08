@@ -38,7 +38,7 @@ func GetGamePage(c echo.Context) error {
 			"Items":     loadFullItems(&skill, int64(userId)),
 			"Inventory": loadInventory(int64(userId)),
 		},
-		Character: models.GetCharacterForUser(int64(userId)),
+		Character: models.GetFullCharacterForUser(int64(userId)),
 	}
 
 	return c.Render(http.StatusOK, "index.html", data)
@@ -63,9 +63,6 @@ func RunActiveAction(c echo.Context) error {
 	if inventoryCount >= 20 {
 		return nil
 	}
-
-	// Wait for action to run
-	time.Sleep(item.Runtime)
 
 	characterSkill := models.GetCharacterProgress(character.ID, uint(item.SkillId))
 
@@ -109,10 +106,18 @@ func RunActiveAction(c echo.Context) error {
 		}
 
 		for _, inventoryItem := range inventoryItems {
-			inventoryItem.Inventory.Amount -= inventoryItem.Amount
-			inventoryItem.Update()
+			newAmount := inventoryItem.Inventory.Amount - inventoryItem.Amount
+			if newAmount == 0 {
+				inventoryItem.Delete()
+			} else {
+				inventoryItem.Inventory.Amount = newAmount
+				inventoryItem.Update()
+			}
 		}
 	}
+
+	// Wait for action to run
+	time.Sleep(item.Runtime)
 
 	// Update CharacterSkill XP
 	characterSkill.ExperiencePoints = characterSkill.ExperiencePoints + item.ExperienceGained
@@ -128,7 +133,7 @@ func RunActiveAction(c echo.Context) error {
 
 	// Update Character XP
 	totalXP := models.CalcCharacterTotalXP(character.ID)
-	character.ExperiencePoints = totalXP / int64(len(skills))
+	character.ExperiencePoints = int64(float64(totalXP) / float64(len(skills)))
 
 	if character.ExperiencePoints >= nextCharacterLevel.ExperienceNeeded {
 		character.Level = nextCharacterLevel
@@ -160,17 +165,18 @@ func RunActiveAction(c echo.Context) error {
 
 	// Get Viewmodel ready
 	data := models.Data{
-		Page: loadCharacterProgress(int64(userId), uint(item.SkillId)),
+		Page:       loadCharacterProgress(int64(userId), skill.ID),
+		ActivePage: skill.Name,
 		DropdownData: map[string]any{
 			"Items":     loadFullItems(&skill, int64(userId)),
 			"Inventory": loadInventory(int64(userId)),
 		},
-		Character: models.GetCharacterForUser(int64(userId)),
+		Character: models.GetFullCharacterForUser(int64(userId)),
 	}
 
 	// Load views
 	c.Render(http.StatusOK, "oob-action", data)
-	c.Render(http.StatusOK, "oob-character-info", data)
+	c.Render(http.StatusOK, "oob-side-bar", data)
 	c.Render(http.StatusOK, "oob-inventory", data)
 	return nil
 }
@@ -227,7 +233,7 @@ func GetActiveAction(c echo.Context) error {
 			"Items":     loadFullItems(&skill, int64(userId)),
 			"Inventory": loadInventory(int64(userId)),
 		},
-		Character: models.GetCharacterForUser(int64(userId)),
+		Character: models.GetFullCharacterForUser(int64(userId)),
 	}
 
 	// Load views
@@ -249,14 +255,18 @@ func loadCharacterProgress(userId int64, skillId uint) interface{} {
 		activeItem = character.ActiveItem
 	}
 
+	percentageXP := (float64(characterSkill.ExperiencePoints) / float64(nextLevel.ExperienceNeeded) * 100) / 2
+
 	characterSkillDto := struct {
 		models.CharacterSkill
-		NextLevel  models.Level
-		ActiveItem models.Item
+		NextLevel    models.Level
+		ActiveItem   models.Item
+		PercentageXP float64
 	}{
 		characterSkill,
 		nextLevel,
 		activeItem,
+		percentageXP,
 	}
 
 	return characterSkillDto

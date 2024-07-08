@@ -31,7 +31,7 @@ func GetAll(c echo.Context) error {
 	data := models.Data{
 		Page:       monsters,
 		ActivePage: "monsters",
-		Character:  models.GetCharacterForUser(int64(userId)),
+		Character:  models.GetFullCharacterForUser(int64(userId)),
 	}
 
 	return c.Render(http.StatusOK, "index.html", data)

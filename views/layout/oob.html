@@ -3,3 +3,10 @@
 {{ end }}
 
 
+{{ block "oob-character-info" . }}
+    <div id="characterInfo" hx-swap-oob="true">{{template "character-info" .}}</div>
+{{ end }}
+
+{{ block "oob-side-bar" . }}
+    <div id="sidebarContent" hx-swap-oob="true">{{template "sidebar" .}}</div>
+{{ end }}

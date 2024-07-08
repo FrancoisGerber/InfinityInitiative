@@ -31,7 +31,7 @@ func GetAll(c echo.Context) error {
 	data := models.Data{
 		Page:       characters,
 		ActivePage: "characters",
-		Character:  models.GetCharacterForUser(int64(userId)),
+		Character:  models.GetFullCharacterForUser(int64(userId)),
 	}
 
 	return c.Render(http.StatusOK, "index.html", data)
@@ -68,6 +68,8 @@ func SaveCharacter(c echo.Context) error {
 	if err := c.Bind(character); err != nil {
 		return c.String(http.StatusBadRequest, "bad request")
 	}
+
+	character.Image = "/assets/img/classes/" + character.Class + ".png"
 
 	var err error
 

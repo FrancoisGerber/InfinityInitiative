@@ -30,6 +30,11 @@ type Character struct {
 	ActiveItem       Item    `json:"ActiveItem" form:"ActiveItem" query:"ActiveItem"`
 }
 
+type FullCharacter struct {
+	Character
+	Skills []CharacterSkill
+}
+
 func MigrateCharacters() {
 	data.DB.AutoMigrate(&Character{})
 }
@@ -80,4 +85,17 @@ func GetCharacterForUser(userId int64) (model Character) {
 	data.DB.Preload("User").Preload("Level").Preload("ActiveItem").First(&model, "user_id = ?", userId)
 
 	return model
+}
+
+func GetFullCharacterForUser(userId int64) (model FullCharacter) {
+	var character Character
+	data.DB.Preload("User").Preload("Level").Preload("ActiveItem").First(&character, "user_id = ?", userId)
+	characterSkills := GetAllCharacterSkillsPerCharacter(int64(character.ID))
+
+	fullCharacter := FullCharacter{
+		character,
+		characterSkills,
+	}
+
+	return fullCharacter
 }

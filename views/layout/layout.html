@@ -37,7 +37,7 @@
       </div>
       <div class="drawer-side z-50">
         <label for="sidebar" class="drawer-overlay"></label>
-        {{template "sidebar" .}}
+        <div id="sidebarContent" hx-swap-oob="true">{{template "sidebar" .}}</div>
       </div>
     </div>
   </body>

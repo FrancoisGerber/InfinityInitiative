@@ -7,7 +7,7 @@ type Data struct {
 	RowsAffected int64
 	ActivePage   string
 	Id           int64
-	Character    Character
+	Character    FullCharacter
 }
 
 var Classes = []string{
@@ -28,4 +28,15 @@ var ItemTypes = []string{
 	"Accessory",
 	"Resource",
 	"Enemy",
+	"Food",
+}
+
+var Skills = []string{
+	"Mining",
+	"Woodcutting",
+	"Fishing",
+	"Smithing",
+	"Crafting",
+	"Cooking",
+	"Farming",
 }

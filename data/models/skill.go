@@ -15,6 +15,16 @@ type Skill struct {
 
 func MigrateSkills() {
 	data.DB.AutoMigrate(&Skill{})
+
+	for _, skill := range Skills {
+		newSkill := GetSkillByName(skill)
+		if newSkill.ID == 0 {
+			data.DB.Create(&Skill{
+				Name:  skill,
+				Image: "/assets/img/skills/" + skill + ".png",
+			})
+		}
+	}
 }
 
 func GetAllSkills() (models []Skill) {

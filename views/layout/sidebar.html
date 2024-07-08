@@ -13,7 +13,7 @@
     <details open>
       <summary>Combat</summary>
       <ul>
-        <li><a class="{{if eq .ActivePage "Combat"}}active{{end}}" href="/game/Combat">Battle PvE</a></li>
+        <li><a>Battle PvE</a></li>
         <li><a>Raids</a></li>
         <li><a>Dungeons</a></li>
         <li><a>Initiative War PvP</a></li>
@@ -24,13 +24,18 @@
     <details open>
       <summary>Skills</summary>
       <ul>
-        <li><a class="{{if eq .ActivePage "Mining"}}active{{end}}" href="/game/Mining">Mining</a></li>
-        <li><a class="{{if eq .ActivePage "Woodcutting"}}active{{end}}" href="/game/Woodcutting">Woodcutting</a></li>
-        <li><a class="{{if eq .ActivePage "Fishing"}}active{{end}}" href="/game/Fishing">Fishing</a></li>
-        <li><a class="{{if eq .ActivePage "Smithing"}}active{{end}}" href="/game/Smithing">Smithing</a></li>
-        <li><a class="{{if eq .ActivePage "Crafting"}}active{{end}}" href="/game/Crafting">Crafting</a></li>
-        <li><a class="{{if eq .ActivePage "Cooking"}}active{{end}}" href="/game/Cooking">Cooking</a></li>
-        <li><a class="{{if eq .ActivePage "Farming"}}active{{end}}" href="/game/Farming">Farming</a></li>
+        {{$ActivePage := .ActivePage}}
+        {{range .Character.Skills}}
+        <li><a class="{{if eq $ActivePage .Skill.Name}}active{{end}}" href="/game/{{.Skill.Name}}">{{.Skill.Name}} <div class="badge badge-neutral">Lvl {{.Level.Name}}</div></a></li>
+        {{end}}
+
+        <!-- <li><a class="{{if eq .ActivePage "Mining"}}active{{end}}" href="/game/Mining">Mining</a></li> -->
+        <!-- <li><a class="{{if eq .ActivePage "Woodcutting"}}active{{end}}" href="/game/Woodcutting">Woodcutting</a></li> -->
+        <!-- <li><a class="{{if eq .ActivePage "Fishing"}}active{{end}}" href="/game/Fishing">Fishing</a></li> -->
+        <!-- <li><a class="{{if eq .ActivePage "Smithing"}}active{{end}}" href="/game/Smithing">Smithing</a></li> -->
+        <!-- <li><a class="{{if eq .ActivePage "Crafting"}}active{{end}}" href="/game/Crafting">Crafting</a></li> -->
+        <!-- <li><a class="{{if eq .ActivePage "Cooking"}}active{{end}}" href="/game/Cooking">Cooking</a></li> -->
+        <!-- <li><a class="{{if eq .ActivePage "Farming"}}active{{end}}" href="/game/Farming">Farming</a></li> -->
       </ul>
     </details>
   </li>
@@ -50,9 +55,4 @@
   <li><a class="{{if eq .ActivePage "characters"}}active{{end}}" href="/characters">Characters</a></li>
 </ul>
 {{end}}
-
-{{ block "oob-character-info" . }}
-    <div id="characterInfo" hx-swap-oob="true">{{template "character-info" .}}</div>
-{{ end }}
-
 
