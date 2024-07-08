@@ -4652,6 +4652,20 @@ html:has(.drawer-toggle:checked) {
   transition: transform 0.1s;
 }
 
+#action-button-main {
+  cursor: pointer;
+}
+
+#action-button-main:active {
+  transform: scale(0.8);
+  transition: transform 0.1s;
+}
+
+#action-button-main:not(:active) {
+  transform: scale(1);
+  transition: transform 0.1s;
+}
+
 html {
   /* overflow-y: hidden !important; */
 }
