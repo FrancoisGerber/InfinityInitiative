@@ -2190,15 +2190,6 @@ input.tab:checked + .tab-content,
   color: var(--fallback-pc,oklch(var(--pc)/var(--tw-text-opacity)));
 }
 
-.badge-secondary {
-  --tw-border-opacity: 1;
-  border-color: var(--fallback-s,oklch(var(--s)/var(--tw-border-opacity)));
-  --tw-bg-opacity: 1;
-  background-color: var(--fallback-s,oklch(var(--s)/var(--tw-bg-opacity)));
-  --tw-text-opacity: 1;
-  color: var(--fallback-sc,oklch(var(--sc)/var(--tw-text-opacity)));
-}
-
 .badge-accent {
   --tw-border-opacity: 1;
   border-color: var(--fallback-a,oklch(var(--a)/var(--tw-border-opacity)));
@@ -4168,28 +4159,12 @@ html:has(.drawer-toggle:checked) {
   top: 0px;
 }
 
-.top-2 {
-  top: 0.5rem;
-}
-
-.top-10 {
-  top: 2.5rem;
-}
-
 .top-16 {
   top: 4rem;
 }
 
-.bottom-16 {
-  bottom: 4rem;
-}
-
-.bottom-5 {
-  bottom: 1.25rem;
-}
-
-.top-20 {
-  top: 5rem;
+.top-2 {
+  top: 0.5rem;
 }
 
 .z-10 {
@@ -4323,12 +4298,12 @@ html:has(.drawer-toggle:checked) {
   height: 1.25rem;
 }
 
-.h-7 {
-  height: 1.75rem;
-}
-
 .h-6 {
   height: 1.5rem;
+}
+
+.h-7 {
+  height: 1.75rem;
 }
 
 .max-h-96 {
@@ -4391,16 +4366,16 @@ html:has(.drawer-toggle:checked) {
   width: 13rem;
 }
 
+.w-6 {
+  width: 1.5rem;
+}
+
 .w-80 {
   width: 20rem;
 }
 
 .w-full {
   width: 100%;
-}
-
-.w-6 {
-  width: 1.5rem;
 }
 
 .max-w-10 {

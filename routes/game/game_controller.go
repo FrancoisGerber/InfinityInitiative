@@ -259,13 +259,16 @@ func loadCharacterProgress(userId int64, skillId uint) interface{} {
 		activeItem = character.ActiveItem
 	}
 
-	percentageXP := characterSkill.ExperiencePoints - characterSkill.Level.ExperienceNeeded
+	newMax := nextLevel.ExperienceNeeded - characterSkill.Level.ExperienceNeeded
+	newXp := characterSkill.ExperiencePoints - characterSkill.Level.ExperienceNeeded
+
+	percentageXP := (float64(newXp) / float64(newMax) * 100)
 
 	characterSkillDto := struct {
 		models.CharacterSkill
 		NextLevel    models.Level
 		ActiveItem   models.Item
-		PercentageXP int64
+		PercentageXP float64
 	}{
 		characterSkill,
 		nextLevel,
