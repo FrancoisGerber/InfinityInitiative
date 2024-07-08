@@ -56,6 +56,17 @@ func RunActiveAction(c echo.Context) error {
 	userId := c.Get("UserId").(uint)
 
 	character := models.GetCharacterForUser(int64(userId))
+
+	inventoryCount := models.GetInventoryForCharacterLen(int64(character.ID))
+
+	// Check if inventory is full
+	if inventoryCount >= 20 {
+		return nil
+	}
+
+	// Wait for action to run
+	time.Sleep(item.Runtime)
+
 	characterSkill := models.GetCharacterProgress(character.ID, uint(item.SkillId))
 
 	nextLevelName := characterSkill.Level.Name + 1
@@ -68,18 +79,40 @@ func RunActiveAction(c echo.Context) error {
 	skill := models.GetSkill(int64(item.SkillId))
 
 	inventory := models.GetInventoryItemForCharacter(int64(item.ID), int64(character.ID))
-	inventoryCount := models.GetInventoryForCharacterLen(int64(character.ID))
+	recipeItems := models.GetRecipesForParentItem(int64(item.ID))
 
-	if inventoryCount >= 20 {
-		return nil
+	// Remove Recipe Items from Inventory
+	if len(recipeItems) > 0 {
+		var inventoryItems []struct {
+			models.Inventory
+			Amount int64
+		}
+
+		for _, recipeItem := range recipeItems {
+			inventoryItem := models.GetInventoryItemForCharacter(int64(recipeItem.ItemId), int64(character.ID))
+
+			if inventoryItem.ID == 0 {
+				return c.String(http.StatusBadRequest, "Not enough resources to make this Item!")
+			}
+
+			if inventoryItem.Amount < recipeItem.Amount {
+				return c.String(http.StatusBadRequest, "Not enough resources to make this Item!")
+			}
+
+			inventoryItems = append(inventoryItems, struct {
+				models.Inventory
+				Amount int64
+			}{
+				inventoryItem,
+				recipeItem.Amount,
+			})
+		}
+
+		for _, inventoryItem := range inventoryItems {
+			inventoryItem.Inventory.Amount -= inventoryItem.Amount
+			inventoryItem.Update()
+		}
 	}
-
-	// Wait for action to run
-	time.Sleep(item.Runtime)
-
-	// TODO: Remove Recipe Items from Inventory
-	// Check if the activeitem recipe items is in inventory
-	// Remove recipe amounts from inventory
 
 	// Update CharacterSkill XP
 	characterSkill.ExperiencePoints = characterSkill.ExperiencePoints + item.ExperienceGained
@@ -106,6 +139,7 @@ func RunActiveAction(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, "Could Not Update Character")
 	}
 
+	// Add made item to inventory
 	if inventory.ID == 0 {
 		inventoryItem := models.Inventory{
 			Character: character,
@@ -117,7 +151,6 @@ func RunActiveAction(c echo.Context) error {
 		_, err = inventoryItem.Create()
 	} else {
 		inventory.Amount += 1
-
 		_, err = inventory.Update()
 	}
 
@@ -125,6 +158,7 @@ func RunActiveAction(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, "Could Not Update Inventory")
 	}
 
+	// Get Viewmodel ready
 	data := models.Data{
 		Page: loadCharacterProgress(int64(userId), uint(item.SkillId)),
 		DropdownData: map[string]any{
@@ -134,6 +168,7 @@ func RunActiveAction(c echo.Context) error {
 		Character: models.GetCharacterForUser(int64(userId)),
 	}
 
+	// Load views
 	c.Render(http.StatusOK, "oob-action", data)
 	c.Render(http.StatusOK, "oob-character-info", data)
 	c.Render(http.StatusOK, "oob-inventory", data)
@@ -146,15 +181,36 @@ func GetActiveAction(c echo.Context) error {
 		"views/game/*.html",
 	})
 
+	// Load Data
 	itemId := c.Param("itemId")
 	item := models.GetItem(int64(utils.ParseInt(itemId)))
 	userId := c.Get("UserId").(uint)
 	character := models.GetCharacterForUser(int64(userId))
 	skill := models.GetSkill(int64(item.SkillId))
+	recipeItems := models.GetRecipesForParentItem(int64(item.ID))
+	characterSkill := models.GetCharacterProgress(character.ID, skill.ID)
 
-	//TODO: Check if item recipe resources is in inventory
-	//TODO: Check if CharacterSkill level >= item level
+	// Check character skill level
+	if characterSkill.Level.Name < item.Level.Name {
+		return c.String(http.StatusBadRequest, "You don't have the required level for this Item!")
+	}
 
+	// Check if character has required items for the action
+	if len(recipeItems) > 0 {
+		for _, recipeItem := range recipeItems {
+			inventoryItem := models.GetInventoryItemForCharacter(int64(recipeItem.ItemId), int64(character.ID))
+
+			if inventoryItem.ID == 0 {
+				return c.String(http.StatusBadRequest, "Not enough resources to make this Item!")
+			}
+
+			if inventoryItem.Amount < recipeItem.Amount {
+				return c.String(http.StatusBadRequest, "Not enough resources to make this Item!")
+			}
+		}
+	}
+
+	// Set active action that may be performed
 	character.ActiveItem = item
 
 	_, err := character.Update()
@@ -162,6 +218,9 @@ func GetActiveAction(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, "Could Not Update Character")
 	}
 
+	//TODO: Start a background process to do this action automatically (IDLE mechanic)
+
+	// Get viewmodel ready
 	data := models.Data{
 		Page: loadCharacterProgress(int64(userId), uint(item.SkillId)),
 		DropdownData: map[string]any{
@@ -171,6 +230,7 @@ func GetActiveAction(c echo.Context) error {
 		Character: models.GetCharacterForUser(int64(userId)),
 	}
 
+	// Load views
 	c.Render(http.StatusOK, "oob-action-button", data)
 	c.Render(http.StatusOK, "oob-recipes", data)
 	return c.Render(http.StatusOK, "action", data)
