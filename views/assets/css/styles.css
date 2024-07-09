@@ -3713,11 +3713,6 @@ html:has(.drawer-toggle:checked) {
   scrollbar-gutter: stable;
 }
 
-html:has(.drawer-open.drawer-open) {
-  overflow-y: auto;
-  scrollbar-gutter: auto;
-}
-
 .indicator :where(.indicator-item) {
   bottom: auto;
   inset-inline-end: 0px;
@@ -4315,10 +4310,6 @@ html:has(.drawer-open.drawer-open) {
   max-height: 24rem;
 }
 
-.max-h-screen {
-  max-height: 100vh;
-}
-
 .min-h-10 {
   min-height: 2.5rem;
 }
@@ -4750,27 +4741,7 @@ html {
   }
 }
 
-.peer:checked ~ .peer-checked\:pointer-events-auto {
-  pointer-events: auto;
-}
-
-.peer:checked ~ .peer-checked\:visible {
-  visibility: visible;
-}
-
-.peer:checked ~ .peer-checked\:sticky {
-  position: sticky;
-}
-
-.peer:checked ~ .peer-checked\:w-auto {
-  width: auto;
-}
-
 @media (min-width: 640px) {
-  .sm\:block {
-    display: block;
-  }
-
   .sm\:px-6 {
     padding-left: 1.5rem;
     padding-right: 1.5rem;
