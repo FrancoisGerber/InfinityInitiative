@@ -24,14 +24,15 @@ func GetAll(c echo.Context) error {
 		"views/recipes/*.html",
 	})
 
-	recipes := models.GetAllRecipes()
-
 	userId := c.Get("UserId").(uint)
+
+	recipes := models.GetAllRecipes()
+	character := models.NewCharacter(utils.DBName)
 
 	data := models.Data{
 		Page:       recipes,
 		ActivePage: "recipes",
-		Character:  models.GetFullCharacterForUser(int64(userId)),
+		Character:  character.GetFullCharacterForUser(int64(userId)),
 	}
 
 	return c.Render(http.StatusOK, "index.html", data)

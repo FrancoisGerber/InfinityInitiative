@@ -1,12 +1,11 @@
 package models
 
 import (
-	"InfinityInitiative/data"
-
 	"gorm.io/gorm"
 )
 
 type Character struct {
+	Base
 	gorm.Model
 	ID               uint    `json:"ID" form:"ID" query:"ID"`
 	Name             string  `json:"Name" form:"Name" query:"Name"`
@@ -35,24 +34,41 @@ type FullCharacter struct {
 	Skills []CharacterSkill
 }
 
-func MigrateCharacters() {
-	data.DB.AutoMigrate(&Character{})
-}
-
-func GetAllCharacters() (models []Character) {
-	data.DB.Preload("User").Preload("Level").Preload("ActiveItem").Find(&models)
-
-	return models
-}
-
-func GetCharacter(id int64) (model Character) {
-	data.DB.Preload("User").Preload("Level").Preload("ActiveItem").First(&model, "id = ?", id)
+func NewCharacter(dbName string) Character {
+	model := Character{}
+	model.initDatabase(dbName)
 
 	return model
 }
 
+func InitCharacter(dbName string, model *Character) Character {
+	model.initDatabase(dbName)
+
+	return *model
+}
+
+func (model *Character) Migrate() error {
+	return model.db.AutoMigrate(&model)
+}
+
+func (model *Character) GetAllCharacters() (models []Character) {
+	model.db.Preload("User").Preload("Level").Preload("ActiveItem").Find(&models)
+
+	for _, m := range models {
+		m = InitCharacter(model.dbName, &m)
+	}
+
+	return models
+}
+
+func (model *Character) GetCharacter(id int64) Character {
+	model.db.Preload("User").Preload("Level").Preload("ActiveItem").First(&model, "id = ?", id)
+
+	return *model
+}
+
 func (model *Character) Create() (int64, error) {
-	result := data.DB.Create(model)
+	result := model.db.Create(model)
 
 	if result.Error != nil {
 		return 0, result.Error
@@ -62,7 +78,7 @@ func (model *Character) Create() (int64, error) {
 }
 
 func (model *Character) Update() (int64, error) {
-	result := data.DB.Updates(&model)
+	result := model.db.Updates(&model)
 
 	if result.Error != nil {
 		return 0, result.Error
@@ -72,7 +88,7 @@ func (model *Character) Update() (int64, error) {
 }
 
 func (model *Character) Delete() (int64, error) {
-	result := data.DB.Delete(&model, &model.ID)
+	result := model.db.Delete(&model, &model.ID)
 
 	if result.Error != nil {
 		return 0, result.Error
@@ -81,15 +97,15 @@ func (model *Character) Delete() (int64, error) {
 	return result.RowsAffected, nil
 }
 
-func GetCharacterForUser(userId int64) (model Character) {
-	data.DB.Preload("User").Preload("Level").Preload("ActiveItem").First(&model, "user_id = ?", userId)
+func (model *Character) GetCharacterForUser(userId int64) Character {
+	model.db.Preload("User").Preload("Level").Preload("ActiveItem").First(&model, "user_id = ?", userId)
 
-	return model
+	return *model
 }
 
-func GetFullCharacterForUser(userId int64) (model FullCharacter) {
+func (model *Character) GetFullCharacterForUser(userId int64) FullCharacter {
 	var character Character
-	data.DB.Preload("User").Preload("Level").Preload("ActiveItem").First(&character, "user_id = ?", userId)
+	model.db.Preload("User").Preload("Level").Preload("ActiveItem").First(&character, "user_id = ?", userId)
 	characterSkills := GetAllCharacterSkillsPerCharacter(int64(character.ID))
 
 	fullCharacter := FullCharacter{

@@ -1,4 +1,4 @@
-package models
+package tests
 
 import (
 	"InfinityInitiative/data"
@@ -7,7 +7,7 @@ import (
 )
 
 func TestUser(t *testing.T) {
-	data.Init()
+	data.Init("Test.db")
 
 	models.MigrateUser()
 

@@ -13,6 +13,8 @@ import (
 
 var Secret []byte = []byte("InfinityInitiative")
 
+var DBName string = "InfinityInitiative.db"
+
 func HashPassword(password string) string {
 	bytes, _ := bcrypt.GenerateFromPassword([]byte(password), 14)
 	return string(bytes)

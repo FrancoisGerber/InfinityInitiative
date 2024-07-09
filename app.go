@@ -28,16 +28,21 @@ func main() {
 	// Router
 	routes.Router(e)
 
-	// Connect to database
-	data.Init()
-	migrations()
+	// Run DB migrations
+	//TODO: Remove db init as the models do this themselves
+	data.Init(utils.DBName)
+	autoMigrations()
 
 	// Start Server
 	e.Logger.Fatal(e.Start(":8069"))
 }
 
 // Database auto migrations
-func migrations() {
+func autoMigrations() {
+	character := models.NewCharacter(utils.DBName)
+	data.AutoMigration(&character)
+
+	//TODO: Refactor all models to implement Model interface and change migrations
 	models.MigrateRoles()
 	models.MigrateUser()
 	models.MigrateLevels()
@@ -45,7 +50,6 @@ func migrations() {
 	models.MigrateSkills()
 	models.MigrateRecipes()
 	models.MigrateMonsters()
-	models.MigrateCharacters()
 	models.MigrateInventorys()
 	models.MigrateCharacterSkills()
 }

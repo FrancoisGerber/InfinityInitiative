@@ -24,14 +24,15 @@ func GetAll(c echo.Context) error {
 		"views/characters/*.html",
 	})
 
-	characters := models.GetAllCharacters()
-
 	userId := c.Get("UserId").(uint)
+
+	character := models.NewCharacter(utils.DBName)
+	characters := character.GetAllCharacters()
 
 	data := models.Data{
 		Page:       characters,
 		ActivePage: "characters",
-		Character:  models.GetFullCharacterForUser(int64(userId)),
+		Character:  character.GetFullCharacterForUser(int64(userId)),
 	}
 
 	return c.Render(http.StatusOK, "index.html", data)
@@ -46,7 +47,9 @@ func EditCharacter(c echo.Context) error {
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
 
-	character := models.GetCharacter(Id)
+	character := models.NewCharacter(utils.DBName)
+
+	character = character.GetCharacter(Id)
 	levels := models.GetAllLevels()
 	users := models.GetAllUsers()
 
@@ -63,11 +66,12 @@ func EditCharacter(c echo.Context) error {
 }
 
 func SaveCharacter(c echo.Context) error {
-	character := new(models.Character)
-
-	if err := c.Bind(character); err != nil {
+	characterDto := new(models.Character)
+	if err := c.Bind(characterDto); err != nil {
 		return c.String(http.StatusBadRequest, "bad request")
 	}
+
+	character := models.InitCharacter(utils.DBName, characterDto)
 
 	character.Image = "/assets/img/classes/" + character.Class + ".png"
 
@@ -126,7 +130,9 @@ func ConfirmDeleteCharacter(c echo.Context) error {
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
 
-	character := models.GetCharacter(Id)
+	character := models.NewCharacter(utils.DBName)
+
+	character = character.GetCharacter(Id)
 
 	data := models.Data{
 		Page: character,
@@ -139,7 +145,9 @@ func DeleteCharacter(c echo.Context) error {
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
 
-	character := models.GetCharacter(Id)
+	character := models.NewCharacter(utils.DBName)
+
+	character = character.GetCharacter(Id)
 
 	_, err := character.Delete()
 

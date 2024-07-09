@@ -23,6 +23,10 @@ func GetGamePage(c echo.Context) error {
 	})
 
 	skillName := c.Param("skillName")
+
+	game := models.NewGame(utils.DBName)
+	character := models.NewCharacter(utils.DBName)
+
 	skill := models.GetSkillByName(skillName)
 
 	if skill.ID == 0 {
@@ -32,13 +36,13 @@ func GetGamePage(c echo.Context) error {
 	userId := c.Get("UserId").(uint)
 
 	data := models.Data{
-		Page:       loadCharacterProgress(int64(userId), skill.ID),
+		Page:       game.LoadCharacterProgress(int64(userId), skill.ID),
 		ActivePage: skillName,
 		DropdownData: map[string]any{
-			"Items":     loadFullItems(&skill, int64(userId)),
-			"Inventory": loadInventory(int64(userId)),
+			"Items":     game.LoadFullItems(&skill, int64(userId)),
+			"Inventory": game.LoadInventory(int64(userId)),
 		},
-		Character: models.GetFullCharacterForUser(int64(userId)),
+		Character: character.GetFullCharacterForUser(int64(userId)),
 	}
 
 	return c.Render(http.StatusOK, "index.html", data)
@@ -50,13 +54,15 @@ func RunActiveAction(c echo.Context) error {
 		"views/game/*.html",
 	})
 
-	// Load Data
 	itemId := c.Param("itemId")
-	item := models.GetItem(int64(utils.ParseInt(itemId)))
 	userId := c.Get("UserId").(uint)
 
-	character := models.GetCharacterForUser(int64(userId))
+	game := models.NewGame(utils.DBName)
+	character := models.NewCharacter(utils.DBName)
 
+	// Load Data
+	item := models.GetItem(int64(utils.ParseInt(itemId)))
+	character = character.GetCharacterForUser(int64(userId))
 	inventoryCount := models.GetInventoryForCharacterLen(int64(character.ID))
 
 	// Check if inventory is full
@@ -168,13 +174,13 @@ func RunActiveAction(c echo.Context) error {
 
 	// Get Viewmodel ready
 	data := models.Data{
-		Page:       loadCharacterProgress(int64(userId), skill.ID),
+		Page:       game.LoadCharacterProgress(int64(userId), skill.ID),
 		ActivePage: skill.Name,
 		DropdownData: map[string]any{
-			"Items":     loadFullItems(&skill, int64(userId)),
-			"Inventory": loadInventory(int64(userId)),
+			"Items":     game.LoadFullItems(&skill, int64(userId)),
+			"Inventory": game.LoadInventory(int64(userId)),
 		},
-		Character: models.GetFullCharacterForUser(int64(userId)),
+		Character: character.GetFullCharacterForUser(int64(userId)),
 	}
 
 	// Load views
@@ -189,11 +195,15 @@ func GetActiveAction(c echo.Context) error {
 		"views/game/*.html",
 	})
 
-	// Load Data
 	itemId := c.Param("itemId")
-	item := models.GetItem(int64(utils.ParseInt(itemId)))
 	userId := c.Get("UserId").(uint)
-	character := models.GetCharacterForUser(int64(userId))
+
+	game := models.NewGame(utils.DBName)
+	character := models.NewCharacter(utils.DBName)
+
+	// Load Data
+	item := models.GetItem(int64(utils.ParseInt(itemId)))
+	character = character.GetCharacterForUser(int64(userId))
 	skill := models.GetSkill(int64(item.SkillId))
 	recipeItems := models.GetRecipesForParentItem(int64(item.ID))
 	characterSkill := models.GetCharacterProgress(character.ID, skill.ID)
@@ -204,21 +214,11 @@ func GetActiveAction(c echo.Context) error {
 		return c.String(http.StatusBadRequest, "You don't have the required level for this Item!!!!")
 	}
 
-	// Check if character has required items for the action
-	if len(recipeItems) > 0 {
-		for _, recipeItem := range recipeItems {
-			inventoryItem := models.GetInventoryItemForCharacter(int64(recipeItem.ItemId), int64(character.ID))
+	errorMessage := game.CharacterHasItems(character, recipeItems)
 
-			if inventoryItem.ID == 0 {
-				utils.ShowAlertError(c, "You do not have enough resources to make this Item!")
-				return c.String(http.StatusBadRequest, "Not enough resources to make this Item!")
-			}
-
-			if inventoryItem.Amount < recipeItem.Amount {
-				utils.ShowAlertError(c, "You do not have enough resources to make this Item!")
-				return c.String(http.StatusBadRequest, "Not enough resources to make this Item!")
-			}
-		}
+	if errorMessage != "" {
+		utils.ShowAlertError(c, errorMessage)
+		return c.String(http.StatusBadRequest, errorMessage)
 	}
 
 	// Set active action that may be performed
@@ -229,88 +229,18 @@ func GetActiveAction(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, "Could Not Update Character")
 	}
 
-	//TODO: Start a background process to do this action automatically (IDLE mechanic)
-
 	// Get viewmodel ready
 	data := models.Data{
-		Page: loadCharacterProgress(int64(userId), uint(item.SkillId)),
+		Page: game.LoadCharacterProgress(int64(userId), uint(item.SkillId)),
 		DropdownData: map[string]any{
-			"Items":     loadFullItems(&skill, int64(userId)),
-			"Inventory": loadInventory(int64(userId)),
+			"Items":     game.LoadFullItems(&skill, int64(userId)),
+			"Inventory": game.LoadInventory(int64(userId)),
 		},
-		Character: models.GetFullCharacterForUser(int64(userId)),
+		Character: character.GetFullCharacterForUser(int64(userId)),
 	}
 
 	// Load views
 	c.Render(http.StatusOK, "oob-action-button", data)
 	c.Render(http.StatusOK, "oob-recipes", data)
 	return c.Render(http.StatusOK, "oob-action", data)
-}
-
-func loadCharacterProgress(userId int64, skillId uint) interface{} {
-	character := models.GetCharacterForUser(userId)
-	characterSkill := models.GetCharacterProgress(character.ID, skillId)
-
-	nextLevelName := characterSkill.Level.Name + 1
-	nextLevel := models.GetLevelByName(nextLevelName)
-
-	var activeItem models.Item
-	if character.ActiveItem.SkillId == int(skillId) {
-		activeItem = character.ActiveItem
-	}
-
-	newMax := nextLevel.ExperienceNeeded - characterSkill.Level.ExperienceNeeded
-	newXp := characterSkill.ExperiencePoints - characterSkill.Level.ExperienceNeeded
-
-	percentageXP := (float64(newXp) / float64(newMax) * 100)
-
-	characterSkillDto := struct {
-		models.CharacterSkill
-		NextLevel    models.Level
-		ActiveItem   models.Item
-		PercentageXP float64
-	}{
-		characterSkill,
-		nextLevel,
-		activeItem,
-		percentageXP,
-	}
-
-	return characterSkillDto
-}
-
-func loadFullItems(skill *models.Skill, userId int64) interface{} {
-	character := models.GetCharacterForUser(userId)
-	items := models.GetAllItemsForSkill(skill.ID)
-
-	var itemDtos []struct {
-		models.Item
-		Recipes    []models.Recipe
-		ActiveItem models.Item
-	}
-
-	for _, item := range items {
-		recipes := models.GetRecipesForParentItem(int64(item.ID))
-
-		itemDto := struct {
-			models.Item
-			Recipes    []models.Recipe
-			ActiveItem models.Item
-		}{
-			item,
-			recipes,
-			character.ActiveItem,
-		}
-
-		itemDtos = append(itemDtos, itemDto)
-	}
-
-	return itemDtos
-}
-
-func loadInventory(userId int64) []models.Inventory {
-	character := models.GetCharacterForUser(userId)
-	inventory := models.GetInventoryForCharacter(int64(character.ID))
-
-	return inventory
 }
