@@ -81,7 +81,7 @@ func GetInventoryForCharacterLen(id int64) int64 {
 	data.DB.Raw(`
 		select count(id) as Count
 		from inventories
-		where character_id = ?
+		where character_id = ? and deleted_at is null
 	`, id).Scan(&Count)
 
 	return Count
