@@ -26,7 +26,7 @@ func GetAll(c echo.Context) error {
 
 	userId := c.Get("UserId").(uint)
 
-	character := models.NewCharacter(utils.DBName)
+	character := models.NewCharacter()
 	characters := character.GetAllCharacters()
 
 	data := models.Data{
@@ -47,7 +47,7 @@ func EditCharacter(c echo.Context) error {
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
 
-	character := models.NewCharacter(utils.DBName)
+	character := models.NewCharacter()
 
 	character = character.GetCharacter(Id)
 	levels := models.GetAllLevels()
@@ -71,7 +71,7 @@ func SaveCharacter(c echo.Context) error {
 		return c.String(http.StatusBadRequest, "bad request")
 	}
 
-	character := models.InitCharacter(utils.DBName, characterDto)
+	character := models.InitCharacter(characterDto)
 
 	character.Image = "/assets/img/classes/" + character.Class + ".png"
 
@@ -130,7 +130,7 @@ func ConfirmDeleteCharacter(c echo.Context) error {
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
 
-	character := models.NewCharacter(utils.DBName)
+	character := models.NewCharacter()
 
 	character = character.GetCharacter(Id)
 
@@ -145,7 +145,7 @@ func DeleteCharacter(c echo.Context) error {
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
 
-	character := models.NewCharacter(utils.DBName)
+	character := models.NewCharacter()
 
 	character = character.GetCharacter(Id)
 

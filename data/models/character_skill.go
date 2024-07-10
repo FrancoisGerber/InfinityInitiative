@@ -1,12 +1,11 @@
 package models
 
 import (
-	"InfinityInitiative/data"
-
 	"gorm.io/gorm"
 )
 
 type CharacterSkill struct {
+	Base
 	gorm.Model
 	ID               uint      `json:"ID" form:"ID" query:"ID"`
 	CharacterId      uint      `json:"CharacterId" form:"CharacterId" query:"CharacterId"`
@@ -18,24 +17,37 @@ type CharacterSkill struct {
 	ExperiencePoints int64     `json:"ExperiencePoints" form:"ExperiencePoints" query:"ExperiencePoints"`
 }
 
-func MigrateCharacterSkills() {
-	data.DB.AutoMigrate(&CharacterSkill{})
-}
-
-func GetAllCharacterSkills() (models []CharacterSkill) {
-	data.DB.Preload("Level").Preload("Character").Preload("Skill").Find(&models)
-
-	return models
-}
-
-func GetCharacterSkill(id int64) (model CharacterSkill) {
-	data.DB.Preload("Level").Preload("Character").Preload("Skill").First(&model, "id = ?", id)
+func NewCharacterSkill() CharacterSkill {
+	model := CharacterSkill{}
+	model.initDatabase()
 
 	return model
 }
 
+func InitCharacterSkill(model *CharacterSkill) CharacterSkill {
+	model.initDatabase()
+
+	return *model
+}
+
+func (model *CharacterSkill) Migrate() error {
+	return model.db.AutoMigrate(&model)
+}
+
+func (model *CharacterSkill) GetAllCharacterSkills() (models []CharacterSkill) {
+	model.db.Preload("Level").Preload("Character").Preload("Skill").Find(&models)
+
+	return models
+}
+
+func (model *CharacterSkill) GetCharacterSkill(id int64) CharacterSkill {
+	model.db.Preload("Level").Preload("Character").Preload("Skill").First(&model, "id = ?", id)
+
+	return *model
+}
+
 func (model *CharacterSkill) Create() (int64, error) {
-	result := data.DB.Create(model)
+	result := model.db.Create(model)
 
 	if result.Error != nil {
 		return 0, result.Error
@@ -45,7 +57,7 @@ func (model *CharacterSkill) Create() (int64, error) {
 }
 
 func (model *CharacterSkill) Update() (int64, error) {
-	result := data.DB.Updates(&model)
+	result := model.db.Updates(&model)
 
 	if result.Error != nil {
 		return 0, result.Error
@@ -55,7 +67,7 @@ func (model *CharacterSkill) Update() (int64, error) {
 }
 
 func (model *CharacterSkill) Delete() (int64, error) {
-	result := data.DB.Delete(&model, &model.ID)
+	result := model.db.Delete(&model, &model.ID)
 
 	if result.Error != nil {
 		return 0, result.Error
@@ -64,30 +76,32 @@ func (model *CharacterSkill) Delete() (int64, error) {
 	return result.RowsAffected, nil
 }
 
-func GetCharacterProgress(characterId uint, skillId uint) (model CharacterSkill) {
-	data.DB.Preload("Level").Preload("Character").Preload("Skill").First(&model, "character_id = ? and skill_id = ?", characterId, skillId)
+func (model *CharacterSkill) GetCharacterProgress(characterId uint, skillId uint) CharacterSkill {
+	var characterSkill CharacterSkill
+	model.db.Preload("Level").Preload("Character").Preload("Skill").First(&characterSkill, "character_id = ? and skill_id = ?", characterId, skillId)
 
-	if model.ID == 0 {
+	characterSkill = InitCharacterSkill(&characterSkill)
+
+	if characterSkill.ID == 0 {
 		level1 := GetLevelByName(1)
 
-		model = CharacterSkill{
-			CharacterId:      characterId,
-			LevelId:          level1.ID,
-			SkillId:          skillId,
-			ExperiencePoints: 0,
-		}
+		characterSkill.CharacterId = characterId
+		characterSkill.LevelId = level1.ID
+		characterSkill.SkillId = skillId
+		characterSkill.ExperiencePoints = 0
 
-		model.Create()
-		model = GetCharacterSkill(int64(model.ID))
+		characterSkill.Create()
+
+		return characterSkill.GetCharacterSkill(int64(model.ID))
 	}
 
-	return model
+	return characterSkill
 }
 
-func CalcCharacterTotalXP(characterId uint) int64 {
+func (model *CharacterSkill) CalcCharacterTotalXP(characterId uint) int64 {
 	var TotalExperiencePoints int64 = 0
 
-	data.DB.Raw(`
+	model.db.Raw(`
 		select sum(experience_points) as TotalExperiencePoints
 		from character_skills
 		where character_id = ?
@@ -96,8 +110,12 @@ func CalcCharacterTotalXP(characterId uint) int64 {
 	return TotalExperiencePoints
 }
 
-func GetAllCharacterSkillsPerCharacter(characterId int64) (models []CharacterSkill) {
-	data.DB.Preload("Level").Preload("Character").Preload("Skill").Find(&models, "character_id = ?", characterId)
+func (model *CharacterSkill) GetAllCharacterSkillsPerCharacter(characterId int64) (models []CharacterSkill) {
+	model.db.Preload("Level").Preload("Character").Preload("Skill").Find(&models, "character_id = ?", characterId)
+
+	for _, m := range models {
+		m = InitCharacterSkill(&m)
+	}
 
 	return models
 }

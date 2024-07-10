@@ -4,9 +4,9 @@ type Game struct {
 	Base
 }
 
-func NewGame(dbName string) Game {
+func NewGame() Game {
 	model := Game{}
-	model.initDatabase(dbName)
+	model.initDatabase()
 
 	return model
 }
@@ -19,9 +19,10 @@ func (model *Game) LoadCharacterProgress(userId int64, skillId uint) struct {
 	PercentageXP float64
 } {
 
-	character := NewCharacter(model.dbName)
+	character := NewCharacter()
+	characterSkill := NewCharacterSkill()
 	character = character.GetCharacterForUser(userId)
-	characterSkill := GetCharacterProgress(character.ID, skillId)
+	characterSkill = characterSkill.GetCharacterProgress(character.ID, skillId)
 
 	nextLevelName := characterSkill.Level.Name + 1
 	nextLevel := GetLevelByName(nextLevelName)
@@ -58,7 +59,7 @@ func (model *Game) LoadFullItems(skill *Skill, userId int64) []struct {
 	ActiveItem Item
 } {
 
-	character := NewCharacter(model.dbName)
+	character := NewCharacter()
 	character = character.GetCharacterForUser(userId)
 	items := GetAllItemsForSkill(skill.ID)
 
@@ -89,7 +90,7 @@ func (model *Game) LoadFullItems(skill *Skill, userId int64) []struct {
 
 // Get the character's full inventory
 func (model *Game) LoadInventory(userId int64) []Inventory {
-	character := NewCharacter(model.dbName)
+	character := NewCharacter()
 	character = character.GetCharacterForUser(userId)
 	inventory := GetInventoryForCharacter(int64(character.ID))
 

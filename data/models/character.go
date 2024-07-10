@@ -25,7 +25,7 @@ type Character struct {
 	Defence          float64 `json:"Defence" form:"Defence" query:"Defence"`
 	ArmourRating     float64 `json:"ArmourRating" form:"ArmourRating" query:"ArmourRating"`
 	ExperiencePoints int64   `json:"ExperiencePoints" form:"ExperiencePoints" query:"ExperiencePoints"`
-	ActiveItemId     uint    `json:"ActiveItemId" form:"ActiveItemId" query:"ActiveItemId"`
+	ActiveItemId     *uint   `json:"ActiveItemId" form:"ActiveItemId" query:"ActiveItemId"`
 	ActiveItem       Item    `json:"ActiveItem" form:"ActiveItem" query:"ActiveItem"`
 }
 
@@ -34,15 +34,15 @@ type FullCharacter struct {
 	Skills []CharacterSkill
 }
 
-func NewCharacter(dbName string) Character {
+func NewCharacter() Character {
 	model := Character{}
-	model.initDatabase(dbName)
+	model.initDatabase()
 
 	return model
 }
 
-func InitCharacter(dbName string, model *Character) Character {
-	model.initDatabase(dbName)
+func InitCharacter(model *Character) Character {
+	model.initDatabase()
 
 	return *model
 }
@@ -55,7 +55,7 @@ func (model *Character) GetAllCharacters() (models []Character) {
 	model.db.Preload("User").Preload("Level").Preload("ActiveItem").Find(&models)
 
 	for _, m := range models {
-		m = InitCharacter(model.dbName, &m)
+		m = InitCharacter(&m)
 	}
 
 	return models
@@ -73,6 +73,8 @@ func (model *Character) Create() (int64, error) {
 	if result.Error != nil {
 		return 0, result.Error
 	}
+
+	//TODO: Create character skills for every skill
 
 	return result.RowsAffected, nil
 }
@@ -106,7 +108,9 @@ func (model *Character) GetCharacterForUser(userId int64) Character {
 func (model *Character) GetFullCharacterForUser(userId int64) FullCharacter {
 	var character Character
 	model.db.Preload("User").Preload("Level").Preload("ActiveItem").First(&character, "user_id = ?", userId)
-	characterSkills := GetAllCharacterSkillsPerCharacter(int64(character.ID))
+
+	characterSkill := NewCharacterSkill()
+	characterSkills := characterSkill.GetAllCharacterSkillsPerCharacter(int64(character.ID))
 
 	fullCharacter := FullCharacter{
 		character,

@@ -6,7 +6,7 @@ import (
 )
 
 func TestGameRepo(t *testing.T) {
-	repo := models.NewGame("Test.db")
+	repo := models.NewGame()
 
 	repo.Log("Hallo from testing")
 }

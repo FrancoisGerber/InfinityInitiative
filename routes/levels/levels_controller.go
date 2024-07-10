@@ -27,7 +27,7 @@ func GetAll(c echo.Context) error {
 	userId := c.Get("UserId").(uint)
 
 	levels := models.GetAllLevels()
-	character := models.NewCharacter(utils.DBName)
+	character := models.NewCharacter()
 
 	data := models.Data{
 		Page:       levels,

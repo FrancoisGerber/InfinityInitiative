@@ -7,7 +7,7 @@ import (
 )
 
 func TestUser(t *testing.T) {
-	data.Init("Test.db")
+	data.Init()
 
 	models.MigrateUser()
 

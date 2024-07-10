@@ -3,7 +3,7 @@ package game
 import (
 	"InfinityInitiative/data/models"
 	"InfinityInitiative/utils"
-	"InfinityInitiative/views"
+	templates "InfinityInitiative/views"
 	"net/http"
 	"time"
 
@@ -24,8 +24,8 @@ func GetGamePage(c echo.Context) error {
 
 	skillName := c.Param("skillName")
 
-	game := models.NewGame(utils.DBName)
-	character := models.NewCharacter(utils.DBName)
+	game := models.NewGame()
+	character := models.NewCharacter()
 
 	skill := models.GetSkillByName(skillName)
 
@@ -57,8 +57,9 @@ func RunActiveAction(c echo.Context) error {
 	itemId := c.Param("itemId")
 	userId := c.Get("UserId").(uint)
 
-	game := models.NewGame(utils.DBName)
-	character := models.NewCharacter(utils.DBName)
+	game := models.NewGame()
+	character := models.NewCharacter()
+	characterSkill := models.NewCharacterSkill()
 
 	// Load Data
 	item := models.GetItem(int64(utils.ParseInt(itemId)))
@@ -71,7 +72,7 @@ func RunActiveAction(c echo.Context) error {
 		return nil
 	}
 
-	characterSkill := models.GetCharacterProgress(character.ID, uint(item.SkillId))
+	characterSkill = characterSkill.GetCharacterProgress(character.ID, uint(item.SkillId))
 
 	nextLevelName := characterSkill.Level.Name + 1
 	nextLevel := models.GetLevelByName(nextLevelName)
@@ -141,7 +142,7 @@ func RunActiveAction(c echo.Context) error {
 	}
 
 	// Update Character XP
-	totalXP := models.CalcCharacterTotalXP(character.ID)
+	totalXP := characterSkill.CalcCharacterTotalXP(character.ID)
 	character.ExperiencePoints = int64(float64(totalXP) / float64(len(skills)))
 
 	if character.ExperiencePoints >= nextCharacterLevel.ExperienceNeeded {
@@ -198,15 +199,16 @@ func GetActiveAction(c echo.Context) error {
 	itemId := c.Param("itemId")
 	userId := c.Get("UserId").(uint)
 
-	game := models.NewGame(utils.DBName)
-	character := models.NewCharacter(utils.DBName)
+	game := models.NewGame()
+	character := models.NewCharacter()
+	characterSkill := models.NewCharacterSkill()
 
 	// Load Data
 	item := models.GetItem(int64(utils.ParseInt(itemId)))
 	character = character.GetCharacterForUser(int64(userId))
 	skill := models.GetSkill(int64(item.SkillId))
 	recipeItems := models.GetRecipesForParentItem(int64(item.ID))
-	characterSkill := models.GetCharacterProgress(character.ID, skill.ID)
+	characterSkill = characterSkill.GetCharacterProgress(character.ID, skill.ID)
 
 	// Check character skill level
 	if characterSkill.Level.Name < item.Level.Name {

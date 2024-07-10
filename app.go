@@ -7,12 +7,20 @@ import (
 	"InfinityInitiative/utils"
 
 	"github.com/gorilla/sessions"
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
+	//Load environment variables
+	err := godotenv.Load(".env")
+
+	if err != nil {
+		panic("Error loading .env file")
+	}
+
 	// Setup Echo
 	e := echo.New()
 
@@ -20,7 +28,7 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORS())
-	e.Use(session.Middleware(sessions.NewCookieStore(utils.Secret)))
+	e.Use(session.Middleware(sessions.NewCookieStore(utils.Secret())))
 
 	// Static files and templates
 	e.Static("/assets", "views/assets")
@@ -30,7 +38,7 @@ func main() {
 
 	// Run DB migrations
 	//TODO: Remove db init as the models do this themselves
-	data.Init(utils.DBName)
+	data.Init()
 	autoMigrations()
 
 	// Start Server
@@ -39,8 +47,11 @@ func main() {
 
 // Database auto migrations
 func autoMigrations() {
-	character := models.NewCharacter(utils.DBName)
+	character := models.NewCharacter()
+	characterSkill := models.NewCharacterSkill()
+
 	data.AutoMigration(&character)
+	data.AutoMigration(&characterSkill)
 
 	//TODO: Refactor all models to implement Model interface and change migrations
 	models.MigrateRoles()
@@ -51,5 +62,4 @@ func autoMigrations() {
 	models.MigrateRecipes()
 	models.MigrateMonsters()
 	models.MigrateInventorys()
-	models.MigrateCharacterSkills()
 }
