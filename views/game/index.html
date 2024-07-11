@@ -1,15 +1,15 @@
 {{template "layout" .}} {{define "content"}}
 <div class="grid lg:grid-cols-2 md:grid-cols-2 grid-cols-1 gap-4">
   <div>
-    <div class="divider">Action</div>
+    <div class="divider">{{if .Page.ActiveItem.Name}} {{.Page.Skill.Name}} {{else}} Action {{end}}</div>
     <div id="actionSection">{{template "action" .}}</div>
 
     <div class="divider">Notes</div>
     <div id="notesSection">{{template "notes" .}}</div>
   </div>
   <div>
-    <div class="divider"></div>
-    <div id="recipesSection">{{template "recipes" .}}</div>
+    <div class="divider">Resources</div>
+    <div id="recipesSection">{{template "resources" .}}</div>
 
     <div class="divider">Character</div>
     <div id="characterSection">{{template "inventory" .}}</div>

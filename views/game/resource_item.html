@@ -1,0 +1,31 @@
+{{block "resource_item" .}}
+<li>
+  <a
+    hx-trigger="click"
+    hx-swap="none"
+    hx-get="/game/action/{{.ID}}"
+    class="{{if eq .ActiveItem.ID .ID}} active active-neutral {{end}}grid grid-rows-2 grid-flow-col"
+  >
+    <div class="row-span-2">
+      <img class="max-w-10 w-10" src="{{.Image}}" />
+    </div>
+    <div class="row-span-1 col-span-2 flex">
+      <div>
+        <span class="rounded m-2 font-bold">{{.Name}}</span>
+      </div>
+    </div>
+
+    <div class="col-span-1 flex justify-start gap-2">
+      <span class="rounded bg-gray-700 p-1">Lv. {{.Level.Name}}</span>
+      <span class="rounded bg-gray-700 p-1">{{.ExperienceGained}} XP</span>
+      <span class="rounded bg-gray-700 p-1">{{.RuntimeString}}</span>
+    </div>
+
+    <div class="col-span-1 flex justify-end gap-2">
+      {{range .Recipes}}
+      <span class="rounded bg-gray-700 p-1">{{.Amount}}x {{.Item.Name}}</span>
+      {{end}}
+    </div>
+  </a>
+</li>
+{{end}}

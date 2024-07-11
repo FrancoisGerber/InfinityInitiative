@@ -4179,6 +4179,22 @@ html:has(.drawer-toggle:checked) {
   z-index: 1;
 }
 
+.col-span-1 {
+  grid-column: span 1 / span 1;
+}
+
+.col-span-2 {
+  grid-column: span 2 / span 2;
+}
+
+.row-span-1 {
+  grid-row: span 1 / span 1;
+}
+
+.row-span-2 {
+  grid-row: span 2 / span 2;
+}
+
 .m-2 {
   margin: 0.5rem;
 }
@@ -4398,12 +4414,20 @@ html:has(.drawer-toggle:checked) {
   cursor: pointer;
 }
 
+.grid-flow-col {
+  grid-auto-flow: column;
+}
+
 .grid-cols-1 {
   grid-template-columns: repeat(1, minmax(0, 1fr));
 }
 
 .grid-cols-4 {
   grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.grid-rows-2 {
+  grid-template-rows: repeat(2, minmax(0, 1fr));
 }
 
 .flex-row {
@@ -4426,6 +4450,10 @@ html:has(.drawer-toggle:checked) {
   justify-content: flex-start;
 }
 
+.justify-end {
+  justify-content: flex-end;
+}
+
 .gap-2 {
   gap: 0.5rem;
 }
@@ -4436,10 +4464,6 @@ html:has(.drawer-toggle:checked) {
 
 .gap-4 {
   gap: 1rem;
-}
-
-.justify-self-end {
-  justify-self: end;
 }
 
 .overflow-hidden {
@@ -4578,6 +4602,11 @@ html:has(.drawer-toggle:checked) {
   line-height: 1rem;
 }
 
+.text-2xl {
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+
 .font-bold {
   font-weight: 700;
 }
@@ -4634,6 +4663,11 @@ html:has(.drawer-toggle:checked) {
   transition-duration: 150ms;
 }
 
+.active-neutral {
+  --tw-bg-opacity: 1 !important;
+  background-color: rgb(75 85 99 / var(--tw-bg-opacity)) !important;
+}
+
 #action-button {
   cursor: pointer;
 }
@@ -4662,10 +4696,6 @@ html:has(.drawer-toggle:checked) {
   transition: transform 0.1s;
 }
 
-html {
-  /* overflow-y: hidden !important; */
-}
-
 .h-almost {
   height: 90vh !important;
   max-height: 90vh !important;
@@ -4684,15 +4714,11 @@ html {
 }
 
 .htmx-indicator {
-  display: none;
+  /* display: none; */
 }
 
 .tab {
   height: 100% !important;
-}
-
-.action-cursor {
-  cursor: url(http://www.javascriptkit.com/dhtmltutors/cursor-hand.gif), auto;
 }
 
 .max-h-96{

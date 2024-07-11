@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+.active-neutral {
+  @apply bg-gray-600 !important;
+}
+
 #action-button {
   cursor: pointer;
 }
@@ -29,9 +33,6 @@
   transform: scale(1);
   transition: transform 0.1s;
 }
-html {
-  /* overflow-y: hidden !important; */
-}
 
 .h-almost {
   height: 90vh !important;
@@ -51,15 +52,11 @@ html {
 }
 
 .htmx-indicator {
-  display: none;
+  /* display: none; */
 }
 
 .tab {
   height: 100% !important;
-}
-
-.action-cursor {
-  cursor: url(http://www.javascriptkit.com/dhtmltutors/cursor-hand.gif), auto;
 }
 
 .max-h-96{

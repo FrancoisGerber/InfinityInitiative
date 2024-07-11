@@ -252,6 +252,6 @@ func GetActiveAction(c echo.Context) error {
 
 	// Load views
 	c.Render(http.StatusOK, "oob-action-button", data)
-	c.Render(http.StatusOK, "oob-recipes", data)
+	c.Render(http.StatusOK, "oob-resources", data)
 	return c.Render(http.StatusOK, "oob-action", data)
 }
