@@ -48,10 +48,12 @@ func EditCharacter(c echo.Context) error {
 	Id := int64(utils.ParseInt(id))
 
 	character := models.NewCharacter()
+	level := models.NewLevel()
+	user := models.NewUser()
 
 	character = character.GetCharacter(Id)
-	levels := models.GetAllLevels()
-	users := models.GetAllUsers()
+	levels := level.GetAllLevels()
+	users := user.GetAllUsers()
 
 	data := models.Data{
 		Page: character,
@@ -83,7 +85,8 @@ func SaveCharacter(c echo.Context) error {
 		_, err = character.Create()
 	}
 
-	user := models.GetUser(int64(character.UserId))
+	user := models.NewUser()
+	user = user.GetUser(int64(character.UserId))
 
 	if user.ID != 0 {
 		user.Image = character.Image
@@ -106,8 +109,11 @@ func CreateCharacter(c echo.Context) error {
 		"views/characters/*.html",
 	})
 
-	levels := models.GetAllLevels()
-	users := models.GetAllUsers()
+	level := models.NewLevel()
+	user := models.NewUser()
+
+	levels := level.GetAllLevels()
+	users := user.GetAllUsers()
 
 	data := models.Data{
 		Page: models.Character{},
@@ -131,7 +137,6 @@ func ConfirmDeleteCharacter(c echo.Context) error {
 	Id := int64(utils.ParseInt(id))
 
 	character := models.NewCharacter()
-
 	character = character.GetCharacter(Id)
 
 	data := models.Data{
@@ -146,7 +151,6 @@ func DeleteCharacter(c echo.Context) error {
 	Id := int64(utils.ParseInt(id))
 
 	character := models.NewCharacter()
-
 	character = character.GetCharacter(Id)
 
 	_, err := character.Delete()

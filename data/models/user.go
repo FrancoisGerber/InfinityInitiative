@@ -1,13 +1,12 @@
 package models
 
 import (
-	"InfinityInitiative/data"
 	"InfinityInitiative/utils"
-
 	"gorm.io/gorm"
 )
 
 type User struct {
+	Base
 	gorm.Model
 	ID       uint   `json:"ID" form:"ID" query:"ID"`
 	Username string `gorm:"unique" json:"Username" form:"Username" query:"Username"`
@@ -18,39 +17,66 @@ type User struct {
 	Role     Role   `json:"Role" form:"Role" query:"Role"`
 }
 
-func MigrateUser() {
-	data.DB.AutoMigrate(&User{})
+func NewUser() User {
+	model := User{}
+	model.initDatabase()
 
-	admin := GetUserByEmail("admin@admin.com")
-	if admin.ID == 0 {
-		data.DB.Create(&User{
-			Username: "admin",
-			Email:    "admin@admin.com",
-			Password: utils.HashPassword("admin"),
-			RoleId:   1,
-		})
-	}
+	return model
 }
 
-func GetAllUsers() (models []User) {
-	data.DB.Find(&models)
+func InitUser(model *User) User {
+	model.initDatabase()
+
+	return *model
+}
+
+func (model *User) Migrate() error {
+	migration := model.db.AutoMigrate(&model)
+
+	admin := model.GetUserByEmail("admin@admin.com")
+	if admin.ID == 0 {
+		admin := NewUser()
+		admin.Username = "admin"
+		admin.Email = "admin@admin.com"
+		admin.Password = utils.HashPassword("admin")
+		admin.RoleId = 1
+
+		admin.Create()
+	}
+
+	return migration
+}
+
+func (model *User) GetAllUsers() (models []User) {
+	model.db.Find(&models)
+
+	for _, m := range models {
+		m = InitUser(&m)
+	}
 
 	return models
 }
 
-func GetUser(id int64) (model User) {
-	data.DB.First(&model, "id = ?", id)
+func (model *User) GetUser(id int64) User {
+	var user User
+	model.db.First(&user, "id = ?", id)
 
-	return model
+	user = InitUser(&user)
+
+	return user
 }
 
-func GetUserByEmail(email string) (model User) {
-	data.DB.First(&model, "email = ?", email)
-	return model
+func (model *User) GetUserByEmail(email string) User {
+	var user User
+	model.db.First(&user, "email = ?", email)
+
+	user = InitUser(&user)
+
+	return user
 }
 
 func (model *User) Create() (int64, error) {
-	result := data.DB.Create(model)
+	result := model.db.Create(model)
 
 	if result.Error != nil {
 		return 0, result.Error
@@ -60,7 +86,7 @@ func (model *User) Create() (int64, error) {
 }
 
 func (model *User) Update() (int64, error) {
-	result := data.DB.Updates(&model)
+	result := model.db.Updates(&model)
 
 	if result.Error != nil {
 		return 0, result.Error
@@ -70,7 +96,7 @@ func (model *User) Update() (int64, error) {
 }
 
 func (model *User) Delete() (int64, error) {
-	result := data.DB.Delete(&model, &model.ID)
+	result := model.db.Delete(&model, &model.ID)
 
 	if result.Error != nil {
 		return 0, result.Error

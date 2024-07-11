@@ -27,13 +27,15 @@ func Login(c echo.Context) error {
 }
 
 func PostLogin(c echo.Context) error {
-	user := new(models.User)
+	userDto := new(models.User)
 
-	if err := c.Bind(user); err != nil {
+	if err := c.Bind(userDto); err != nil {
 		return c.String(http.StatusBadRequest, "bad request")
 	}
 
-	dbUser := models.GetUserByEmail(user.Email)
+	user := models.InitUser(userDto)
+
+	dbUser := user.GetUserByEmail(user.Email)
 
 	if dbUser.ID == 0 || dbUser.Password == "" {
 		return c.String(http.StatusBadRequest, "Email not registered!")
@@ -73,13 +75,19 @@ func Register(c echo.Context) error {
 }
 
 func PostRegister(c echo.Context) error {
-	user := new(models.User)
+	userDto := new(models.User)
 
-	if err := c.Bind(user); err != nil {
+	if err := c.Bind(userDto); err != nil {
 		return c.String(http.StatusBadRequest, "bad request")
 	}
 
-	user.Password = utils.HashPassword(user.Password)
+	userDto.Password = utils.HashPassword(userDto.Password)
+
+	user := models.InitUser(userDto)
+	userRole := models.NewRole()
+	userRole = userRole.GetRoleByName("user")
+
+	user.Role = userRole
 
 	_, err := user.Create()
 

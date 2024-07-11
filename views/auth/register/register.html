@@ -1,7 +1,7 @@
 {{template "auth_layout" .}} {{define "auth_content"}}
 
 <div class="hero bg-default min-h-screen">
-  <div class="hero-content flex-col">
+  <div class="hero-content flex-col top-0 absolute">
     <img src="/assets/img/favicon.png" class="w-4/12 mx-auto my-2" />
     <div class="text-center">
       <h1 class="text-5xl font-bold">Register</h1>
@@ -25,13 +25,28 @@
           <label class="label">
             <span class="label-text">Password</span>
           </label>
-          <input type="password" name="Password" id="Password" placeholder="Password" class="input input-bordered" required />
+          <input
+            type="password"
+            name="Password"
+            id="Password"
+            placeholder="Password"
+            class="input input-bordered"
+            required
+          />
         </div>
         <div class="form-control">
           <label class="label">
             <span class="label-text">Verify Password</span>
           </label>
-          <input type="password" name="VerifyPassword" id="VerifyPassword" placeholder="Verify Password" class="input input-bordered" required onchange="check()" />
+          <input
+            type="password"
+            name="VerifyPassword"
+            id="VerifyPassword"
+            placeholder="Verify Password"
+            class="input input-bordered"
+            required
+            onchange="check()"
+          />
         </div>
         <div class="form-control mt-6">
           <button class="btn btn-primary">Register</button>

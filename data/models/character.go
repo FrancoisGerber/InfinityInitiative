@@ -62,9 +62,12 @@ func (model *Character) GetAllCharacters() (models []Character) {
 }
 
 func (model *Character) GetCharacter(id int64) Character {
-	model.db.Preload("User").Preload("Level").Preload("ActiveItem").First(&model, "id = ?", id)
+	var character Character
+	model.db.Preload("User").Preload("Level").Preload("ActiveItem").First(&character, "id = ?", id)
 
-	return *model
+	character = InitCharacter(&character)
+
+	return character
 }
 
 func (model *Character) Create() (int64, error) {
@@ -74,7 +77,13 @@ func (model *Character) Create() (int64, error) {
 		return 0, result.Error
 	}
 
-	//TODO: Create character skills for every skill
+	for _, s := range Skills {
+		skill := NewSkill()
+		skill = skill.GetSkillByName(s)
+
+		characterSkill := NewCharacterSkill()
+		characterSkill.GetCharacterProgress(model.ID, skill.ID)
+	}
 
 	return result.RowsAffected, nil
 }
@@ -100,15 +109,19 @@ func (model *Character) Delete() (int64, error) {
 }
 
 func (model *Character) GetCharacterForUser(userId int64) Character {
-	model.db.Preload("User").Preload("Level").Preload("ActiveItem").First(&model, "user_id = ?", userId)
+	var character Character
+	model.db.Preload("User").Preload("Level").Preload("ActiveItem").First(&character, "user_id = ?", userId)
 
-	return *model
+	character = InitCharacter(&character)
+
+	return character
 }
 
 func (model *Character) GetFullCharacterForUser(userId int64) FullCharacter {
 	var character Character
 	model.db.Preload("User").Preload("Level").Preload("ActiveItem").First(&character, "user_id = ?", userId)
 
+	character = InitCharacter(&character)
 	characterSkill := NewCharacterSkill()
 	characterSkills := characterSkill.GetAllCharacterSkillsPerCharacter(int64(character.ID))
 

@@ -1,55 +1,81 @@
 package models
 
 import (
-	"InfinityInitiative/data"
-
 	"gorm.io/gorm"
 )
 
 type Role struct {
+	Base
 	gorm.Model
 	ID   uint   `json:"ID" form:"ID" query:"ID"`
 	Name string `json:"Name" form:"Name" query:"Name"`
 }
 
-func MigrateRoles() {
-	data.DB.AutoMigrate(&Role{})
+func NewRole() Role {
+	model := Role{}
+	model.initDatabase()
 
-	admin := GetRoleByName("Admin")
-	if admin.ID == 0 {
-		data.DB.Create(&Role{
-			Name: "Admin",
-		})
-	}
-
-	user := GetRoleByName("User")
-	if user.ID == 0 {
-		data.DB.Create(&Role{
-			Name: "User",
-		})
-	}
+	return model
 }
 
-func GetAllRoles() (models []Role) {
-	data.DB.Find(&models)
+func InitRole(model *Role) Role {
+	model.initDatabase()
+
+	return *model
+}
+
+func (model *Role) Migrate() error {
+	migration := model.db.AutoMigrate(&model)
+
+	admin := model.GetRoleByName("admin")
+	if admin.ID == 0 {
+		admin := NewRole()
+		admin.Name = "admin"
+
+		admin.Create()
+	}
+
+	user := model.GetRoleByName("user")
+	if user.ID == 0 {
+		user := NewRole()
+		user.Name = "user"
+
+		user.Create()
+	}
+
+	return migration
+}
+
+func (model *Role) GetAllRoles() (models []Role) {
+	model.db.Find(&models)
+
+	for _, m := range models {
+		m = InitRole(&m)
+	}
 
 	return models
 }
 
-func GetRole(id int64) (model Role) {
-	data.DB.First(&model, "id = ?", id)
+func (model *Role) GetRole(id int64) Role {
+	var role Role
+	model.db.First(&role, "id = ?", id)
 
-	return model
+	role = InitRole(&role)
+
+	return role
 }
 
-func GetRoleByName(name string) (model Role) {
-	data.DB.First(&model, "name = ?", name)
+func (model *Role) GetRoleByName(name string) Role {
+	var role Role
+	model.db.First(&role, "name = ?", name)
 
-	return model
+	role = InitRole(&role)
+
+	return role
 }
 
 func (model *Role) Create() (int64, error) {
-	result := data.DB.Create(model)
+	result := model.db.Create(model)
 
 	if result.Error != nil {
 		return 0, result.Error
@@ -59,7 +85,7 @@ func (model *Role) Create() (int64, error) {
 }
 
 func (model *Role) Update() (int64, error) {
-	result := data.DB.Updates(&model)
+	result := model.db.Updates(&model)
 
 	if result.Error != nil {
 		return 0, result.Error
@@ -69,7 +95,7 @@ func (model *Role) Update() (int64, error) {
 }
 
 func (model *Role) Delete() (int64, error) {
-	result := data.DB.Delete(&model, &model.ID)
+	result := model.db.Delete(&model, &model.ID)
 
 	if result.Error != nil {
 		return 0, result.Error

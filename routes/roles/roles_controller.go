@@ -26,7 +26,8 @@ func GetAll(c echo.Context) error {
 
 	userId := c.Get("UserId").(uint)
 
-	roles := models.GetAllRoles()
+	role := models.NewRole()
+	roles := role.GetAllRoles()
 	character := models.NewCharacter()
 
 	data := models.Data{
@@ -47,7 +48,8 @@ func EditRole(c echo.Context) error {
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
 
-	role := models.GetRole(Id)
+	role := models.NewRole()
+	role = role.GetRole(Id)
 
 	data := models.Data{
 		Page: role,
@@ -57,13 +59,14 @@ func EditRole(c echo.Context) error {
 }
 
 func SaveRole(c echo.Context) error {
-	role := new(models.Role)
+	roleDto := new(models.Role)
 
-	if err := c.Bind(role); err != nil {
+	if err := c.Bind(roleDto); err != nil {
 		return c.String(http.StatusBadRequest, "bad request")
 	}
 
 	var err error
+	role := models.InitRole(roleDto)
 
 	if role.ID != 0 {
 		_, err = role.Update()
@@ -99,7 +102,8 @@ func ConfirmDeleteRole(c echo.Context) error {
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
 
-	role := models.GetRole(Id)
+	role := models.NewRole()
+	role = role.GetRole(Id)
 
 	data := models.Data{
 		Page: role,
@@ -112,7 +116,8 @@ func DeleteRole(c echo.Context) error {
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
 
-	role := models.GetRole(Id)
+	role := models.NewRole()
+	role = role.GetRole(Id)
 
 	_, err := role.Delete()
 

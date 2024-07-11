@@ -1,12 +1,11 @@
 package models
 
 import (
-	"InfinityInitiative/data"
-
 	"gorm.io/gorm"
 )
 
 type Inventory struct {
+	Base
 	gorm.Model
 	ID          uint      `json:"ID" form:"ID" query:"ID"`
 	CharacterId uint      `json:"CharacterId" form:"CharacterId" query:"CharacterId"`
@@ -17,24 +16,44 @@ type Inventory struct {
 	Amount      int64     `json:"Amount" form:"Amount" query:"Amount"`
 }
 
-func MigrateInventorys() {
-	data.DB.AutoMigrate(&Inventory{})
-}
-
-func GetAllInventorys() (models []Inventory) {
-	data.DB.Preload("Character").Preload("Item").Find(&models)
-
-	return models
-}
-
-func GetInventory(id int64) (model Inventory) {
-	data.DB.Preload("Character").Preload("Item").First(&model, "id = ?", id)
+func NewInventory() Inventory {
+	model := Inventory{}
+	model.initDatabase()
 
 	return model
 }
 
+func InitInventory(model *Inventory) Inventory {
+	model.initDatabase()
+
+	return *model
+}
+
+func (model *Inventory) Migrate() error {
+	return model.db.AutoMigrate(&model)
+}
+
+func (model *Inventory) GetAllInventorys() (models []Inventory) {
+	model.db.Preload("Character").Preload("Item").Find(&models)
+
+	for _, m := range models {
+		m = InitInventory(&m)
+	}
+
+	return models
+}
+
+func (model *Inventory) GetInventory(id int64) Inventory {
+	var inventory Inventory
+	model.db.Preload("Character").Preload("Item").First(&inventory, "id = ?", id)
+
+	inventory = InitInventory(&inventory)
+
+	return inventory
+}
+
 func (model *Inventory) Create() (int64, error) {
-	result := data.DB.Create(model)
+	result := model.db.Create(model)
 
 	if result.Error != nil {
 		return 0, result.Error
@@ -44,7 +63,7 @@ func (model *Inventory) Create() (int64, error) {
 }
 
 func (model *Inventory) Update() (int64, error) {
-	result := data.DB.Updates(&model)
+	result := model.db.Updates(&model)
 
 	if result.Error != nil {
 		return 0, result.Error
@@ -54,7 +73,7 @@ func (model *Inventory) Update() (int64, error) {
 }
 
 func (model *Inventory) Delete() (int64, error) {
-	result := data.DB.Delete(&model, &model.ID)
+	result := model.db.Delete(&model, &model.ID)
 
 	if result.Error != nil {
 		return 0, result.Error
@@ -63,22 +82,29 @@ func (model *Inventory) Delete() (int64, error) {
 	return result.RowsAffected, nil
 }
 
-func GetInventoryForCharacter(id int64) (models []Inventory) {
-	data.DB.Preload("Character").Preload("Item").Find(&models, "character_id = ?", id)
+func (model *Inventory) GetInventoryForCharacter(id int64) (models []Inventory) {
+	model.db.Preload("Character").Preload("Item").Find(&models, "character_id = ?", id)
+
+	for _, m := range models {
+		m = InitInventory(&m)
+	}
 
 	return models
 }
 
-func GetInventoryItemForCharacter(itemId int64, characterId int64) (model Inventory) {
-	data.DB.Preload("Character").Preload("Item").Find(&model, "item_id = ? and character_id = ?", itemId, characterId)
+func (model *Inventory) GetInventoryItemForCharacter(itemId int64, characterId int64) Inventory {
+	var inventory Inventory
+	model.db.Preload("Character").Preload("Item").Find(&inventory, "item_id = ? and character_id = ?", itemId, characterId)
 
-	return model
+	inventory = InitInventory(&inventory)
+
+	return inventory
 }
 
-func GetInventoryForCharacterLen(id int64) int64 {
+func (model *Inventory) GetInventoryForCharacterLen(id int64) int64 {
 	var Count int64
 
-	data.DB.Raw(`
+	model.db.Raw(`
 		select count(id) as Count
 		from inventories
 		where character_id = ? and deleted_at is null

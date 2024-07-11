@@ -1,52 +1,76 @@
 package models
 
 import (
-	"InfinityInitiative/data"
-
 	"gorm.io/gorm"
 )
 
 type Level struct {
+	Base
 	gorm.Model
 	ID               uint  `json:"ID" form:"ID" query:"ID"`
 	Name             int64 `json:"Name" form:"Name" query:"Name"`
 	ExperienceNeeded int64 `json:"ExperienceNeeded" form:"ExperienceNeeded" query:"ExperienceNeeded"`
 }
 
-func MigrateLevels() {
-	data.DB.AutoMigrate(&Level{})
+func NewLevel() Level {
+	model := Level{}
+	model.initDatabase()
+
+	return model
+}
+
+func InitLevel(model *Level) Level {
+	model.initDatabase()
+
+	return *model
+}
+
+func (model *Level) Migrate() error {
+	migration := model.db.AutoMigrate(&model)
 
 	for levelName := range 100 {
-		level := GetLevelByName(int64(levelName))
+		level := model.GetLevelByName(int64(levelName))
 		if level.ID == 0 && levelName > 0 {
-			data.DB.Create(&Level{
+			model.db.Create(&Level{
 				Name:             int64(levelName),
 				ExperienceNeeded: int64(((levelName - 1) * 1000) * levelName),
 			})
 		}
 	}
+
+	return migration
 }
 
-func GetAllLevels() (models []Level) {
-	data.DB.Find(&models)
+func (model *Level) GetAllLevels() (models []Level) {
+	model.db.Find(&models)
+
+	for _, m := range models {
+		m = InitLevel(&m)
+	}
 
 	return models
 }
 
-func GetLevel(id int64) (model Level) {
-	data.DB.First(&model, "id = ?", id)
+func (model *Level) GetLevel(id int64) Level {
+	var level Level
+	model.db.First(&level, "id = ?", id)
 
-	return model
+	level = InitLevel(&level)
+
+	return level
 }
 
-func GetLevelByName(name int64) (model Level) {
-	data.DB.First(&model, "name = ?", name)
+func (model *Level) GetLevelByName(name int64) Level {
+	var level Level
+	model.db.First(&level, "name = ?", name)
 
-	return model
+	level = InitLevel(&level)
+
+	return level
 }
 
 func (model *Level) Create() (int64, error) {
-	result := data.DB.Create(model)
+	result := model.db.Create(model)
 
 	if result.Error != nil {
 		return 0, result.Error
@@ -56,7 +80,7 @@ func (model *Level) Create() (int64, error) {
 }
 
 func (model *Level) Update() (int64, error) {
-	result := data.DB.Updates(&model)
+	result := model.db.Updates(&model)
 
 	if result.Error != nil {
 		return 0, result.Error
@@ -66,7 +90,7 @@ func (model *Level) Update() (int64, error) {
 }
 
 func (model *Level) Delete() (int64, error) {
-	result := data.DB.Delete(&model, &model.ID)
+	result := model.db.Delete(&model, &model.ID)
 
 	if result.Error != nil {
 		return 0, result.Error

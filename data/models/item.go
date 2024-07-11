@@ -1,13 +1,12 @@
 package models
 
 import (
-	"InfinityInitiative/data"
-	"time"
-
 	"gorm.io/gorm"
+	"time"
 )
 
 type Item struct {
+	Base
 	gorm.Model
 	ID               uint          `json:"ID" form:"ID" query:"ID"`
 	Name             string        `json:"Name" form:"Name" query:"Name"`
@@ -23,30 +22,54 @@ type Item struct {
 	Skill            Skill         `json:"Skill" form:"Skill" query:"Skill"`
 }
 
-func MigrateItems() {
-	data.DB.AutoMigrate(&Item{})
-}
-
-func GetAllItems() (models []Item) {
-	data.DB.Preload("Level").Preload("Skill").Find(&models)
-
-	return models
-}
-
-func GetAllItemsForSkill(skillId uint) (models []Item) {
-	data.DB.Preload("Level").Preload("Skill").Find(&models, "skill_id = ?", skillId)
-
-	return models
-}
-
-func GetItem(id int64) (model Item) {
-	data.DB.Preload("Level").Preload("Skill").First(&model, "id = ?", id)
+func NewItem() Item {
+	model := Item{}
+	model.initDatabase()
 
 	return model
 }
 
+func InitItem(model *Item) Item {
+	model.initDatabase()
+
+	return *model
+}
+
+func (model *Item) Migrate() error {
+	return model.db.AutoMigrate(&model)
+}
+
+func (model *Item) GetAllItems() (models []Item) {
+	model.db.Preload("Level").Preload("Skill").Find(&models)
+
+	for _, m := range models {
+		m = InitItem(&m)
+	}
+
+	return models
+}
+
+func (model *Item) GetAllItemsForSkill(skillId uint) (models []Item) {
+	model.db.Preload("Level").Preload("Skill").Find(&models, "skill_id = ?", skillId)
+
+	for _, m := range models {
+		m = InitItem(&m)
+	}
+
+	return models
+}
+
+func (model *Item) GetItem(id int64) Item {
+	var item Item
+	model.db.Preload("Level").Preload("Skill").First(&item, "id = ?", id)
+
+	item = InitItem(&item)
+
+	return item
+}
+
 func (model *Item) Create() (int64, error) {
-	result := data.DB.Create(model)
+	result := model.db.Create(model)
 
 	if result.Error != nil {
 		return 0, result.Error
@@ -56,7 +79,7 @@ func (model *Item) Create() (int64, error) {
 }
 
 func (model *Item) Update() (int64, error) {
-	result := data.DB.Updates(&model)
+	result := model.db.Updates(&model)
 
 	if result.Error != nil {
 		return 0, result.Error
@@ -66,7 +89,7 @@ func (model *Item) Update() (int64, error) {
 }
 
 func (model *Item) Delete() (int64, error) {
-	result := data.DB.Delete(&model, &model.ID)
+	result := model.db.Delete(&model, &model.ID)
 
 	if result.Error != nil {
 		return 0, result.Error

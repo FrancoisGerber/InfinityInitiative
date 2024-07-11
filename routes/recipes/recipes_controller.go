@@ -26,8 +26,10 @@ func GetAll(c echo.Context) error {
 
 	userId := c.Get("UserId").(uint)
 
-	recipes := models.GetAllRecipes()
+	recipe := models.NewRecipe()
 	character := models.NewCharacter()
+
+	recipes := recipe.GetAllRecipes()
 
 	data := models.Data{
 		Page:       recipes,
@@ -47,8 +49,11 @@ func EditRecipe(c echo.Context) error {
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
 
-	recipe := models.GetRecipe(Id)
-	items := models.GetAllItems()
+	recipe := models.NewRecipe()
+	item := models.NewItem()
+
+	recipe = recipe.GetRecipe(Id)
+	items := item.GetAllItems()
 
 	data := models.Data{
 		Page: recipe,
@@ -61,13 +66,14 @@ func EditRecipe(c echo.Context) error {
 }
 
 func SaveRecipe(c echo.Context) error {
-	recipe := new(models.Recipe)
+	recipeDto := new(models.Recipe)
 
-	if err := c.Bind(recipe); err != nil {
+	if err := c.Bind(recipeDto); err != nil {
 		return c.String(http.StatusBadRequest, "bad request")
 	}
 
 	var err error
+	recipe := models.InitRecipe(recipeDto)
 
 	if recipe.ID != 0 {
 		_, err = recipe.Update()
@@ -91,7 +97,8 @@ func CreateRecipe(c echo.Context) error {
 		"views/recipes/*.html",
 	})
 
-	items := models.GetAllItems()
+	item := models.NewItem()
+	items := item.GetAllItems()
 
 	data := models.Data{
 		Page: models.Recipe{},
@@ -112,7 +119,8 @@ func ConfirmDeleteRecipe(c echo.Context) error {
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
 
-	recipe := models.GetRecipe(Id)
+	recipe := models.NewRecipe()
+	recipe = recipe.GetRecipe(Id)
 
 	data := models.Data{
 		Page: recipe,
@@ -125,7 +133,8 @@ func DeleteRecipe(c echo.Context) error {
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
 
-	recipe := models.GetRecipe(Id)
+	recipe := models.NewRecipe()
+	recipe = recipe.GetRecipe(Id)
 
 	_, err := recipe.Delete()
 

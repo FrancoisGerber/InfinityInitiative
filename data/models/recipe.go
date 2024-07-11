@@ -1,12 +1,11 @@
 package models
 
 import (
-	"InfinityInitiative/data"
-
 	"gorm.io/gorm"
 )
 
 type Recipe struct {
+	Base
 	gorm.Model
 	ID           uint  `json:"ID" form:"ID" query:"ID"`
 	ParentItemId uint  `json:"ParentItemId" form:"ParentItemId" query:"ParentItemId"`
@@ -16,24 +15,44 @@ type Recipe struct {
 	Amount       int64 `json:"Amount" form:"Amount" query:"Amount"`
 }
 
-func MigrateRecipes() {
-	data.DB.AutoMigrate(&Recipe{})
-}
-
-func GetAllRecipes() (models []Recipe) {
-	data.DB.Preload("Item").Preload("ParentItem").Find(&models)
-
-	return models
-}
-
-func GetRecipe(id int64) (model Recipe) {
-	data.DB.Preload("Item").Preload("ParentItem").First(&model, "id = ?", id)
+func NewRecipe() Recipe {
+	model := Recipe{}
+	model.initDatabase()
 
 	return model
 }
 
+func InitRecipe(model *Recipe) Recipe {
+	model.initDatabase()
+
+	return *model
+}
+
+func (model *Recipe) Migrate() error {
+	return model.db.AutoMigrate(&model)
+}
+
+func (model *Recipe) GetAllRecipes() (models []Recipe) {
+	model.db.Preload("Item").Preload("ParentItem").Find(&models)
+
+	for _, m := range models {
+		m = InitRecipe(&m)
+	}
+
+	return models
+}
+
+func (model *Recipe) GetRecipe(id int64) Recipe {
+	var recipe Recipe
+	model.db.Preload("Item").Preload("ParentItem").First(&recipe, "id = ?", id)
+
+	recipe = InitRecipe(&recipe)
+
+	return recipe
+}
+
 func (model *Recipe) Create() (int64, error) {
-	result := data.DB.Create(model)
+	result := model.db.Create(model)
 
 	if result.Error != nil {
 		return 0, result.Error
@@ -43,7 +62,7 @@ func (model *Recipe) Create() (int64, error) {
 }
 
 func (model *Recipe) Update() (int64, error) {
-	result := data.DB.Updates(&model)
+	result := model.db.Updates(&model)
 
 	if result.Error != nil {
 		return 0, result.Error
@@ -53,7 +72,7 @@ func (model *Recipe) Update() (int64, error) {
 }
 
 func (model *Recipe) Delete() (int64, error) {
-	result := data.DB.Delete(&model, &model.ID)
+	result := model.db.Delete(&model, &model.ID)
 
 	if result.Error != nil {
 		return 0, result.Error
@@ -62,16 +81,18 @@ func (model *Recipe) Delete() (int64, error) {
 	return result.RowsAffected, nil
 }
 
-func GetRecipesForParentItem(itemId int64) (models []Recipe) {
-	data.DB.Preload("Item").Preload("ParentItem").Find(&models, "parent_item_id = ?", itemId)
+func (model *Recipe) GetRecipesForParentItem(itemId int64) (models []Recipe) {
+	model.db.Preload("Item").Preload("ParentItem").Find(&models, "parent_item_id = ?", itemId)
+
+	for _, m := range models {
+		m = InitRecipe(&m)
+	}
 
 	return models
 }
 
-func DeleteRecipesOfParentItem(itemId int64) (int64, error) {
-	recipe := Recipe{}
-
-	result := data.DB.Delete(&recipe, "parent_item_id = ?", itemId)
+func (model *Recipe) DeleteRecipesOfParentItem(itemId int64) (int64, error) {
+	result := model.db.Delete(&model, "parent_item_id = ?", itemId)
 
 	if result.Error != nil {
 		return 0, result.Error

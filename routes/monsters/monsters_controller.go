@@ -26,7 +26,8 @@ func GetAll(c echo.Context) error {
 
 	userId := c.Get("UserId").(uint)
 
-	monsters := models.GetAllMonsters()
+	monster := models.NewMonster()
+	monsters := monster.GetAllMonsters()
 	character := models.NewCharacter()
 
 	data := models.Data{
@@ -47,8 +48,10 @@ func EditMonster(c echo.Context) error {
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
 
-	monster := models.GetMonster(Id)
-	levels := models.GetAllLevels()
+	monster := models.NewMonster()
+	level := models.NewLevel()
+	monster = monster.GetMonster(Id)
+	levels := level.GetAllLevels()
 
 	data := models.Data{
 		Page: monster,
@@ -62,13 +65,14 @@ func EditMonster(c echo.Context) error {
 }
 
 func SaveMonster(c echo.Context) error {
-	monster := new(models.Monster)
+	monsterDto := new(models.Monster)
 
-	if err := c.Bind(monster); err != nil {
+	if err := c.Bind(monsterDto); err != nil {
 		return c.String(http.StatusBadRequest, "bad request")
 	}
 
 	var err error
+	monster := models.InitMonster(monsterDto)
 
 	if monster.ID != 0 {
 		_, err = monster.Update()
@@ -92,7 +96,8 @@ func CreateMonster(c echo.Context) error {
 		"views/monsters/*.html",
 	})
 
-	levels := models.GetAllLevels()
+	level := models.NewLevel()
+	levels := level.GetAllLevels()
 
 	data := models.Data{
 		Page: models.Monster{},
@@ -114,7 +119,8 @@ func ConfirmDeleteMonster(c echo.Context) error {
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
 
-	monster := models.GetMonster(Id)
+	monster := models.NewMonster()
+	monster = monster.GetMonster(Id)
 
 	data := models.Data{
 		Page: monster,
@@ -127,7 +133,8 @@ func DeleteMonster(c echo.Context) error {
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
 
-	monster := models.GetMonster(Id)
+	monster := models.NewMonster()
+	monster = monster.GetMonster(Id)
 
 	_, err := monster.Delete()
 

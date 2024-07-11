@@ -7,15 +7,15 @@ import (
 )
 
 func TestUser(t *testing.T) {
-	data.Init()
 
-	models.MigrateUser()
+	user := models.NewUser()
+	data.AutoMigration(&user)
 
-	u := models.User{
+	u := models.InitUser(&models.User{
 		Username: "Test",
 		Email:    "test@test.com",
 		Password: "test",
-	}
+	})
 
 	rows, err := u.Create()
 
@@ -27,7 +27,7 @@ func TestUser(t *testing.T) {
 
 	t.Log("CREATE Rows affected: ", rows)
 
-	users := models.GetAllUsers()
+	users := user.GetAllUsers()
 
 	if len(users) == 0 {
 		t.Log("Users is empty")

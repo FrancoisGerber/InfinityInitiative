@@ -1,46 +1,68 @@
 package models
 
 import (
-	"InfinityInitiative/data"
-
 	"gorm.io/gorm"
 )
 
 type Skill struct {
+	Base
 	gorm.Model
 	ID    uint   `json:"ID" form:"ID" query:"ID"`
 	Name  string `json:"Name" form:"Name" query:"Name"`
 	Image string `json:"Image" form:"Image" query:"Image"`
 }
 
-func MigrateSkills() {
-	data.DB.AutoMigrate(&Skill{})
-
-	for _, skill := range Skills {
-		newSkill := GetSkillByName(skill)
-		if newSkill.ID == 0 {
-			data.DB.Create(&Skill{
-				Name:  skill,
-				Image: "/assets/img/skills/" + skill + ".png",
-			})
-		}
-	}
-}
-
-func GetAllSkills() (models []Skill) {
-	data.DB.Find(&models)
-
-	return models
-}
-
-func GetSkill(id int64) (model Skill) {
-	data.DB.First(&model, "id = ?", id)
+func NewSkill() Skill {
+	model := Skill{}
+	model.initDatabase()
 
 	return model
 }
 
+func InitSkill(model *Skill) Skill {
+	model.initDatabase()
+
+	return *model
+}
+
+func (model *Skill) Migrate() error {
+	migration := model.db.AutoMigrate(&model)
+
+	for _, skill := range Skills {
+		newSkill := model.GetSkillByName(skill)
+		if newSkill.ID == 0 {
+			newSkill := NewSkill()
+			newSkill.Name = skill
+			newSkill.Image = "/assets/img/skills/" + skill + ".png"
+
+			newSkill.Create()
+		}
+	}
+
+	return migration
+}
+
+func (model *Skill) GetAllSkills() (models []Skill) {
+	model.db.Find(&models)
+
+	for _, m := range models {
+		m = InitSkill(&m)
+	}
+
+	return models
+}
+
+func (model *Skill) GetSkill(id int64) Skill {
+	var skill Skill
+	model.db.First(&skill, "id = ?", id)
+
+	skill = InitSkill(&skill)
+
+	return skill
+}
+
 func (model *Skill) Create() (int64, error) {
-	result := data.DB.Create(model)
+	result := model.db.Create(model)
 
 	if result.Error != nil {
 		return 0, result.Error
@@ -50,7 +72,7 @@ func (model *Skill) Create() (int64, error) {
 }
 
 func (model *Skill) Update() (int64, error) {
-	result := data.DB.Updates(&model)
+	result := model.db.Updates(&model)
 
 	if result.Error != nil {
 		return 0, result.Error
@@ -60,7 +82,7 @@ func (model *Skill) Update() (int64, error) {
 }
 
 func (model *Skill) Delete() (int64, error) {
-	result := data.DB.Delete(&model, &model.ID)
+	result := model.db.Delete(&model, &model.ID)
 
 	if result.Error != nil {
 		return 0, result.Error
@@ -69,8 +91,11 @@ func (model *Skill) Delete() (int64, error) {
 	return result.RowsAffected, nil
 }
 
-func GetSkillByName(name string) (model Skill) {
-	data.DB.First(&model, "name = ?", name)
+func (model *Skill) GetSkillByName(name string) Skill {
+	var skill Skill
+	model.db.First(&skill, "name = ?", name)
 
-	return model
+	skill = InitSkill(&skill)
+
+	return skill
 }

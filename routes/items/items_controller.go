@@ -29,8 +29,8 @@ func GetAll(c echo.Context) error {
 	})
 
 	userId := c.Get("UserId").(uint)
-
-	items := models.GetAllItems()
+	item := models.NewItem()
+	items := item.GetAllItems()
 
 	character := models.NewCharacter()
 
@@ -52,10 +52,13 @@ func EditItem(c echo.Context) error {
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
 
-	item := models.GetItem(Id)
+	item := models.NewItem()
+	level := models.NewLevel()
+	skill := models.NewSkill()
 
-	levels := models.GetAllLevels()
-	skills := models.GetAllSkills()
+	item = item.GetItem(Id)
+	levels := level.GetAllLevels()
+	skills := skill.GetAllSkills()
 
 	data := models.Data{
 		Page: item,
@@ -70,13 +73,14 @@ func EditItem(c echo.Context) error {
 }
 
 func SaveItem(c echo.Context) error {
-	item := new(models.Item)
+	itemDto := new(models.Item)
 
-	if err := c.Bind(item); err != nil {
+	if err := c.Bind(itemDto); err != nil {
 		return c.String(http.StatusBadRequest, "bad request")
 	}
 
 	var err error
+	item := models.InitItem(itemDto)
 
 	if item.RuntimeString != "" {
 		runtimeDuration, err := time.ParseDuration(item.RuntimeString)
@@ -110,8 +114,11 @@ func CreateItem(c echo.Context) error {
 		"views/items/*.html",
 	})
 
-	levels := models.GetAllLevels()
-	skills := models.GetAllSkills()
+	level := models.NewLevel()
+	skill := models.NewSkill()
+
+	levels := level.GetAllLevels()
+	skills := skill.GetAllSkills()
 
 	data := models.Data{
 		Page: models.Item{},
@@ -134,7 +141,8 @@ func ConfirmDeleteItem(c echo.Context) error {
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
 
-	item := models.GetItem(Id)
+	item := models.NewItem()
+	item = item.GetItem(Id)
 
 	data := models.Data{
 		Page: item,
@@ -147,7 +155,8 @@ func DeleteItem(c echo.Context) error {
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
 
-	item := models.GetItem(Id)
+	item := models.NewItem()
+	item = item.GetItem(Id)
 
 	_, err := item.Delete()
 
@@ -170,9 +179,11 @@ func EditRecipe(c echo.Context) error {
 	id := c.Param("id")
 	ItemId := int64(utils.ParseInt(id))
 
-	recipes := models.GetRecipesForParentItem(ItemId)
+	recipe := models.NewRecipe()
+	item := models.NewItem()
 
-	items := models.GetAllItems()
+	recipes := recipe.GetRecipesForParentItem(ItemId)
+	items := item.GetAllItems()
 
 	var recipesVM []struct {
 		models.Recipe
@@ -204,7 +215,8 @@ func AddRecipe(c echo.Context) error {
 		"views/layout/*.html",
 		"views/items/*.html",
 	})
-	items := models.GetAllItems()
+	item := models.NewItem()
+	items := item.GetAllItems()
 
 	recipeDto := struct {
 		models.Recipe
@@ -220,20 +232,21 @@ func AddRecipe(c echo.Context) error {
 func SaveRecipe(c echo.Context) error {
 	form, _ := c.FormParams()
 
-	partenItemId := form["ParentItemID"][0]
+	parentItemId := form["ParentItemID"][0]
 
-	_, err := models.DeleteRecipesOfParentItem(int64(utils.ParseInt(partenItemId)))
+	recipe := models.NewRecipe()
+	_, err := recipe.DeleteRecipesOfParentItem(int64(utils.ParseInt(parentItemId)))
 
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "Could Not Delete Recipes for Parent Item")
+		return c.String(http.StatusInternalServerError, "Could Not Delete Recipes for Parent Item"+err.Error())
 	}
 
 	for index, itemId := range form["ItemId"] {
-		recipe := models.Recipe{
-			ParentItemId: uint(utils.ParseInt(partenItemId)),
+		recipe := models.InitRecipe(&models.Recipe{
+			ParentItemId: uint(utils.ParseInt(parentItemId)),
 			ItemId:       uint(utils.ParseInt(itemId)),
 			Amount:       int64(utils.ParseInt(form["Amount"][index])),
-		}
+		})
 
 		_, err = recipe.Create()
 

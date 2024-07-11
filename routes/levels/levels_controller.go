@@ -26,7 +26,8 @@ func GetAll(c echo.Context) error {
 
 	userId := c.Get("UserId").(uint)
 
-	levels := models.GetAllLevels()
+	level := models.NewLevel()
+	levels := level.GetAllLevels()
 	character := models.NewCharacter()
 
 	data := models.Data{
@@ -47,7 +48,8 @@ func EditLevel(c echo.Context) error {
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
 
-	level := models.GetLevel(Id)
+	level := models.NewLevel()
+	level = level.GetLevel(Id)
 
 	data := models.Data{
 		Page: level,
@@ -57,13 +59,14 @@ func EditLevel(c echo.Context) error {
 }
 
 func SaveLevel(c echo.Context) error {
-	level := new(models.Level)
+	levelDto := new(models.Level)
 
-	if err := c.Bind(level); err != nil {
+	if err := c.Bind(levelDto); err != nil {
 		return c.String(http.StatusBadRequest, "bad request")
 	}
 
 	var err error
+	level := models.InitLevel(levelDto)
 
 	if level.ID != 0 {
 		_, err = level.Update()
@@ -99,7 +102,8 @@ func ConfirmDeleteLevel(c echo.Context) error {
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
 
-	level := models.GetLevel(Id)
+	level := models.NewLevel()
+	level = level.GetLevel(Id)
 
 	data := models.Data{
 		Page: level,
@@ -112,7 +116,8 @@ func DeleteLevel(c echo.Context) error {
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
 
-	level := models.GetLevel(Id)
+	level := models.NewLevel()
+	level = level.GetLevel(Id)
 
 	_, err := level.Delete()
 

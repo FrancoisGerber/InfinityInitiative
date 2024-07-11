@@ -26,8 +26,9 @@ func GetGamePage(c echo.Context) error {
 
 	game := models.NewGame()
 	character := models.NewCharacter()
+	skill := models.NewSkill()
 
-	skill := models.GetSkillByName(skillName)
+	skill = skill.GetSkillByName(skillName)
 
 	if skill.ID == 0 {
 		return c.Redirect(http.StatusTemporaryRedirect, "/login")
@@ -60,11 +61,16 @@ func RunActiveAction(c echo.Context) error {
 	game := models.NewGame()
 	character := models.NewCharacter()
 	characterSkill := models.NewCharacterSkill()
+	item := models.NewItem()
+	inventory := models.NewInventory()
+	level := models.NewLevel()
+	skill := models.NewSkill()
+	recipe := models.NewRecipe()
 
 	// Load Data
-	item := models.GetItem(int64(utils.ParseInt(itemId)))
+	item = item.GetItem(int64(utils.ParseInt(itemId)))
 	character = character.GetCharacterForUser(int64(userId))
-	inventoryCount := models.GetInventoryForCharacterLen(int64(character.ID))
+	inventoryCount := inventory.GetInventoryForCharacterLen(int64(character.ID))
 
 	// Check if inventory is full
 	if inventoryCount >= 20 {
@@ -75,16 +81,16 @@ func RunActiveAction(c echo.Context) error {
 	characterSkill = characterSkill.GetCharacterProgress(character.ID, uint(item.SkillId))
 
 	nextLevelName := characterSkill.Level.Name + 1
-	nextLevel := models.GetLevelByName(nextLevelName)
+	nextLevel := level.GetLevelByName(nextLevelName)
 
 	nextCharacterLevelName := character.Level.Name + 1
-	nextCharacterLevel := models.GetLevelByName(nextCharacterLevelName)
+	nextCharacterLevel := level.GetLevelByName(nextCharacterLevelName)
 
-	skills := models.GetAllSkills()
-	skill := models.GetSkill(int64(item.SkillId))
+	skills := skill.GetAllSkills()
+	skill = skill.GetSkill(int64(item.SkillId))
 
-	inventory := models.GetInventoryItemForCharacter(int64(item.ID), int64(character.ID))
-	recipeItems := models.GetRecipesForParentItem(int64(item.ID))
+	inventory = inventory.GetInventoryItemForCharacter(int64(item.ID), int64(character.ID))
+	recipeItems := recipe.GetRecipesForParentItem(int64(item.ID))
 
 	// Remove Recipe Items from Inventory
 	if len(recipeItems) > 0 {
@@ -94,7 +100,7 @@ func RunActiveAction(c echo.Context) error {
 		}
 
 		for _, recipeItem := range recipeItems {
-			inventoryItem := models.GetInventoryItemForCharacter(int64(recipeItem.ItemId), int64(character.ID))
+			inventoryItem := inventory.GetInventoryItemForCharacter(int64(recipeItem.ItemId), int64(character.ID))
 
 			if inventoryItem.ID == 0 {
 				utils.ShowAlertError(c, "You do not have enough resources to make this Item!")
@@ -156,12 +162,12 @@ func RunActiveAction(c echo.Context) error {
 
 	// Add made item to inventory
 	if inventory.ID == 0 {
-		inventoryItem := models.Inventory{
+		inventoryItem := models.InitInventory(&models.Inventory{
 			Character: character,
 			Item:      item,
 			Amount:    1,
 			Equipped:  false,
-		}
+		})
 
 		_, err = inventoryItem.Create()
 	} else {
@@ -202,12 +208,15 @@ func GetActiveAction(c echo.Context) error {
 	game := models.NewGame()
 	character := models.NewCharacter()
 	characterSkill := models.NewCharacterSkill()
+	item := models.NewItem()
+	recipe := models.NewRecipe()
+	skill := models.NewSkill()
 
 	// Load Data
-	item := models.GetItem(int64(utils.ParseInt(itemId)))
+	item = item.GetItem(int64(utils.ParseInt(itemId)))
 	character = character.GetCharacterForUser(int64(userId))
-	skill := models.GetSkill(int64(item.SkillId))
-	recipeItems := models.GetRecipesForParentItem(int64(item.ID))
+	skill = skill.GetSkill(int64(item.SkillId))
+	recipeItems := recipe.GetRecipesForParentItem(int64(item.ID))
 	characterSkill = characterSkill.GetCharacterProgress(character.ID, skill.ID)
 
 	// Check character skill level

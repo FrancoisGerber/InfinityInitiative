@@ -37,13 +37,20 @@ func (model *CharacterSkill) Migrate() error {
 func (model *CharacterSkill) GetAllCharacterSkills() (models []CharacterSkill) {
 	model.db.Preload("Level").Preload("Character").Preload("Skill").Find(&models)
 
+	for _, m := range models {
+		m = InitCharacterSkill(&m)
+	}
+
 	return models
 }
 
 func (model *CharacterSkill) GetCharacterSkill(id int64) CharacterSkill {
-	model.db.Preload("Level").Preload("Character").Preload("Skill").First(&model, "id = ?", id)
+	var characterSkill CharacterSkill
+	model.db.Preload("Level").Preload("Character").Preload("Skill").First(&characterSkill, "id = ?", id)
 
-	return *model
+	characterSkill = InitCharacterSkill(&characterSkill)
+
+	return characterSkill
 }
 
 func (model *CharacterSkill) Create() (int64, error) {
@@ -80,21 +87,22 @@ func (model *CharacterSkill) GetCharacterProgress(characterId uint, skillId uint
 	var characterSkill CharacterSkill
 	model.db.Preload("Level").Preload("Character").Preload("Skill").First(&characterSkill, "character_id = ? and skill_id = ?", characterId, skillId)
 
-	characterSkill = InitCharacterSkill(&characterSkill)
-
 	if characterSkill.ID == 0 {
-		level1 := GetLevelByName(1)
+		level1 := NewLevel()
+		level1 = level1.GetLevelByName(1)
 
-		characterSkill.CharacterId = characterId
-		characterSkill.LevelId = level1.ID
-		characterSkill.SkillId = skillId
-		characterSkill.ExperiencePoints = 0
+		characterSkill := InitCharacterSkill(&CharacterSkill{
+			CharacterId: characterId,
+			SkillId:     skillId,
+			LevelId:     level1.ID,
+		})
 
 		characterSkill.Create()
 
-		return characterSkill.GetCharacterSkill(int64(model.ID))
+		return characterSkill.GetCharacterSkill(int64(characterSkill.ID))
 	}
 
+	characterSkill = InitCharacterSkill(&characterSkill)
 	return characterSkill
 }
 

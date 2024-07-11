@@ -26,7 +26,8 @@ func GetAll(c echo.Context) error {
 
 	userId := c.Get("UserId").(uint)
 
-	skills := models.GetAllSkills()
+	skill := models.NewSkill()
+	skills := skill.GetAllSkills()
 	character := models.NewCharacter()
 
 	data := models.Data{
@@ -47,7 +48,8 @@ func EditSkill(c echo.Context) error {
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
 
-	skill := models.GetSkill(Id)
+	skill := models.NewSkill()
+	skill = skill.GetSkill(Id)
 
 	data := models.Data{
 		Page: skill,
@@ -57,13 +59,14 @@ func EditSkill(c echo.Context) error {
 }
 
 func SaveSkill(c echo.Context) error {
-	skill := new(models.Skill)
+	skillDto := new(models.Skill)
 
-	if err := c.Bind(skill); err != nil {
+	if err := c.Bind(skillDto); err != nil {
 		return c.String(http.StatusBadRequest, "bad request")
 	}
 
 	var err error
+	skill := models.InitSkill(skillDto)
 
 	if skill.ID != 0 {
 		_, err = skill.Update()
@@ -99,7 +102,8 @@ func ConfirmDeleteSkill(c echo.Context) error {
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
 
-	skill := models.GetSkill(Id)
+	skill := models.NewSkill()
+	skill = skill.GetSkill(Id)
 
 	data := models.Data{
 		Page: skill,
@@ -112,7 +116,8 @@ func DeleteSkill(c echo.Context) error {
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
 
-	skill := models.GetSkill(Id)
+	skill := models.NewSkill()
+	skill = skill.GetSkill(Id)
 
 	_, err := skill.Delete()
 

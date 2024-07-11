@@ -27,8 +27,10 @@ func GetAll(c echo.Context) error {
 
 	userId := c.Get("UserId").(uint)
 
-	users := models.GetAllUsers()
+	user := models.NewUser()
 	character := models.NewCharacter()
+
+	users := user.GetAllUsers()
 
 	data := models.Data{
 		Page:       users,
@@ -48,7 +50,8 @@ func EditUser(c echo.Context) error {
 	id := c.Param("id")
 	Id, _ := strconv.Atoi(id)
 
-	user := models.GetUser(int64(Id))
+	user := models.NewUser()
+	user = user.GetUser(int64(Id))
 	user.Password = ""
 
 	data := models.Data{
@@ -59,13 +62,14 @@ func EditUser(c echo.Context) error {
 }
 
 func SaveUser(c echo.Context) error {
-	user := new(models.User)
+	userDto := new(models.User)
 
-	if err := c.Bind(user); err != nil {
+	if err := c.Bind(userDto); err != nil {
 		return c.String(http.StatusBadRequest, "bad request")
 	}
 
 	var err error
+	user := models.InitUser(userDto)
 
 	user.Password = utils.HashPassword(user.Password)
 
@@ -103,7 +107,8 @@ func ConfirmDeleteUser(c echo.Context) error {
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
 
-	user := models.GetUser(Id)
+	user := models.NewUser()
+	user = user.GetUser(Id)
 
 	data := models.Data{
 		Page: user,
@@ -116,7 +121,8 @@ func DeleteUser(c echo.Context) error {
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
 
-	user := models.GetUser(Id)
+	user := models.NewUser()
+	user = user.GetUser(Id)
 
 	_, err := user.Delete()
 

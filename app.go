@@ -37,8 +37,6 @@ func main() {
 	routes.Router(e)
 
 	// Run DB migrations
-	//TODO: Remove db init as the models do this themselves
-	data.Init()
 	autoMigrations()
 
 	// Start Server
@@ -49,17 +47,23 @@ func main() {
 func autoMigrations() {
 	character := models.NewCharacter()
 	characterSkill := models.NewCharacterSkill()
+	level := models.NewLevel()
+	item := models.NewItem()
+	skill := models.NewSkill()
+	recipe := models.NewRecipe()
+	monster := models.NewMonster()
+	inventory := models.NewInventory()
+	role := models.NewRole()
+	user := models.NewUser()
 
 	data.AutoMigration(&character)
 	data.AutoMigration(&characterSkill)
-
-	//TODO: Refactor all models to implement Model interface and change migrations
-	models.MigrateRoles()
-	models.MigrateUser()
-	models.MigrateLevels()
-	models.MigrateItems()
-	models.MigrateSkills()
-	models.MigrateRecipes()
-	models.MigrateMonsters()
-	models.MigrateInventorys()
+	data.AutoMigration(&level)
+	data.AutoMigration(&item)
+	data.AutoMigration(&skill)
+	data.AutoMigration(&recipe)
+	data.AutoMigration(&monster)
+	data.AutoMigration(&inventory)
+	data.AutoMigration(&role)
+	data.AutoMigration(&user)
 }

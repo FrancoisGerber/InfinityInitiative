@@ -1,12 +1,11 @@
 package models
 
 import (
-	"InfinityInitiative/data"
-
 	"gorm.io/gorm"
 )
 
 type Monster struct {
+	Base
 	gorm.Model
 	ID               uint    `json:"ID" form:"ID" query:"ID"`
 	Name             string  `json:"Name" form:"Name" query:"Name"`
@@ -23,24 +22,44 @@ type Monster struct {
 	ArmourRating     float64 `json:"ArmourRating" form:"ArmourRating" query:"ArmourRating"`
 }
 
-func MigrateMonsters() {
-	data.DB.AutoMigrate(&Monster{})
-}
-
-func GetAllMonsters() (models []Monster) {
-	data.DB.Preload("Level").Find(&models)
-
-	return models
-}
-
-func GetMonster(id int64) (model Monster) {
-	data.DB.Preload("Level").First(&model, "id = ?", id)
+func NewMonster() Monster {
+	model := Monster{}
+	model.initDatabase()
 
 	return model
 }
 
+func InitMonster(model *Monster) Monster {
+	model.initDatabase()
+
+	return *model
+}
+
+func (model *Monster) Migrate() error {
+	return model.db.AutoMigrate(&model)
+}
+
+func (model *Monster) GetAllMonsters() (models []Monster) {
+	model.db.Preload("Level").Find(&models)
+
+	for _, m := range models {
+		m = InitMonster(&m)
+	}
+
+	return models
+}
+
+func (model *Monster) GetMonster(id int64) Monster {
+	var monster Monster
+	model.db.Preload("Level").First(&monster, "id = ?", id)
+
+	monster = InitMonster(&monster)
+
+	return monster
+}
+
 func (model *Monster) Create() (int64, error) {
-	result := data.DB.Create(model)
+	result := model.db.Create(model)
 
 	if result.Error != nil {
 		return 0, result.Error
@@ -50,7 +69,7 @@ func (model *Monster) Create() (int64, error) {
 }
 
 func (model *Monster) Update() (int64, error) {
-	result := data.DB.Updates(&model)
+	result := model.db.Updates(&model)
 
 	if result.Error != nil {
 		return 0, result.Error
@@ -60,7 +79,7 @@ func (model *Monster) Update() (int64, error) {
 }
 
 func (model *Monster) Delete() (int64, error) {
-	result := data.DB.Delete(&model, &model.ID)
+	result := model.db.Delete(&model, &model.ID)
 
 	if result.Error != nil {
 		return 0, result.Error

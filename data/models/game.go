@@ -21,11 +21,12 @@ func (model *Game) LoadCharacterProgress(userId int64, skillId uint) struct {
 
 	character := NewCharacter()
 	characterSkill := NewCharacterSkill()
+	level := NewLevel()
 	character = character.GetCharacterForUser(userId)
 	characterSkill = characterSkill.GetCharacterProgress(character.ID, skillId)
 
 	nextLevelName := characterSkill.Level.Name + 1
-	nextLevel := GetLevelByName(nextLevelName)
+	nextLevel := level.GetLevelByName(nextLevelName)
 
 	var activeItem Item
 	if character.ActiveItem.SkillId == int(skillId) {
@@ -59,9 +60,10 @@ func (model *Game) LoadFullItems(skill *Skill, userId int64) []struct {
 	ActiveItem Item
 } {
 
+	item := NewItem()
 	character := NewCharacter()
 	character = character.GetCharacterForUser(userId)
-	items := GetAllItemsForSkill(skill.ID)
+	items := item.GetAllItemsForSkill(skill.ID)
 
 	var itemDtos []struct {
 		Item
@@ -70,7 +72,8 @@ func (model *Game) LoadFullItems(skill *Skill, userId int64) []struct {
 	}
 
 	for _, item := range items {
-		recipes := GetRecipesForParentItem(int64(item.ID))
+		recipe := NewRecipe()
+		recipes := recipe.GetRecipesForParentItem(int64(item.ID))
 
 		itemDto := struct {
 			Item
@@ -90,18 +93,20 @@ func (model *Game) LoadFullItems(skill *Skill, userId int64) []struct {
 
 // Get the character's full inventory
 func (model *Game) LoadInventory(userId int64) []Inventory {
+	inventory := NewInventory()
 	character := NewCharacter()
 	character = character.GetCharacterForUser(userId)
-	inventory := GetInventoryForCharacter(int64(character.ID))
+	inventoryList := inventory.GetInventoryForCharacter(int64(character.ID))
 
-	return inventory
+	return inventoryList
 }
 
 // Check if character has required items for the action
 func (model *Game) CharacterHasItems(character Character, recipeItems []Recipe) string {
+	inventory := NewInventory()
 	if len(recipeItems) > 0 {
 		for _, recipeItem := range recipeItems {
-			inventoryItem := GetInventoryItemForCharacter(int64(recipeItem.ItemId), int64(character.ID))
+			inventoryItem := inventory.GetInventoryItemForCharacter(int64(recipeItem.ItemId), int64(character.ID))
 
 			if inventoryItem.ID == 0 {
 				return "You do not have enough resources to make this Item!"
