@@ -47,7 +47,7 @@ func PostLogin(c echo.Context) error {
 		return c.String(http.StatusUnauthorized, "Password is incorrect!")
 	}
 
-	err := utils.CreateSessionUser(c, dbUser.ID)
+	err := utils.SetSessionUser(c, dbUser.ID)
 
 	if err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
@@ -60,7 +60,7 @@ func PostLogin(c echo.Context) error {
 }
 
 func Logout(c echo.Context) error {
-	utils.CreateSessionUser(c, 0)
+	utils.SetSessionUser(c, 0)
 
 	return c.Redirect(http.StatusTemporaryRedirect, "/login")
 }

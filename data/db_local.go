@@ -13,6 +13,5 @@ func InitLocal() *gorm.DB {
 		panic("Failed to connect database")
 	}
 
-	DB = db
 	return db
 }

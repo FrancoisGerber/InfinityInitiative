@@ -1,9 +1,29 @@
 {{block "notes" .}}
 <div tabindex="0" class="collapse collapse-arrow bg-neutral text-neutral-content shadow-xl">
-  <input type="checkbox" />
-  <div class="collapse-title text-xl font-medium">Lvl {{.Character.Level.Name}} - Total: {{.Character.ExperiencePoints}} XP</div>
+  <input
+    type="checkbox"
+    hx-post="/game/state/NotesState"
+    hx-trigger="click"
+    hx-swap="none"
+    name="NotesState"
+    {{if
+    .DropdownData.GameState.NotesState}}
+    checked
+    {{end}}
+  />
+
+  <div class="collapse-title text-xl font-medium">
+    Lvl {{.Character.Level.Name}} - Total: {{.Character.ExperiencePoints}} XP
+  </div>
   <div class="collapse-content">
-    <textarea class="textarea textarea-bordered w-full" placeholder="Notes"></textarea>
+    <textarea
+      class="textarea textarea-bordered w-full"
+      placeholder="Notes"
+      hx-post="/game/notes"
+      hx-trigger="keyup changed delay:1s"
+      hx-swap="none"
+      name="Notes"
+    >{{.Page.Character.Notes}}</textarea>
   </div>
 </div>
 {{end}}

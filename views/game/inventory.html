@@ -1,7 +1,17 @@
 {{block "inventory" .}}
-<div tabindex="0" class="collapse collapse-open collapse-arrow bg-neutral text-neutral-content shadow-xl">
-  <input type="checkbox" />
-  <div class="collapse-title text-xl font-medium">Storage {{len .DropdownData.Inventory}}/20</div>
+<div
+  tabindex="0"
+  class="collapse collapse-arrow bg-neutral text-neutral-content shadow-xl"
+>
+  <input
+    type="checkbox"
+    hx-post="/game/state/InventoryState"
+    hx-trigger="click"
+    hx-swap="none"
+    name="InventoryState"
+    {{if .DropdownData.GameState.InventoryState}} checked {{end}}
+  />
+  <div class="collapse-title text-xl font-medium">Storage {{len .DropdownData.Inventory}}/24</div>
   <div class="collapse-content">
     <div role="tablist" class="tabs tabs-lifted">
       <a role="tab" class="tab tab-active">
@@ -12,7 +22,9 @@
           {{range .DropdownData.Inventory}}
           <div class="tooltip tooltip-top tooltip-primary" data-tip="{{.Item.Name}}">
             <div class="indicator rounded-box bg-neutral h-20 w-full content-center cursor-pointer">
-              <span class="indicator-item indicator-start badge border-2 border-neutral-600">{{.Amount}}</span>
+              <span class="indicator-item indicator-start badge border-2 border-neutral-600"
+                >{{.Amount}}</span
+              >
               <img src="{{.Item.Image}}" class="h-12 w-12 mx-auto my-auto hover" />
             </div>
           </div>

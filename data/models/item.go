@@ -50,7 +50,11 @@ func (model *Item) GetAllItems() (models []Item) {
 }
 
 func (model *Item) GetAllItemsForSkill(skillId uint) (models []Item) {
-	model.db.Preload("Level").Preload("Skill").Find(&models, "skill_id = ?", skillId)
+	model.db.Preload("Level").Preload("Skill").
+		Joins("INNER JOIN levels on items.level_id = levels.id").
+		Joins("INNER JOIN skills on items.skill_id = skills.id").
+		Order("levels.name").Order("items.type").
+		Find(&models, "skill_id = ?", skillId)
 
 	for _, m := range models {
 		m = InitItem(&m)

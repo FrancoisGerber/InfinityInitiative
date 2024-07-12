@@ -27,6 +27,7 @@ type Character struct {
 	ExperiencePoints int64   `json:"ExperiencePoints" form:"ExperiencePoints" query:"ExperiencePoints"`
 	ActiveItemId     *uint   `json:"ActiveItemId" form:"ActiveItemId" query:"ActiveItemId"`
 	ActiveItem       Item    `json:"ActiveItem" form:"ActiveItem" query:"ActiveItem"`
+	Notes            string  `json:"Notes" form:"Notes" query:"Notes"`
 }
 
 type FullCharacter struct {

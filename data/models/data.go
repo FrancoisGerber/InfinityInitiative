@@ -1,5 +1,7 @@
 package models
 
+var MaxInventorySize int64 = 24
+
 type Data struct {
 	Page         interface{}
 	Errors       interface{}
@@ -27,7 +29,6 @@ var ItemTypes = []string{
 	"Armor",
 	"Accessory",
 	"Resource",
-	"Enemy",
 	"Food",
 }
 

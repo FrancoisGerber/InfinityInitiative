@@ -120,3 +120,102 @@ func (model *Game) CharacterHasItems(character Character, recipeItems []Recipe) 
 
 	return ""
 }
+
+// Remove Recipe Items from Inventory
+func (model *Game) RemoveRecipeItemsFromInventory(recipeItems []Recipe, inventory Inventory, character Character) string {
+	if len(recipeItems) > 0 {
+		var inventoryItems []struct {
+			Inventory
+			Amount int64
+		}
+
+		for _, recipeItem := range recipeItems {
+			inventoryItem := inventory.GetInventoryItemForCharacter(int64(recipeItem.ItemId), int64(character.ID))
+
+			if inventoryItem.ID == 0 {
+				return "You do not have enough resources to make this Item!"
+			}
+
+			if inventoryItem.Amount < recipeItem.Amount {
+				return "You do not have enough resources to make this Item!"
+			}
+
+			inventoryItems = append(inventoryItems, struct {
+				Inventory
+				Amount int64
+			}{
+				inventoryItem,
+				recipeItem.Amount,
+			})
+		}
+
+		for _, inventoryItem := range inventoryItems {
+			newAmount := inventoryItem.Inventory.Amount - inventoryItem.Amount
+			if newAmount == 0 {
+				inventoryItem.Delete()
+			} else {
+				inventoryItem.Inventory.Amount = newAmount
+				inventoryItem.Update()
+			}
+		}
+	}
+
+	return ""
+}
+
+// Update CharacterSkill XP
+func (model *Game) IncreaseCharacterSkill(characterSkill CharacterSkill, nextLevel Level, item Item) error {
+	characterSkill.ExperiencePoints = characterSkill.ExperiencePoints + item.ExperienceGained
+
+	if characterSkill.ExperiencePoints >= nextLevel.ExperienceNeeded {
+		characterSkill.Level = nextLevel
+	}
+	_, err := characterSkill.Update()
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Update Character XP
+func (model *Game) IncreaseCharacterXP(characterSkill CharacterSkill, character Character, nextCharacterLevel Level, skills []Skill) error {
+	totalXP := characterSkill.CalcCharacterTotalXP(character.ID)
+	character.ExperiencePoints = int64(float64(totalXP) / float64(len(skills)))
+
+	if character.ExperiencePoints >= nextCharacterLevel.ExperienceNeeded {
+		character.Level = nextCharacterLevel
+	}
+	_, err := character.Update()
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Add made item to inventory
+func (model *Game) AddNewItemForCharacter(inventory Inventory, character Character, item Item) error {
+	var err error
+	if inventory.ID == 0 {
+		inventoryItem := InitInventory(&Inventory{
+			Character: character,
+			Item:      item,
+			Amount:    1,
+			Equipped:  false,
+		})
+
+		_, err = inventoryItem.Create()
+	} else {
+		inventory.Amount += 1
+		_, err = inventory.Update()
+	}
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

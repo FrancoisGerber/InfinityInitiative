@@ -18,6 +18,5 @@ func InitRemote() *gorm.DB {
 		panic("Failed to connect to database")
 	}
 
-	DB = db
 	return db
 }

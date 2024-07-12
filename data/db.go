@@ -6,9 +6,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// TODO: remove global DB once everything is in repos
-var DB *gorm.DB
-
 func Init() *gorm.DB {
 	return InitLocal()
 }

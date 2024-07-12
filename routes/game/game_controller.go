@@ -14,6 +14,8 @@ func SetupEndpoints(g *echo.Group) {
 	g.GET("/game/:skillName", GetGamePage)
 	g.GET("/game/action/:itemId", GetActiveAction)
 	g.POST("/game/action/:itemId", RunActiveAction)
+	g.POST("/game/state/:name", SetGameState)
+	g.POST("/game/notes", SetGameNotes)
 }
 
 func GetGamePage(c echo.Context) error {
@@ -42,6 +44,7 @@ func GetGamePage(c echo.Context) error {
 		DropdownData: map[string]any{
 			"Items":     game.LoadFullItems(&skill, int64(userId)),
 			"Inventory": game.LoadInventory(int64(userId)),
+			"GameState": utils.GetGameState(c),
 		},
 		Character: character.GetFullCharacterForUser(int64(userId)),
 	}
@@ -71,14 +74,9 @@ func RunActiveAction(c echo.Context) error {
 	item = item.GetItem(int64(utils.ParseInt(itemId)))
 	character = character.GetCharacterForUser(int64(userId))
 	inventoryCount := inventory.GetInventoryForCharacterLen(int64(character.ID))
-
-	// Check if inventory is full
-	if inventoryCount >= 20 {
-		utils.ShowAlertError(c, "Your inventory if full!")
-		return nil
-	}
-
 	characterSkill = characterSkill.GetCharacterProgress(character.ID, uint(item.SkillId))
+	skills := skill.GetAllSkills()
+	skill = skill.GetSkill(int64(item.SkillId))
 
 	nextLevelName := characterSkill.Level.Name + 1
 	nextLevel := level.GetLevelByName(nextLevelName)
@@ -86,95 +84,43 @@ func RunActiveAction(c echo.Context) error {
 	nextCharacterLevelName := character.Level.Name + 1
 	nextCharacterLevel := level.GetLevelByName(nextCharacterLevelName)
 
-	skills := skill.GetAllSkills()
-	skill = skill.GetSkill(int64(item.SkillId))
-
 	inventory = inventory.GetInventoryItemForCharacter(int64(item.ID), int64(character.ID))
 	recipeItems := recipe.GetRecipesForParentItem(int64(item.ID))
 
+	// Check if inventory is full
+	if inventoryCount >= models.MaxInventorySize {
+		utils.ShowAlertError(c, "Your inventory is full!")
+		return nil
+	}
+
+	// Check if character has required items for the action
+	if errorMessage := game.CharacterHasItems(character, recipeItems); errorMessage != "" {
+		utils.ShowAlertError(c, errorMessage)
+		return c.String(http.StatusBadRequest, errorMessage)
+	}
+
 	// Remove Recipe Items from Inventory
-	if len(recipeItems) > 0 {
-		var inventoryItems []struct {
-			models.Inventory
-			Amount int64
-		}
-
-		for _, recipeItem := range recipeItems {
-			inventoryItem := inventory.GetInventoryItemForCharacter(int64(recipeItem.ItemId), int64(character.ID))
-
-			if inventoryItem.ID == 0 {
-				utils.ShowAlertError(c, "You do not have enough resources to make this Item!")
-				return c.String(http.StatusBadRequest, "Not enough resources to make this Item!")
-			}
-
-			if inventoryItem.Amount < recipeItem.Amount {
-				utils.ShowAlertError(c, "You do not have enough resources to make this Item!")
-				return c.String(http.StatusBadRequest, "Not enough resources to make this Item!")
-			}
-
-			inventoryItems = append(inventoryItems, struct {
-				models.Inventory
-				Amount int64
-			}{
-				inventoryItem,
-				recipeItem.Amount,
-			})
-		}
-
-		for _, inventoryItem := range inventoryItems {
-			newAmount := inventoryItem.Inventory.Amount - inventoryItem.Amount
-			if newAmount == 0 {
-				inventoryItem.Delete()
-			} else {
-				inventoryItem.Inventory.Amount = newAmount
-				inventoryItem.Update()
-			}
-		}
+	if errorMessage := game.RemoveRecipeItemsFromInventory(recipeItems, inventory, character); errorMessage != "" {
+		utils.ShowAlertError(c, errorMessage)
 	}
 
 	// Wait for action to run
 	time.Sleep(item.Runtime)
 
 	// Update CharacterSkill XP
-	characterSkill.ExperiencePoints = characterSkill.ExperiencePoints + item.ExperienceGained
-
-	if characterSkill.ExperiencePoints >= nextLevel.ExperienceNeeded {
-		characterSkill.Level = nextLevel
-	}
-	_, err := characterSkill.Update()
-
+	err := game.IncreaseCharacterSkill(characterSkill, nextLevel, item)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "Could Not Update Character Skill")
 	}
 
 	// Update Character XP
-	totalXP := characterSkill.CalcCharacterTotalXP(character.ID)
-	character.ExperiencePoints = int64(float64(totalXP) / float64(len(skills)))
-
-	if character.ExperiencePoints >= nextCharacterLevel.ExperienceNeeded {
-		character.Level = nextCharacterLevel
-	}
-	_, err = character.Update()
-
+	err = game.IncreaseCharacterXP(characterSkill, character, nextCharacterLevel, skills)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "Could Not Update Character")
 	}
 
 	// Add made item to inventory
-	if inventory.ID == 0 {
-		inventoryItem := models.InitInventory(&models.Inventory{
-			Character: character,
-			Item:      item,
-			Amount:    1,
-			Equipped:  false,
-		})
-
-		_, err = inventoryItem.Create()
-	} else {
-		inventory.Amount += 1
-		_, err = inventory.Update()
-	}
-
+	err = game.AddNewItemForCharacter(inventory, character, item)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "Could Not Update Inventory")
 	}
@@ -186,6 +132,7 @@ func RunActiveAction(c echo.Context) error {
 		DropdownData: map[string]any{
 			"Items":     game.LoadFullItems(&skill, int64(userId)),
 			"Inventory": game.LoadInventory(int64(userId)),
+			"GameState": utils.GetGameState(c),
 		},
 		Character: character.GetFullCharacterForUser(int64(userId)),
 	}
@@ -225,16 +172,14 @@ func GetActiveAction(c echo.Context) error {
 		return c.String(http.StatusBadRequest, "You don't have the required level for this Item!!!!")
 	}
 
-	errorMessage := game.CharacterHasItems(character, recipeItems)
-
-	if errorMessage != "" {
+	// Check if character has required items for the action
+	if errorMessage := game.CharacterHasItems(character, recipeItems); errorMessage != "" {
 		utils.ShowAlertError(c, errorMessage)
 		return c.String(http.StatusBadRequest, errorMessage)
 	}
 
 	// Set active action that may be performed
 	character.ActiveItem = item
-
 	_, err := character.Update()
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "Could Not Update Character")
@@ -246,6 +191,7 @@ func GetActiveAction(c echo.Context) error {
 		DropdownData: map[string]any{
 			"Items":     game.LoadFullItems(&skill, int64(userId)),
 			"Inventory": game.LoadInventory(int64(userId)),
+			"GameState": utils.GetGameState(c),
 		},
 		Character: character.GetFullCharacterForUser(int64(userId)),
 	}
@@ -254,4 +200,38 @@ func GetActiveAction(c echo.Context) error {
 	c.Render(http.StatusOK, "oob-action-button", data)
 	c.Render(http.StatusOK, "oob-resources", data)
 	return c.Render(http.StatusOK, "oob-action", data)
+}
+
+func SetGameNotes(c echo.Context) error {
+	userId := c.Get("UserId").(uint)
+
+	character := models.NewCharacter()
+	character = character.GetCharacterForUser(int64(userId))
+
+	character.Notes = c.FormValue("Notes")
+	_, err := character.Update()
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "Could Not Update Character")
+	}
+
+	return nil
+}
+
+func SetGameState(c echo.Context) error {
+	gameState := utils.GetGameState(c)
+
+	switch c.Param("name") {
+	case "InventoryState":
+		gameState.InventoryState = c.FormValue("InventoryState") == "on"
+	case "NotesState":
+		gameState.NotesState = c.FormValue("NotesState") == "on"
+	case "ResourceListState":
+		gameState.ResourceListState = c.FormValue("ResourceListState") == "on"
+	}
+
+	if err := utils.SetGameState(c, gameState); err != nil {
+		return c.String(http.StatusBadRequest, "bad request")
+	}
+
+	return nil
 }
