@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 .active-neutral {
-  @apply bg-base-100 !important;
+  @apply bg-gray-600 !important;
 }
 
 #action-button {

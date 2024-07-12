@@ -4668,7 +4668,7 @@ html:has(.drawer-toggle:checked) {
 
 .active-neutral {
   --tw-bg-opacity: 1 !important;
-  background-color: var(--fallback-b1,oklch(var(--b1)/var(--tw-bg-opacity))) !important;
+  background-color: rgb(75 85 99 / var(--tw-bg-opacity)) !important;
 }
 
 #action-button {

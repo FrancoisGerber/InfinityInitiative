@@ -6,13 +6,16 @@
     hx-trigger="click"
     hx-swap="none"
     name="ResourceListState"
-    {{if .DropdownData.GameState.ResourceListState}} checked {{end}}
+    {{if
+    .DropdownData.GameState.ResourceListState}}
+    checked
+    {{end}}
   />
   <div class="collapse-title text-xl font-medium">Select a resource</div>
   <div class="collapse-content">
-      <ul class="menu gap-2 bg-base-200 rounded-box">
-        {{range .DropdownData.Items}} {{template "resource_item" .}} {{end}}
-      </ul>
-    </div>
+    <ul class="menu gap-2 rounded-box">
+      {{range .DropdownData.Items}} {{template "resource_item" .}} {{end}}
+    </ul>
+  </div>
 </div>
 {{end}}

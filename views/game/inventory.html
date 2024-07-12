@@ -1,15 +1,15 @@
 {{block "inventory" .}}
-<div
-  tabindex="0"
-  class="collapse collapse-arrow bg-neutral text-neutral-content shadow-xl"
->
+<div tabindex="0" class="collapse collapse-arrow bg-neutral text-neutral-content shadow-xl">
   <input
     type="checkbox"
     hx-post="/game/state/InventoryState"
     hx-trigger="click"
     hx-swap="none"
     name="InventoryState"
-    {{if .DropdownData.GameState.InventoryState}} checked {{end}}
+    {{if
+    .DropdownData.GameState.InventoryState}}
+    checked
+    {{end}}
   />
   <div class="collapse-title text-xl font-medium">Storage {{len .DropdownData.Inventory}}/24</div>
   <div class="collapse-content">
