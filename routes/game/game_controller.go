@@ -42,9 +42,10 @@ func GetGamePage(c echo.Context) error {
 		Page:       game.LoadCharacterProgress(int64(userId), skill.ID),
 		ActivePage: skillName,
 		DropdownData: map[string]any{
-			"Items":     game.LoadFullItems(&skill, int64(userId)),
-			"Inventory": game.LoadInventory(int64(userId)),
-			"GameState": utils.GetGameState(c),
+			"Items":            game.LoadFullItems(&skill, int64(userId)),
+			"Inventory":        game.LoadInventory(int64(userId)),
+			"GameState":        utils.GetGameState(c),
+			"MaxInventorySize": models.MaxInventorySize,
 		},
 		Character: character.GetFullCharacterForUser(int64(userId)),
 	}
@@ -130,9 +131,10 @@ func RunActiveAction(c echo.Context) error {
 		Page:       game.LoadCharacterProgress(int64(userId), skill.ID),
 		ActivePage: skill.Name,
 		DropdownData: map[string]any{
-			"Items":     game.LoadFullItems(&skill, int64(userId)),
-			"Inventory": game.LoadInventory(int64(userId)),
-			"GameState": utils.GetGameState(c),
+			"Items":            game.LoadFullItems(&skill, int64(userId)),
+			"Inventory":        game.LoadInventory(int64(userId)),
+			"GameState":        utils.GetGameState(c),
+			"MaxInventorySize": models.MaxInventorySize,
 		},
 		Character: character.GetFullCharacterForUser(int64(userId)),
 	}
@@ -189,9 +191,10 @@ func GetActiveAction(c echo.Context) error {
 	data := models.Data{
 		Page: game.LoadCharacterProgress(int64(userId), uint(item.SkillId)),
 		DropdownData: map[string]any{
-			"Items":     game.LoadFullItems(&skill, int64(userId)),
-			"Inventory": game.LoadInventory(int64(userId)),
-			"GameState": utils.GetGameState(c),
+			"Items":            game.LoadFullItems(&skill, int64(userId)),
+			"Inventory":        game.LoadInventory(int64(userId)),
+			"GameState":        utils.GetGameState(c),
+			"MaxInventorySize": models.MaxInventorySize,
 		},
 		Character: character.GetFullCharacterForUser(int64(userId)),
 	}

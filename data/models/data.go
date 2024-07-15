@@ -1,6 +1,6 @@
 package models
 
-var MaxInventorySize int64 = 24
+var MaxInventorySize int64 = 36
 
 type Data struct {
 	Page         interface{}
