@@ -16,6 +16,7 @@ func SetupEndpoints(g *echo.Group) {
 	g.POST("/game/action/:itemId", RunActiveAction)
 	g.POST("/game/state/:name", SetGameState)
 	g.POST("/game/notes", SetGameNotes)
+	g.POST("/game/equipitem/:itemId", SetEquipedItem)
 }
 
 func GetGamePage(c echo.Context) error {
@@ -222,6 +223,10 @@ func SetGameNotes(c echo.Context) error {
 
 func SetGameState(c echo.Context) error {
 	gameState := utils.GetGameState(c)
+	userId := c.Get("UserId").(uint)
+
+	character := models.NewCharacter()
+	character = character.GetCharacterForUser(int64(userId))
 
 	switch c.Param("name") {
 	case "InventoryState":
@@ -230,11 +235,83 @@ func SetGameState(c echo.Context) error {
 		gameState.NotesState = c.FormValue("NotesState") == "on"
 	case "ResourceListState":
 		gameState.ResourceListState = c.FormValue("ResourceListState") == "on"
+	case "InventoryTabState":
+		gameState.InventoryTabState = c.FormValue("InventoryTabState") == "on"
+		gameState.EquipmentTabState = false
+		gameState.CharacterTabState = false
+	case "EquipmentTabState":
+		gameState.EquipmentTabState = c.FormValue("EquipmentTabState") == "on"
+		gameState.InventoryTabState = false
+		gameState.CharacterTabState = false
+	case "CharacterTabState":
+		gameState.CharacterTabState = c.FormValue("CharacterTabState") == "on"
+		gameState.InventoryTabState = false
+		gameState.EquipmentTabState = false
 	}
 
 	if err := utils.SetGameState(c, gameState); err != nil {
 		return c.String(http.StatusBadRequest, "bad request")
 	}
 
+	if c.Param("name") == "InventoryState" || c.Param("name") == "InventoryTabState" || c.Param("name") == "EquipmentTabState" || c.Param("name") == "CharacterTabState" {
+		userId := c.Get("UserId").(uint)
+		game := models.NewGame()
+
+		// Get Viewmodel ready
+		data := models.Data{
+			DropdownData: map[string]any{
+				"Inventory":        game.LoadInventory(int64(userId)),
+				"GameState":        utils.GetGameState(c),
+				"MaxInventorySize": models.MaxInventorySize,
+			},
+			Character: character.GetFullCharacterForUser(int64(userId)),
+		}
+
+		// Load views
+		return c.Render(http.StatusOK, "oob-inventory", data)
+	}
+
 	return nil
+}
+
+func SetEquipedItem(c echo.Context) error {
+	c.Echo().Renderer = templates.ParseTemplates([]string{
+		"views/layout/*.html",
+		"views/game/*.html",
+	})
+
+	itemId := c.Param("itemId")
+	userId := c.Get("UserId").(uint)
+
+	game := models.NewGame()
+	character := models.NewCharacter()
+	item := models.NewItem()
+	skill := models.NewSkill()
+	inventory := models.NewInventory()
+
+	// Load Data
+	item = item.GetItem(int64(utils.ParseInt(itemId)))
+	character = character.GetCharacterForUser(int64(userId))
+
+	// Equip the item
+	msg := game.EquipItem(int64(character.ID), int64(item.ID), inventory)
+	if msg != "" {
+		utils.ShowAlertError(c, msg)
+		return nil
+	}
+
+	// Get Viewmodel ready
+	data := models.Data{
+		DropdownData: map[string]any{
+			"Items":            game.LoadFullItems(&skill, int64(userId)),
+			"Inventory":        game.LoadInventory(int64(userId)),
+			"GameState":        utils.GetGameState(c),
+			"MaxInventorySize": models.MaxInventorySize,
+		},
+		Character: character.GetFullCharacterForUser(int64(userId)),
+	}
+
+	// Load views
+	c.Render(http.StatusOK, "oob-equipped-items", data)
+	return c.Render(http.StatusOK, "oob-inventory", data)
 }

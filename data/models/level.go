@@ -80,7 +80,7 @@ func (model *Level) Create() (int64, error) {
 }
 
 func (model *Level) Update() (int64, error) {
-	result := model.db.Updates(&model)
+	result := model.db.Select("*").Updates(&model)
 
 	if result.Error != nil {
 		return 0, result.Error

@@ -20,6 +20,10 @@ type Item struct {
 	RuntimeString    string        `json:"RuntimeString" form:"RuntimeString" query:"RuntimeString"`
 	SkillId          int           `json:"SkillId" form:"SkillId" query:"SkillId"`
 	Skill            Skill         `json:"Skill" form:"Skill" query:"Skill"`
+	Attack           float64       `json:"Attack" form:"Attack" query:"Attack"`
+	Strength         float64       `json:"Strength" form:"Strength" query:"Strength"`
+	Defence          float64       `json:"Defence" form:"Defence" query:"Defence"`
+	ArmourRating     float64       `json:"ArmourRating" form:"ArmourRating" query:"ArmourRating"`
 }
 
 func NewItem() Item {
@@ -83,7 +87,7 @@ func (model *Item) Create() (int64, error) {
 }
 
 func (model *Item) Update() (int64, error) {
-	result := model.db.Updates(&model)
+	result := model.db.Select("*").Updates(&model)
 
 	if result.Error != nil {
 		return 0, result.Error

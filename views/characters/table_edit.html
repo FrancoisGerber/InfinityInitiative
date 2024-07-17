@@ -3,6 +3,8 @@
 <div>
   <form method="dialog" hx-post="/characters">
     <input type="hidden" name="ID" value="{{.Page.ID}}" />
+    <input type="hidden" name="ActiveItemId" value="{{.Page.ActiveItemId}}" />
+    <input type="hidden" name="Notes" value="{{.Page.Notes}}" />
     <div class="grid lg:grid-cols-2 grid-cols-1 gap-4">
       <div>
         <div class="divider">Basic Info</div>
@@ -10,7 +12,6 @@
           <div class="label">
             <span class="label-text">Character Name</span>
           </div>
-
           <input type="text" class="grow" placeholder="Name" name="Name" value="{{.Page.Name}}" />
         </label>
 
@@ -18,7 +19,12 @@
           <div class="label">
             <span class="label-text">Player</span>
           </div>
-          <select class="w-full select select-bordered" placeholder="User" name="UserId" value="{{.Page.UserId}}">
+          <select
+            class="w-full select select-bordered"
+            placeholder="User"
+            name="UserId"
+            value="{{.Page.UserId}}"
+          >
             {{$SelectedUserId := .Page.UserId}} {{range .DropdownData.Users}}
             <option {{if eq .ID $SelectedUserId}} selected {{end}} value="{{.ID}}">{{.Username}}</option>
             {{end}}
@@ -29,7 +35,12 @@
           <div class="label">
             <span class="label-text">Class</span>
           </div>
-          <select class="w-full select select-bordered" placeholder="Class" name="Class" value="{{.Page.Class}}">
+          <select
+            class="w-full select select-bordered"
+            placeholder="Class"
+            name="Class"
+            value="{{.Page.Class}}"
+          >
             {{$SelectedClass := .Page.Class}} {{range .DropdownData.Classes}}
             <option {{if eq . $SelectedClass}} selected {{end}} value="{{.}}">{{.}}</option>
             {{end}}
@@ -40,7 +51,6 @@
           <div class="label">
             <span class="label-text">Bio</span>
           </div>
-
           <input type="text" class="grow" placeholder="Bio" name="Bio" value="{{.Page.Bio}}" />
         </label>
 
@@ -66,9 +76,16 @@
           <div class="label">
             <span class="label-text">Level</span>
           </div>
-          <select class="w-full select select-bordered" placeholder="Level" name="LevelId" value="{{.Page.LevelId}}">
+          <select
+            class="w-full select select-bordered"
+            placeholder="Level"
+            name="LevelId"
+            value="{{.Page.LevelId}}"
+          >
             {{$SelectedLevelId := .Page.LevelId}} {{range .DropdownData.Levels}}
-            <option {{if eq .ID $SelectedLevelId}} selected {{end}} value="{{.ID}}">{{.Name}} - {{.ExperienceNeeded}}</option>
+            <option {{if eq .ID $SelectedLevelId}} selected {{end}} value="{{.ID}}">
+              {{.Name}} - {{.ExperienceNeeded}}
+            </option>
             {{end}}
           </select>
         </label>
@@ -77,8 +94,43 @@
           <div class="label">
             <span class="label-text">Experience Points</span>
           </div>
+          <input
+            type="number"
+            class="grow"
+            placeholder="Experience Points"
+            name="ExperiencePoints"
+            value="{{.Page.ExperiencePoints}}"
+          />
+        </label>
 
-          <input type="number" class="grow" placeholder="Experience Points" name="ExperiencePoints" value="{{.Page.ExperiencePoints}}" />
+        <label class="flex gap-2 mt-5 mb-5 w-full form-control">
+          <div class="label">
+            <span class="label-text">Combat Level</span>
+          </div>
+          <select
+            class="w-full select select-bordered"
+            placeholder="Combat Level"
+            name="CombatLevelId"
+            value="{{.Page.CombatLevelId}}"
+          >
+            {{$SelectedCombatLevelId := .Page.CombatLevelId}} {{range .DropdownData.Levels}}
+            <option {{if eq .ID $SelectedCombatLevelId}} selected {{end}} value="{{.ID}}">
+              {{.Name}} - {{.ExperienceNeeded}}
+            </option>
+            {{end}}
+          </select>
+        </label>
+        <label class="flex gap-2 items-center mt-5 mb-5 input input-bordered">
+          <div class="label">
+            <span class="label-text">Combat Experience Points</span>
+          </div>
+          <input
+            type="number"
+            class="grow"
+            placeholder="Combat Experience Points"
+            name="CombatExperiencePoints"
+            value="{{.Page.CombatExperiencePoints}}"
+          />
         </label>
       </div>
 
@@ -97,7 +149,13 @@
             <span class="label-text">Max Health</span>
           </div>
 
-          <input type="number" class="grow" placeholder="Max Health" name="MaxHealth" value="{{.Page.MaxHealth}}" />
+          <input
+            type="number"
+            class="grow"
+            placeholder="Max Health"
+            name="MaxHealth"
+            value="{{.Page.MaxHealth}}"
+          />
         </label>
 
         <label class="flex gap-2 items-center mt-5 mb-5 input input-bordered">
@@ -113,7 +171,13 @@
             <span class="label-text">Strength</span>
           </div>
 
-          <input type="number" class="grow" placeholder="Strength" name="Strength" value="{{.Page.Strength}}" />
+          <input
+            type="number"
+            class="grow"
+            placeholder="Strength"
+            name="Strength"
+            value="{{.Page.Strength}}"
+          />
         </label>
 
         <label class="flex gap-2 items-center mt-5 mb-5 input input-bordered">
@@ -129,7 +193,13 @@
             <span class="label-text">Armour Rating</span>
           </div>
 
-          <input type="number" class="grow" placeholder="Armour Rating" name="ArmourRating" value="{{.Page.ArmourRating}}" />
+          <input
+            type="number"
+            class="grow"
+            placeholder="Armour Rating"
+            name="ArmourRating"
+            value="{{.Page.ArmourRating}}"
+          />
         </label>
 
         <div class="divider">Currencies</div>
@@ -147,7 +217,13 @@
             <span class="label-text">Diamonds</span>
           </div>
 
-          <input type="number" class="grow" placeholder="Diamonds" name="Diamonds" value="{{.Page.Diamonds}}" />
+          <input
+            type="number"
+            class="grow"
+            placeholder="Diamonds"
+            name="Diamonds"
+            value="{{.Page.Diamonds}}"
+          />
         </label>
       </div>
     </div>

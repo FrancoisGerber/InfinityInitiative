@@ -32,6 +32,12 @@ var ItemTypes = []string{
 	"Food",
 }
 
+var EquippableItemTypes = []string{
+	"Weapon",
+	"Armor",
+	"Accessory",
+}
+
 var Skills = []string{
 	"Mining",
 	"Woodcutting",

@@ -11,34 +11,114 @@
     checked
     {{end}}
   />
-  <div class="collapse-title text-xl font-medium">Storage {{len .DropdownData.Inventory}}/{{.DropdownData.MaxInventorySize}}</div>
+  <div class="collapse-title text-xl font-medium">
+    Storage {{len .DropdownData.Inventory}}/{{.DropdownData.MaxInventorySize}}
+  </div>
   <div class="collapse-content">
     <div role="tablist" class="tabs tabs-lifted">
-      <a role="tab" class="tab tab-active">
-        <img src="/assets/img/inventory.png" class="py-1 px-2" />
-      </a>
+      <input
+        type="radio"
+        role="tab"
+        class="tab"
+        aria-label="Inventory"
+        {{if
+        .DropdownData.GameState.InventoryTabState}}checked{{end}}
+        hx-post="/game/state/InventoryTabState"
+        hx-trigger="click"
+        hx-swap="none"
+        name="InventoryTabState"
+      />
       <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-6">
         <div class="grid lg:grid-cols-4 grid-cols-4 content-center gap-4">
-          {{range .DropdownData.Inventory}}
+          {{range .DropdownData.Inventory}} {{if ne .Amount 0 }}
           <div class="tooltip tooltip-top tooltip-primary" data-tip="{{.Item.Name}}">
-            <div class="indicator rounded-box bg-neutral h-20 w-full content-center cursor-pointer">
+            <div
+              class="indicator rounded-box bg-neutral h-20 w-full content-center cursor-pointer"
+              hx-post="/game/equipitem/{{.Item.ID}}"
+              hx-trigger="click"
+              hx-swap="none"
+            >
               <span class="indicator-item indicator-start badge border-2 border-neutral-600"
                 >{{.Amount}}</span
               >
               <img src="{{.Item.Image}}" class="h-12 w-12 mx-auto my-auto hover" />
             </div>
           </div>
-          {{end}}
+          {{end}}{{end}}
         </div>
       </div>
-      <a role="tab" class="tab">
-        <img src="/assets/img/equipment.png" class="py-1 px-2" />
-      </a>
-      <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-6">Content 2</div>
-      <a role="tab" class="tab">
-        <img src="/assets/img/quests.png" class="py-1 px-2" />
-      </a>
-      <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-6">Content 3</div>
+      <input
+        type="radio"
+        role="tab"
+        class="tab"
+        aria-label="Equipment"
+        {{if
+        .DropdownData.GameState.EquipmentTabState}}checked{{end}}
+        hx-post="/game/state/EquipmentTabState"
+        hx-trigger="click"
+        hx-swap="none"
+        name="EquipmentTabState"
+      />
+      <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-6">
+        <div class="grid lg:grid-cols-4 grid-cols-4 content-center gap-4">
+          {{range .DropdownData.Inventory}} {{if .Equipped}}
+          <div class="tooltip tooltip-top tooltip-primary" data-tip="{{.Item.Name}}">
+            <div
+              class="indicator rounded-box bg-neutral h-20 w-full content-center cursor-pointer"
+              hx-post="/game/equipitem/{{.Item.ID}}"
+              hx-trigger="click"
+              hx-swap="none"
+            >
+              <img src="{{.Item.Image}}" class="h-12 w-12 mx-auto my-auto hover" />
+            </div>
+          </div>
+          {{end}}{{end}}
+        </div>
+      </div>
+      <input
+        type="radio"
+        role="tab"
+        class="tab"
+        aria-label="Stats"
+        {{if
+        .DropdownData.GameState.CharacterTabState}}checked{{end}}
+        hx-post="/game/state/CharacterTabState"
+        hx-trigger="click"
+        hx-swap="none"
+        name="CharacterTabState"
+      />
+      <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-6">
+        <ul class="menu gap-2 rounded-box">
+          <li>
+            <a class="grid bg-neutral">
+              <img class="max-w-10 w-10" src="/assets/img/skills/Weapons/Swords/W_Sword001.png" />
+              <span class="rounded m-2 font-bold"> Attack </span>
+              <span class="rounded bg-gray-700 p-1 justify-self-end">{{.Character.Attack}}</span>
+            </a>
+          </li>
+          <li>
+            <a class="grid bg-neutral">
+              <img class="max-w-10 w-10" src="/assets/img/skills/Armour/Ac_Necklace01.png" />
+              <span class="rounded m-2 font-bold"> Strength </span>
+              <span class="rounded bg-gray-700 p-1 justify-self-end">{{.Character.Strength}}</span>
+            </a>
+          </li>
+          <li>
+            <a class="grid bg-neutral">
+              <img class="max-w-10 w-10" src="/assets/img/skills/Weapons/Shields/E_Wood01.png" />
+              <span class="rounded m-2 font-bold"> Defence </span>
+              <span class="rounded bg-gray-700 p-1 justify-self-end">{{.Character.Defence}}</span>
+            </a>
+          </li>
+          <li>
+            <a class="grid bg-neutral">
+              <img class="max-w-10 w-10" src="/assets/img/skills/Armour/A_Armour01.png" />
+              <span class="rounded m-2 font-bold"> Armour Rating </span>
+              <span class="rounded bg-gray-700 p-1 justify-self-end">{{.Character.ArmourRating}}</span>
+            </a>
+          </li>
+        </ul>
+      </div>
     </div>
   </div>
 </div>

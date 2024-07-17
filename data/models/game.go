@@ -1,5 +1,7 @@
 package models
 
+import "slices"
+
 type Game struct {
 	Base
 }
@@ -218,4 +220,31 @@ func (model *Game) AddNewItemForCharacter(inventory Inventory, character Charact
 	}
 
 	return nil
+}
+
+// Equip items in inventory on character
+func (model *Game) EquipItem(characterId int64, itemId int64, inventory Inventory) string {
+	inventoryItem := inventory.GetInventoryItemForCharacter(itemId, characterId)
+
+	if inventoryItem.ID == 0 {
+		return "You do not have the item in your inventory."
+	}
+
+	if !slices.Contains(EquippableItemTypes, inventoryItem.Item.Type) {
+		return "That item is not equippable"
+	}
+
+	inventoryItem.Equipped = !inventoryItem.Equipped
+
+	if inventoryItem.Equipped {
+		inventoryItem.Amount -= 1
+	} else {
+		inventoryItem.Amount += 1
+	}
+	_, err := inventoryItem.Update()
+	if err != nil {
+		return err.Error()
+	}
+
+	return ""
 }

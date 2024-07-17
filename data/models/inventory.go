@@ -63,7 +63,7 @@ func (model *Inventory) Create() (int64, error) {
 }
 
 func (model *Inventory) Update() (int64, error) {
-	result := model.db.Updates(&model)
+	result := model.db.Select("*").Updates(&model)
 
 	if result.Error != nil {
 		return 0, result.Error

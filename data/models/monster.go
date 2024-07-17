@@ -69,7 +69,7 @@ func (model *Monster) Create() (int64, error) {
 }
 
 func (model *Monster) Update() (int64, error) {
-	result := model.db.Updates(&model)
+	result := model.db.Select("*").Updates(&model)
 
 	if result.Error != nil {
 		return 0, result.Error

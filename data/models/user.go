@@ -2,6 +2,7 @@ package models
 
 import (
 	"InfinityInitiative/utils"
+
 	"gorm.io/gorm"
 )
 
@@ -86,7 +87,7 @@ func (model *User) Create() (int64, error) {
 }
 
 func (model *User) Update() (int64, error) {
-	result := model.db.Updates(&model)
+	result := model.db.Select("*").Updates(&model)
 
 	if result.Error != nil {
 		return 0, result.Error
