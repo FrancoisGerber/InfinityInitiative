@@ -1,0 +1,19 @@
+{
+  "name": "Infinity Initiative",
+  "display": "standalone",
+  "start_url": "/login",
+  "background_color": "#0f192d",
+  "theme_color": "#0f192d",
+  "icons": [
+    {
+      "src": "/assets/img/favicon-512x512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    },
+    {
+      "src": "/assets/img/favicon-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    }
+  ]
+}
