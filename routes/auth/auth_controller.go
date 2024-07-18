@@ -85,7 +85,7 @@ func PostRegister(c echo.Context) error {
 
 	user := models.InitUser(userDto)
 	userRole := models.NewRole()
-	userRole = userRole.GetRoleByName("user")
+	userRole = userRole.GetRoleByName("User")
 
 	user.Role = userRole
 

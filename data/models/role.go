@@ -27,18 +27,18 @@ func InitRole(model *Role) Role {
 func (model *Role) Migrate() error {
 	migration := model.db.AutoMigrate(&model)
 
-	admin := model.GetRoleByName("admin")
+	admin := model.GetRoleByName("Admin")
 	if admin.ID == 0 {
 		admin := NewRole()
-		admin.Name = "admin"
+		admin.Name = "Admin"
 
 		admin.Create()
 	}
 
-	user := model.GetRoleByName("user")
+	user := model.GetRoleByName("User")
 	if user.ID == 0 {
 		user := NewRole()
-		user.Name = "user"
+		user.Name = "User"
 
 		user.Create()
 	}

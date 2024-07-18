@@ -3,6 +3,7 @@
 <div>
   <form method="dialog" hx-post="/users">
     <input type="hidden" name="ID" value="{{.Page.ID}}" />
+    <input type="hidden" name="RoleId" value="{{.Page.RoleId}}" />
 
     <label class="input input-bordered flex items-center gap-2 mb-5 mt-5">
       <input type="text" class="grow" placeholder="Username" name="Username" value="{{.Page.Username}}" required/>
