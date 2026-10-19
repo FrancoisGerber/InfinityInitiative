@@ -4,18 +4,19 @@
     hx-trigger="click"
     hx-swap="none"
     hx-get="/game/action/{{.ID}}"
-    class="{{if eq .ActiveItem.ID .ID}}active-neutral{{end}} flex flex-wrap items-center gap-2 bg-base-100 p-2"
+    class="{{if eq .ActiveItem.ID .ID}}active-neutral{{end}} flex w-full flex-nowrap items-center gap-2 bg-base-100 px-2 py-1"
   >
-    <img class="w-10 shrink-0" src="{{.Image}}" />
-    <span class="rounded bg-gray-700 p-1 whitespace-nowrap">Lv. {{.Level.Name}}</span>
-    <span class="font-bold whitespace-nowrap">{{.Name}}</span>
+    <img class="w-8 shrink-0" src="{{.Image}}" />
+    <span class="chip">Lv. {{.Level.Name}}</span>
+    <span class="text-sm font-bold whitespace-nowrap">{{.Name}}</span>
 
-    {{range .Recipes}}
-    <span class="rounded bg-gray-700 p-1 whitespace-nowrap">{{.Amount}}x {{.Item.Name}}</span>
-    {{end}}
-
-    <span class="ml-auto rounded bg-gray-700 p-1 whitespace-nowrap">{{.ExperienceGained}} XP</span>
-    <span class="rounded bg-gray-700 p-1 whitespace-nowrap">{{.RuntimeString}}</span>
+    <span class="ml-auto flex flex-wrap items-center gap-2">
+      {{range .Recipes}}
+      <span class="chip">{{.Amount}}x {{.Item.Name}}</span>
+      {{end}}
+      <span class="chip">{{.ExperienceGained}} XP</span>
+      <span class="chip">{{.RuntimeString}}</span>
+    </span>
   </a>
 </li>
 {{end}}
