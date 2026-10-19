@@ -5,27 +5,27 @@
     <input type="hidden" name="ID" value="{{.Page.ID}}" />
     <input type="hidden" name="Runtime" value="0" />
 
-    <label class="input input-bordered flex items-center gap-2 mb-5 mt-5">
+    <label class="input flex items-center gap-2 mb-5 mt-5">
       <div class="label">
-        <span class="label-text">Name</span>
+        <span>Name</span>
       </div>
       <input type="text" class="grow" placeholder="Name" name="Name" value="{{.Page.Name}}" />
     </label>
 
-    <label class="flex gap-2 mt-5 mb-5 w-full form-control">
+    <label class="flex gap-2 mt-5 mb-5 w-full flex-col">
       <div class="label">
-        <span class="label-text">Type</span>
+        <span>Type</span>
       </div>
-      <select class="w-full select select-bordered" placeholder="Type" name="Type" value="{{.Page.Type}}">
+      <select class="w-full select" placeholder="Type" name="Type" value="{{.Page.Type}}">
         {{$SelectedType := .Page.Type}} {{range .DropdownData.ItemTypes}}
         <option {{if eq . $SelectedType}} selected {{end}} value="{{.}}">{{.}}</option>
         {{end}}
       </select>
     </label>
 
-    <label class="input input-bordered flex items-center gap-2 mb-5 mt-5">
+    <label class="input flex items-center gap-2 mb-5 mt-5">
       <div class="label">
-        <span class="label-text">Description</span>
+        <span>Description</span>
       </div>
       <input
         type="text"
@@ -35,12 +35,12 @@
         value="{{.Page.Description}}"
       />
     </label>
-    <label class="form-control gap-2 mb-5 mt-5 w-full">
+    <label class="flex-col gap-2 mb-5 mt-5 w-full">
       <div class="label">
-        <span class="label-text">Skill</span>
+        <span>Skill</span>
       </div>
       <select
-        class="select select-bordered w-full"
+        class="select w-full"
         placeholder="Skill"
         name="SkillId"
         value="{{.Page.SkillId}}"
@@ -60,19 +60,19 @@
           {{end}}
         </div>
       </div>
-      <label class="flex gap-2 items-center ml-5 mt-5 mb-5 w-full input input-bordered">
+      <label class="flex gap-2 items-center ml-5 mt-5 mb-5 w-full input">
         <div class="label">
-          <span class="label-text">Image Url</span>
+          <span>Image Url</span>
         </div>
         <input type="text" class="grow" placeholder="Image Url" name="Image" value="{{.Page.Image}}" />
       </label>
     </div>
-    <label class="form-control gap-2 mb-5 mt-5 w-full">
+    <label class="flex-col gap-2 mb-5 mt-5 w-full">
       <div class="label">
-        <span class="label-text">Level</span>
+        <span>Level</span>
       </div>
       <select
-        class="select select-bordered w-full"
+        class="select w-full"
         placeholder="Level"
         name="LevelId"
         value="{{.Page.LevelId}}"
@@ -85,9 +85,9 @@
       </select>
     </label>
 
-    <label class="input input-bordered flex items-center gap-2 mb-5 mt-5">
+    <label class="input flex items-center gap-2 mb-5 mt-5">
       <div class="label">
-        <span class="label-text">Experience Gained</span>
+        <span>Experience Gained</span>
       </div>
       <input
         type="number"
@@ -98,9 +98,9 @@
       />
     </label>
 
-    <label class="input input-bordered flex items-center gap-2 mb-5 mt-5">
+    <label class="input flex items-center gap-2 mb-5 mt-5">
       <div class="label">
-        <span class="label-text">Runtime</span>
+        <span>Runtime</span>
       </div>
       <input
         type="text"
@@ -111,30 +111,30 @@
       />
     </label>
 
-    <label class="input input-bordered flex items-center gap-2 mb-5 mt-5">
+    <label class="input flex items-center gap-2 mb-5 mt-5">
       <div class="label">
-        <span class="label-text">Attack</span>
+        <span>Attack</span>
       </div>
       <input type="number" class="grow" placeholder="Attack" name="Attack" value="{{.Page.Attack}}" />
     </label>
 
-    <label class="input input-bordered flex items-center gap-2 mb-5 mt-5">
+    <label class="input flex items-center gap-2 mb-5 mt-5">
       <div class="label">
-        <span class="label-text">Strength</span>
+        <span>Strength</span>
       </div>
       <input type="number" class="grow" placeholder="Strength" name="Strength" value="{{.Page.Strength}}" />
     </label>
 
-    <label class="input input-bordered flex items-center gap-2 mb-5 mt-5">
+    <label class="input flex items-center gap-2 mb-5 mt-5">
       <div class="label">
-        <span class="label-text">Defence</span>
+        <span>Defence</span>
       </div>
       <input type="number" class="grow" placeholder="Defence" name="Defence" value="{{.Page.Defence}}" />
     </label>
 
-    <label class="input input-bordered flex items-center gap-2 mb-5 mt-5">
+    <label class="input flex items-center gap-2 mb-5 mt-5">
       <div class="label">
-        <span class="label-text">Armour Rating</span>
+        <span>Armour Rating</span>
       </div>
       <input
         type="number"

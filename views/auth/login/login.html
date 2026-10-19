@@ -8,26 +8,26 @@
     </div>
     <div class="card bg-neutral text-neutral-content shadow-xl w-full max-w-sm shrink-0">
       <form class="card-body" hx-post="/login">
-        <div class="form-control">
+        <div class="flex-col">
           <label class="label">
-            <span class="label-text">Email</span>
+            <span>Email</span>
           </label>
-          <input type="email" name="Email" placeholder="Email" class="input input-bordered" required />
+          <input type="email" name="Email" placeholder="Email" class="input" required />
         </div>
-        <div class="form-control">
+        <div class="flex-col">
           <label class="label">
-            <span class="label-text">Password</span>
+            <span>Password</span>
           </label>
           <input
             type="password"
             name="Password"
             id="Password"
             placeholder="Password"
-            class="input input-bordered"
+            class="input"
             required
           />
         </div>
-        <div class="form-control mt-6">
+        <div class="flex-col mt-6">
           <button class="btn btn-primary">Login</button>
           <a class="btn my-2" href="/register">Register</a>
         </div>

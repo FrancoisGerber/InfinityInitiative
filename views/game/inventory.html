@@ -15,7 +15,7 @@
     Storage {{len .DropdownData.Inventory}}/{{.DropdownData.MaxInventorySize}}
   </div>
   <div class="collapse-content">
-    <div role="tablist" class="tabs tabs-lifted">
+    <div role="tablist" class="tabs tabs-lift">
       <input
         type="radio"
         role="tab"
@@ -41,7 +41,7 @@
               <span class="indicator-item indicator-start badge border-2 border-neutral-600"
                 >{{.Amount}}</span
               >
-              <img src="{{.Item.Image}}" class="h-12 w-12 mx-auto my-auto hover" />
+              <img src="{{.Item.Image}}" class="h-12 w-12 mx-auto my-auto" />
             </div>
           </div>
           {{end}}{{end}}
@@ -69,7 +69,7 @@
               hx-trigger="click"
               hx-swap="none"
             >
-              <img src="{{.Item.Image}}" class="h-12 w-12 mx-auto my-auto hover" />
+              <img src="{{.Item.Image}}" class="h-12 w-12 mx-auto my-auto" />
             </div>
           </div>
           {{end}}{{end}}

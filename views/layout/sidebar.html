@@ -26,7 +26,7 @@
       <ul>
         {{$ActivePage := .ActivePage}}
         {{range .Character.Skills}}
-        <li><a class="{{if eq $ActivePage .Skill.Name}}active{{end}}" href="/game/{{.Skill.Name}}">{{.Skill.Name}} <div class="badge badge-neutral">Lvl {{.Level.Name}}</div></a></li>
+        <li><a class="{{if eq $ActivePage .Skill.Name}}menu-active{{end}}" href="/game/{{.Skill.Name}}">{{.Skill.Name}} <div class="badge badge-neutral">Lvl {{.Level.Name}}</div></a></li>
         {{end}}
      </ul>
     </details>
