@@ -38,6 +38,8 @@ The server listens on `:8069` (hardcoded in `app.go`).
 | Old School RuneScape wiki | https://oldschool.runescape.wiki/ |
 | RuneScape wiki | https://runescape.wiki/ |
 | Game-system plans (this repo) | `docs/game-systems/` |
+| Improvement plans for the systems that already exist | `docs/improvements/` |
+| Bug list (audited, with severity and file:line) | `docs/BUGS.md` |
 
 ## Architecture map
 
