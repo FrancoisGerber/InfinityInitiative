@@ -8,6 +8,13 @@ import (
 	"net/http"
 )
 
+// viewPatterns for the auth screens: the shells plus the per-screen fragments.
+var (
+	authViewPatterns     = "views/auth/*.html"
+	loginViewPatterns    = "views/auth/login/*.html"
+	registerViewPatterns = "views/auth/register/*.html"
+)
+
 func SetupEndpoints(g *echo.Group) {
 	g.GET("/login", Login)
 	g.POST("/login", PostLogin)
@@ -18,9 +25,7 @@ func SetupEndpoints(g *echo.Group) {
 }
 
 func Login(c echo.Context) error {
-	c.Echo().Renderer = templates.For("views/auth/*.html","views/auth/login/*.html")
-
-	return c.Render(http.StatusOK, "login.html", nil)
+	return templates.RenderGroup(c, http.StatusOK, "login.html", nil, authViewPatterns, loginViewPatterns)
 }
 
 func PostLogin(c echo.Context) error {
@@ -63,9 +68,7 @@ func Logout(c echo.Context) error {
 }
 
 func Register(c echo.Context) error {
-	c.Echo().Renderer = templates.For("views/auth/*.html","views/auth/register/*.html")
-
-	return c.Render(http.StatusOK, "register.html", nil)
+	return templates.RenderGroup(c, http.StatusOK, "register.html", nil, authViewPatterns, registerViewPatterns)
 }
 
 func PostRegister(c echo.Context) error {
@@ -102,6 +105,5 @@ func PostRegister(c echo.Context) error {
 }
 
 func ClearAlert(c echo.Context) error {
-	c.Render(http.StatusOK, "oob-alert-empty", nil)
-	return nil
+	return templates.RenderGroup(c, http.StatusOK, "oob-alert-empty", nil, authViewPatterns)
 }

@@ -10,6 +10,9 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// viewPatterns is the template set this controller renders into.
+var viewPatterns = []string{"views/layout/*.html", "views/users/*.html"}
+
 func SetupEndpoints(g *echo.Group) {
 	g.GET("/users", GetAll)
 	g.GET("/users/:id", EditUser)
@@ -20,7 +23,6 @@ func SetupEndpoints(g *echo.Group) {
 }
 
 func GetAll(c echo.Context) error {
-	c.Echo().Renderer = templates.For("views/layout/*.html","views/users/*.html")
 
 	userId := c.Get("UserId").(uint)
 
@@ -35,11 +37,10 @@ func GetAll(c echo.Context) error {
 		Character:  character.GetFullCharacterForUser(int64(userId)),
 	}
 
-	return c.Render(http.StatusOK, "index.html", data)
+	return templates.RenderGroup(c, http.StatusOK, "index.html", data, viewPatterns...)
 }
 
 func EditUser(c echo.Context) error {
-	c.Echo().Renderer = templates.For("views/layout/*.html","views/users/*.html")
 
 	id := c.Param("id")
 	Id, _ := strconv.Atoi(id)
@@ -52,7 +53,7 @@ func EditUser(c echo.Context) error {
 		Page: user,
 	}
 
-	return c.Render(http.StatusOK, "table-edit", data)
+	return templates.RenderGroup(c, http.StatusOK, "table-edit", data, viewPatterns...)
 }
 
 func SaveUser(c echo.Context) error {
@@ -84,13 +85,11 @@ func SaveUser(c echo.Context) error {
 }
 
 func CreateUser(c echo.Context) error {
-	c.Echo().Renderer = templates.For("views/layout/*.html","views/users/*.html")
 
-	return c.Render(http.StatusOK, "table-edit", nil)
+	return templates.RenderGroup(c, http.StatusOK, "table-edit", nil, viewPatterns...)
 }
 
 func ConfirmDeleteUser(c echo.Context) error {
-	c.Echo().Renderer = templates.For("views/layout/*.html","views/users/*.html")
 
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
@@ -102,7 +101,7 @@ func ConfirmDeleteUser(c echo.Context) error {
 		Page: user,
 	}
 
-	return c.Render(http.StatusOK, "table-delete", data)
+	return templates.RenderGroup(c, http.StatusOK, "table-delete", data, viewPatterns...)
 }
 
 func DeleteUser(c echo.Context) error {

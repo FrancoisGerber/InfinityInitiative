@@ -5,8 +5,8 @@ import (
 	"InfinityInitiative/data/models"
 	"InfinityInitiative/routes"
 	"InfinityInitiative/utils"
+	"net/http"
 
-	"github.com/gorilla/sessions"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
@@ -36,7 +36,19 @@ func main() {
 	// Root level middleware
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
-	e.Use(session.Middleware(sessions.NewCookieStore(utils.Secret())))
+	e.Use(session.Middleware(utils.SessionStore()))
+
+	// CSRF: every mutating request must carry the token. The cookie is readable by the
+	// page's own script (HttpOnly off on purpose) so htmx can copy it into a header.
+	e.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
+		TokenLookup:    "header:X-CSRF-Token,form:_csrf",
+		ContextKey:     "csrf",
+		CookieName:     "_csrf",
+		CookiePath:     "/",
+		CookieHTTPOnly: false,
+		CookieSecure:   !utils.InsecureCookies(),
+		CookieSameSite: http.SameSiteLaxMode,
+	}))
 
 	// Static files and templates
 	e.Static("/assets", "views/assets")

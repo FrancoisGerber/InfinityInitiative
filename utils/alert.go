@@ -1,9 +1,16 @@
 package utils
 
 import (
-	"github.com/labstack/echo/v4"
 	"net/http"
+
+	templates "InfinityInitiative/views"
+
+	"github.com/labstack/echo/v4"
 )
+
+// The alert fragments live in the layout set, so they are rendered with it directly —
+// the handlers no longer install a renderer on the shared Echo instance.
+var alertViewPatterns = "views/layout/*.html"
 
 func ShowAlert(c echo.Context, message string) {
 	showAlert(c, message, "oob-alert")
@@ -18,5 +25,8 @@ func ShowAlertError(c echo.Context, message string) {
 }
 
 func showAlert(c echo.Context, message string, alertType string) {
-	c.Render(http.StatusOK, alertType, struct{ Message string }{message})
+	err := templates.RenderGroup(c, http.StatusOK, alertType, struct{ Message string }{message}, alertViewPatterns)
+	if err != nil {
+		c.Logger().Error(err)
+	}
 }

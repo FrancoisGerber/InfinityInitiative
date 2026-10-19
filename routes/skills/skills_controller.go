@@ -9,6 +9,9 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// viewPatterns is the template set this controller renders into.
+var viewPatterns = []string{"views/layout/*.html", "views/skills/*.html"}
+
 func SetupEndpoints(g *echo.Group) {
 	g.GET("/skills", GetAll)
 	g.GET("/skills/:id", EditSkill)
@@ -19,7 +22,6 @@ func SetupEndpoints(g *echo.Group) {
 }
 
 func GetAll(c echo.Context) error {
-	c.Echo().Renderer = templates.For("views/layout/*.html","views/skills/*.html")
 
 	userId := c.Get("UserId").(uint)
 
@@ -33,11 +35,10 @@ func GetAll(c echo.Context) error {
 		Character:  character.GetFullCharacterForUser(int64(userId)),
 	}
 
-	return c.Render(http.StatusOK, "index.html", data)
+	return templates.RenderGroup(c, http.StatusOK, "index.html", data, viewPatterns...)
 }
 
 func EditSkill(c echo.Context) error {
-	c.Echo().Renderer = templates.For("views/layout/*.html","views/skills/*.html")
 
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
@@ -49,7 +50,7 @@ func EditSkill(c echo.Context) error {
 		Page: skill,
 	}
 
-	return c.Render(http.StatusOK, "table-edit", data)
+	return templates.RenderGroup(c, http.StatusOK, "table-edit", data, viewPatterns...)
 }
 
 func SaveSkill(c echo.Context) error {
@@ -79,13 +80,11 @@ func SaveSkill(c echo.Context) error {
 }
 
 func CreateSkill(c echo.Context) error {
-	c.Echo().Renderer = templates.For("views/layout/*.html","views/skills/*.html")
 
-	return c.Render(http.StatusOK, "table-edit", nil)
+	return templates.RenderGroup(c, http.StatusOK, "table-edit", nil, viewPatterns...)
 }
 
 func ConfirmDeleteSkill(c echo.Context) error {
-	c.Echo().Renderer = templates.For("views/layout/*.html","views/skills/*.html")
 
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
@@ -97,7 +96,7 @@ func ConfirmDeleteSkill(c echo.Context) error {
 		Page: skill,
 	}
 
-	return c.Render(http.StatusOK, "table-delete", data)
+	return templates.RenderGroup(c, http.StatusOK, "table-delete", data, viewPatterns...)
 }
 
 func DeleteSkill(c echo.Context) error {

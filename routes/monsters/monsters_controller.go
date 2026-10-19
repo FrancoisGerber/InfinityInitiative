@@ -9,6 +9,9 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// viewPatterns is the template set this controller renders into.
+var viewPatterns = []string{"views/layout/*.html", "views/monsters/*.html"}
+
 func SetupEndpoints(g *echo.Group) {
 	g.GET("/monsters", GetAll)
 	g.GET("/monsters/:id", EditMonster)
@@ -19,7 +22,6 @@ func SetupEndpoints(g *echo.Group) {
 }
 
 func GetAll(c echo.Context) error {
-	c.Echo().Renderer = templates.For("views/layout/*.html","views/monsters/*.html")
 
 	userId := c.Get("UserId").(uint)
 
@@ -33,11 +35,10 @@ func GetAll(c echo.Context) error {
 		Character:  character.GetFullCharacterForUser(int64(userId)),
 	}
 
-	return c.Render(http.StatusOK, "index.html", data)
+	return templates.RenderGroup(c, http.StatusOK, "index.html", data, viewPatterns...)
 }
 
 func EditMonster(c echo.Context) error {
-	c.Echo().Renderer = templates.For("views/layout/*.html","views/monsters/*.html")
 
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
@@ -55,7 +56,7 @@ func EditMonster(c echo.Context) error {
 		},
 	}
 
-	return c.Render(http.StatusOK, "table-edit", data)
+	return templates.RenderGroup(c, http.StatusOK, "table-edit", data, viewPatterns...)
 }
 
 func SaveMonster(c echo.Context) error {
@@ -85,7 +86,6 @@ func SaveMonster(c echo.Context) error {
 }
 
 func CreateMonster(c echo.Context) error {
-	c.Echo().Renderer = templates.For("views/layout/*.html","views/monsters/*.html")
 
 	level := models.NewLevel()
 	levels := level.GetAllLevels()
@@ -98,11 +98,10 @@ func CreateMonster(c echo.Context) error {
 		},
 	}
 
-	return c.Render(http.StatusOK, "table-edit", data)
+	return templates.RenderGroup(c, http.StatusOK, "table-edit", data, viewPatterns...)
 }
 
 func ConfirmDeleteMonster(c echo.Context) error {
-	c.Echo().Renderer = templates.For("views/layout/*.html","views/monsters/*.html")
 
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
@@ -114,7 +113,7 @@ func ConfirmDeleteMonster(c echo.Context) error {
 		Page: monster,
 	}
 
-	return c.Render(http.StatusOK, "table-delete", data)
+	return templates.RenderGroup(c, http.StatusOK, "table-delete", data, viewPatterns...)
 }
 
 func DeleteMonster(c echo.Context) error {

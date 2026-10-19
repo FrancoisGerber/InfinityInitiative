@@ -9,6 +9,9 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// viewPatterns is the template set this controller renders into.
+var viewPatterns = []string{"views/layout/*.html", "views/game/*.html"}
+
 func SetupEndpoints(g *echo.Group) {
 	g.GET("/game/:skillName", GetGamePage)
 	g.GET("/game/action/:itemId", GetActiveAction)
@@ -19,7 +22,6 @@ func SetupEndpoints(g *echo.Group) {
 }
 
 func GetGamePage(c echo.Context) error {
-	c.Echo().Renderer = templates.For("views/layout/*.html", "views/game/*.html")
 
 	skillName := c.Param("skillName")
 
@@ -47,11 +49,10 @@ func GetGamePage(c echo.Context) error {
 		Character: character.GetFullCharacterForUser(int64(userId)),
 	}
 
-	return c.Render(http.StatusOK, "index.html", data)
+	return templates.RenderGroup(c, http.StatusOK, "index.html", data, viewPatterns...)
 }
 
 func RunActiveAction(c echo.Context) error {
-	c.Echo().Renderer = templates.For("views/layout/*.html", "views/game/*.html")
 
 	itemId := c.Param("itemId")
 	userId := c.Get("UserId").(uint)
@@ -86,15 +87,14 @@ func RunActiveAction(c echo.Context) error {
 		Character: character.GetFullCharacterForUser(int64(userId)),
 	}
 
-	c.Render(http.StatusOK, "oob-action-button", data)
-	c.Render(http.StatusOK, "oob-resources", data)
-	c.Render(http.StatusOK, "oob-action", data)
-	c.Render(http.StatusOK, "oob-side-bar", data)
-	return c.Render(http.StatusOK, "oob-inventory", data)
+	templates.RenderGroup(c, http.StatusOK, "oob-action-button", data, viewPatterns...)
+	templates.RenderGroup(c, http.StatusOK, "oob-resources", data, viewPatterns...)
+	templates.RenderGroup(c, http.StatusOK, "oob-action", data, viewPatterns...)
+	templates.RenderGroup(c, http.StatusOK, "oob-side-bar", data, viewPatterns...)
+	return templates.RenderGroup(c, http.StatusOK, "oob-inventory", data, viewPatterns...)
 }
 
 func GetActiveAction(c echo.Context) error {
-	c.Echo().Renderer = templates.For("views/layout/*.html", "views/game/*.html")
 
 	itemId := c.Param("itemId")
 	userId := c.Get("UserId").(uint)
@@ -150,9 +150,9 @@ func GetActiveAction(c echo.Context) error {
 	}
 
 	// Load views
-	c.Render(http.StatusOK, "oob-action-button", data)
-	c.Render(http.StatusOK, "oob-resources", data)
-	return c.Render(http.StatusOK, "oob-action", data)
+	templates.RenderGroup(c, http.StatusOK, "oob-action-button", data, viewPatterns...)
+	templates.RenderGroup(c, http.StatusOK, "oob-resources", data, viewPatterns...)
+	return templates.RenderGroup(c, http.StatusOK, "oob-action", data, viewPatterns...)
 }
 
 func SetGameNotes(c echo.Context) error {
@@ -217,14 +217,13 @@ func SetGameState(c echo.Context) error {
 		}
 
 		// Load views
-		return c.Render(http.StatusOK, "oob-inventory", data)
+		return templates.RenderGroup(c, http.StatusOK, "oob-inventory", data, viewPatterns...)
 	}
 
 	return nil
 }
 
 func SetEquipedItem(c echo.Context) error {
-	c.Echo().Renderer = templates.For("views/layout/*.html", "views/game/*.html")
 
 	itemId := c.Param("itemId")
 	userId := c.Get("UserId").(uint)
@@ -258,6 +257,6 @@ func SetEquipedItem(c echo.Context) error {
 	}
 
 	// Load views
-	c.Render(http.StatusOK, "oob-equipped-items", data)
-	return c.Render(http.StatusOK, "oob-inventory", data)
+	templates.RenderGroup(c, http.StatusOK, "oob-equipped-items", data, viewPatterns...)
+	return templates.RenderGroup(c, http.StatusOK, "oob-inventory", data, viewPatterns...)
 }

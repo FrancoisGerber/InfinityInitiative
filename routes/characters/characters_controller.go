@@ -9,6 +9,9 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// viewPatterns is the template set this controller renders into.
+var viewPatterns = []string{"views/layout/*.html", "views/characters/*.html"}
+
 func SetupEndpoints(g *echo.Group) {
 	g.GET("/characters", GetAll)
 	g.GET("/characters/:id", EditCharacter)
@@ -19,7 +22,6 @@ func SetupEndpoints(g *echo.Group) {
 }
 
 func GetAll(c echo.Context) error {
-	c.Echo().Renderer = templates.For("views/layout/*.html","views/characters/*.html")
 
 	userId := c.Get("UserId").(uint)
 
@@ -32,11 +34,10 @@ func GetAll(c echo.Context) error {
 		Character:  character.GetFullCharacterForUser(int64(userId)),
 	}
 
-	return c.Render(http.StatusOK, "index.html", data)
+	return templates.RenderGroup(c, http.StatusOK, "index.html", data, viewPatterns...)
 }
 
 func EditCharacter(c echo.Context) error {
-	c.Echo().Renderer = templates.For("views/layout/*.html","views/characters/*.html")
 
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
@@ -58,7 +59,7 @@ func EditCharacter(c echo.Context) error {
 		},
 	}
 
-	return c.Render(http.StatusOK, "table-edit", data)
+	return templates.RenderGroup(c, http.StatusOK, "table-edit", data, viewPatterns...)
 }
 
 func SaveCharacter(c echo.Context) error {
@@ -98,7 +99,6 @@ func SaveCharacter(c echo.Context) error {
 }
 
 func CreateCharacter(c echo.Context) error {
-	c.Echo().Renderer = templates.For("views/layout/*.html","views/characters/*.html")
 
 	level := models.NewLevel()
 	user := models.NewUser()
@@ -115,11 +115,10 @@ func CreateCharacter(c echo.Context) error {
 		},
 	}
 
-	return c.Render(http.StatusOK, "table-edit", data)
+	return templates.RenderGroup(c, http.StatusOK, "table-edit", data, viewPatterns...)
 }
 
 func ConfirmDeleteCharacter(c echo.Context) error {
-	c.Echo().Renderer = templates.For("views/layout/*.html","views/characters/*.html")
 
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
@@ -131,7 +130,7 @@ func ConfirmDeleteCharacter(c echo.Context) error {
 		Page: character,
 	}
 
-	return c.Render(http.StatusOK, "table-delete", data)
+	return templates.RenderGroup(c, http.StatusOK, "table-delete", data, viewPatterns...)
 }
 
 func DeleteCharacter(c echo.Context) error {

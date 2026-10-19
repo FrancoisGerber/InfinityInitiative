@@ -9,6 +9,9 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// viewPatterns is the template set this controller renders into.
+var viewPatterns = []string{"views/layout/*.html", "views/recipes/*.html"}
+
 func SetupEndpoints(g *echo.Group) {
 	g.GET("/recipes", GetAll)
 	g.GET("/recipes/:id", EditRecipe)
@@ -19,7 +22,6 @@ func SetupEndpoints(g *echo.Group) {
 }
 
 func GetAll(c echo.Context) error {
-	c.Echo().Renderer = templates.For("views/layout/*.html","views/recipes/*.html")
 
 	userId := c.Get("UserId").(uint)
 
@@ -34,11 +36,10 @@ func GetAll(c echo.Context) error {
 		Character:  character.GetFullCharacterForUser(int64(userId)),
 	}
 
-	return c.Render(http.StatusOK, "index.html", data)
+	return templates.RenderGroup(c, http.StatusOK, "index.html", data, viewPatterns...)
 }
 
 func EditRecipe(c echo.Context) error {
-	c.Echo().Renderer = templates.For("views/layout/*.html","views/recipes/*.html")
 
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
@@ -56,7 +57,7 @@ func EditRecipe(c echo.Context) error {
 		},
 	}
 
-	return c.Render(http.StatusOK, "table-edit", data)
+	return templates.RenderGroup(c, http.StatusOK, "table-edit", data, viewPatterns...)
 }
 
 func SaveRecipe(c echo.Context) error {
@@ -86,7 +87,6 @@ func SaveRecipe(c echo.Context) error {
 }
 
 func CreateRecipe(c echo.Context) error {
-	c.Echo().Renderer = templates.For("views/layout/*.html","views/recipes/*.html")
 
 	item := models.NewItem()
 	items := item.GetAllItems()
@@ -98,11 +98,10 @@ func CreateRecipe(c echo.Context) error {
 		},
 	}
 
-	return c.Render(http.StatusOK, "table-edit", data)
+	return templates.RenderGroup(c, http.StatusOK, "table-edit", data, viewPatterns...)
 }
 
 func ConfirmDeleteRecipe(c echo.Context) error {
-	c.Echo().Renderer = templates.For("views/layout/*.html","views/recipes/*.html")
 
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
@@ -114,7 +113,7 @@ func ConfirmDeleteRecipe(c echo.Context) error {
 		Page: recipe,
 	}
 
-	return c.Render(http.StatusOK, "table-delete", data)
+	return templates.RenderGroup(c, http.StatusOK, "table-delete", data, viewPatterns...)
 }
 
 func DeleteRecipe(c echo.Context) error {

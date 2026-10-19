@@ -10,6 +10,9 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// viewPatterns is the template set this controller renders into.
+var viewPatterns = []string{"views/layout/*.html", "views/items/*.html"}
+
 func SetupEndpoints(g *echo.Group) {
 	g.GET("/items", GetAll)
 	g.GET("/items/:id", EditItem)
@@ -23,7 +26,6 @@ func SetupEndpoints(g *echo.Group) {
 }
 
 func GetAll(c echo.Context) error {
-	c.Echo().Renderer = templates.For("views/layout/*.html","views/items/*.html")
 
 	userId := c.Get("UserId").(uint)
 	item := models.NewItem()
@@ -37,11 +39,10 @@ func GetAll(c echo.Context) error {
 		Character:  character.GetFullCharacterForUser(int64(userId)),
 	}
 
-	return c.Render(http.StatusOK, "index.html", data)
+	return templates.RenderGroup(c, http.StatusOK, "index.html", data, viewPatterns...)
 }
 
 func EditItem(c echo.Context) error {
-	c.Echo().Renderer = templates.For("views/layout/*.html","views/items/*.html")
 
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
@@ -63,7 +64,7 @@ func EditItem(c echo.Context) error {
 		},
 	}
 
-	return c.Render(http.StatusOK, "table-edit", data)
+	return templates.RenderGroup(c, http.StatusOK, "table-edit", data, viewPatterns...)
 }
 
 func SaveItem(c echo.Context) error {
@@ -103,7 +104,6 @@ func SaveItem(c echo.Context) error {
 }
 
 func CreateItem(c echo.Context) error {
-	c.Echo().Renderer = templates.For("views/layout/*.html","views/items/*.html")
 
 	level := models.NewLevel()
 	skill := models.NewSkill()
@@ -120,11 +120,10 @@ func CreateItem(c echo.Context) error {
 		},
 	}
 
-	return c.Render(http.StatusOK, "table-edit", data)
+	return templates.RenderGroup(c, http.StatusOK, "table-edit", data, viewPatterns...)
 }
 
 func ConfirmDeleteItem(c echo.Context) error {
-	c.Echo().Renderer = templates.For("views/layout/*.html","views/items/*.html")
 
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
@@ -136,7 +135,7 @@ func ConfirmDeleteItem(c echo.Context) error {
 		Page: item,
 	}
 
-	return c.Render(http.StatusOK, "table-delete", data)
+	return templates.RenderGroup(c, http.StatusOK, "table-delete", data, viewPatterns...)
 }
 
 func DeleteItem(c echo.Context) error {
@@ -159,7 +158,6 @@ func DeleteItem(c echo.Context) error {
 }
 
 func EditRecipe(c echo.Context) error {
-	c.Echo().Renderer = templates.For("views/layout/*.html","views/items/*.html")
 
 	id := c.Param("id")
 	ItemId := int64(utils.ParseInt(id))
@@ -192,11 +190,10 @@ func EditRecipe(c echo.Context) error {
 		Id:   ItemId,
 	}
 
-	return c.Render(http.StatusOK, "recipe-edit", data)
+	return templates.RenderGroup(c, http.StatusOK, "recipe-edit", data, viewPatterns...)
 }
 
 func AddRecipe(c echo.Context) error {
-	c.Echo().Renderer = templates.For("views/layout/*.html","views/items/*.html")
 	item := models.NewItem()
 	items := item.GetAllItems()
 
@@ -208,7 +205,7 @@ func AddRecipe(c echo.Context) error {
 		Items:  items,
 	}
 
-	return c.Render(http.StatusOK, "recipe-edit-row", recipeDto)
+	return templates.RenderGroup(c, http.StatusOK, "recipe-edit-row", recipeDto, viewPatterns...)
 }
 
 func SaveRecipe(c echo.Context) error {

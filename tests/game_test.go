@@ -181,7 +181,7 @@ func TestRunActionIsAtomic(t *testing.T) {
 	// The third click cannot be paid for: it must report the shortfall and leave the
 	// bag exactly as it was.
 	rec := doRequest(e, http.MethodPost, craftPath, cookie)
-	if !strings.Contains(rec.Body.String(), "resources") {
+	if !strings.Contains(strings.ToLower(rec.Body.String()), "resources") {
 		t.Fatalf("expected a shortfall message, got %q", rec.Body.String())
 	}
 

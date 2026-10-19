@@ -60,6 +60,22 @@ func For(patterns ...string) *Templates {
 	return entry.templates
 }
 
+// RenderGroup renders name with the cached template set for patterns and writes it
+// straight to the response.
+//
+// Handlers used to assign c.Echo().Renderer per request, which mutates shared state: two
+// concurrent requests from different route groups could render each other's templates.
+// Rendering through this helper keeps the parsed sets cached and the renderer untouched.
+func RenderGroup(c echo.Context, status int, name string, data any, patterns ...string) error {
+	t := For(patterns...)
+
+	if !c.Response().Committed {
+		c.Response().WriteHeader(status)
+	}
+
+	return t.Render(c.Response(), name, data, c)
+}
+
 // ParseTemplates parses a fresh set. Prefer For() so the files are read once.
 func ParseTemplates(patterns []string) *Templates {
 	fileList := []string{}
