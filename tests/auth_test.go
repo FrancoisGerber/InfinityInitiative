@@ -5,6 +5,8 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
+	"strings"
 	"testing"
 
 	"InfinityInitiative/data/models"
@@ -131,5 +133,37 @@ func TestAdminRoutesAllowAdminRole(t *testing.T) {
 
 	if rec.Code == http.StatusForbidden {
 		t.Fatalf("admin was refused: %d body=%q", rec.Code, rec.Body.String())
+	}
+}
+
+// A session cookie left over from an older build (a different store, an old format) must
+// not break login: the handler used to return the decode error as a 500.
+func TestLoginSurvivesAnUndecodableSessionCookie(t *testing.T) {
+	roleModel := models.NewRole()
+	role := roleModel.GetRoleByName("User")
+
+	user := models.InitUser(&models.User{
+		Username: "stale",
+		Email:    "stale@test.local",
+		Password: utils.HashPassword("Passw0rd!123"),
+		RoleId:   role.ID,
+	})
+	if _, err := user.Create(); err != nil {
+		t.Fatalf("could not create user: %v", err)
+	}
+
+	e, _ := newTestServer()
+
+	form := url.Values{"Email": {"stale@test.local"}, "Password": {"Passw0rd!123"}}
+	req := httptest.NewRequest(http.MethodPost, "/login", strings.NewReader(form.Encode()))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationForm)
+	// A value no session store can decode.
+	req.AddCookie(&http.Cookie{Name: "session", Value: "bm90LWEtcmVhbC1zZXNzaW9u"})
+
+	rec := httptest.NewRecorder()
+	e.ServeHTTP(rec, req)
+
+	if rec.Code != 300 {
+		t.Fatalf("login with a stale cookie returned %d: %q", rec.Code, rec.Body.String())
 	}
 }

@@ -4,9 +4,11 @@ import (
 	"InfinityInitiative/data/models"
 	"InfinityInitiative/utils"
 	templates "InfinityInitiative/views"
+	"errors"
 	"net/http"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/labstack/echo/v4"
 )
@@ -213,28 +215,90 @@ func GetGamePage(c echo.Context) error {
 		},
 		Character: character.LoadFullCharacter(),
 	}
+	data = withPacing(data, character)
 
 	return templates.RenderGroup(c, http.StatusOK, "index.html", data, viewPatterns...)
 }
 
 func RunActiveAction(c echo.Context) error {
-
-	itemId := c.Param("itemId")
+	itemID := uint(utils.ParseInt(c.Param("itemId")))
 	userId := c.Get("UserId").(uint)
 
 	game := models.NewGame()
+	character := activeCharacter(c, userId)
+	now := time.Now().UnixMilli()
 
-	// One atomic action: ingredients, XP and output in a single transaction, with no
-	// sleep inside the request (see data/models/action.go).
+	switch {
+	case character.ActionItemId != 0 && now >= character.ActionReadyAt:
+		// The runtime has elapsed; this click collects what the action produced.
+		if _, err := game.CollectAction(character.ID); err != nil {
+			utils.ShowAlertError(c, err.Error())
+			return nil
+		}
+
+		character = activeCharacter(c, userId)
+	case character.ActionItemId != 0:
+		// Still running: re-render the countdown, grant nothing.
+	default:
+		if err := game.StartAction(character.ID, itemID); err != nil {
+			if !errors.Is(err, models.ErrActionInProgress) {
+				utils.ShowAlertError(c, err.Error())
+				return nil
+			}
+		}
+
+		character = activeCharacter(c, userId)
+	}
+
+	return renderActionFragments(c, userId, character, itemID)
+}
+
+// CollectActiveAction is the endpoint the action panel calls when the runtime elapses; it
+// takes no item id, so an abandoned tab can still finish what it started.
+func CollectActiveAction(c echo.Context) error {
+	userId := c.Get("UserId").(uint)
+	game := models.NewGame()
 	character := activeCharacter(c, userId)
 
-	if _, err := game.RunAction(character.ID, uint(utils.ParseInt(itemId))); err != nil {
-		utils.ShowAlertError(c, err.Error())
+	if _, err := game.CollectAction(character.ID); err != nil {
+		if !errors.Is(err, models.ErrActionInProgress) {
+			utils.ShowAlertError(c, err.Error())
+			return nil
+		}
+
 		return nil
 	}
 
+	character = activeCharacter(c, userId)
+
+	itemID := character.ActionItemId
+	if itemID == 0 && character.ActiveItemId != nil {
+		itemID = *character.ActiveItemId
+	}
+
+	return renderActionFragments(c, userId, character, itemID)
+}
+
+// withPacing marks the data as "an action is running" so the action button renders as a
+// countdown instead of a live button.
+func withPacing(data models.Data, character models.Character) models.Data {
+	now := time.Now().UnixMilli()
+	if character.ActionItemId != 0 && character.ActionReadyAt > now {
+		wait := character.ActionReadyAt - now
+		data.Working = true
+		data.WaitMs = wait
+		data.WorkingSeconds = (wait + 999) / 1000
+	}
+
+	return data
+}
+
+// renderActionFragments sends the five out-of-band panels an action updates.
+func renderActionFragments(c echo.Context, userId uint, character models.Character, itemID uint) error {
+	game := models.NewGame()
+
 	item := models.NewItem()
-	item = item.GetItem(int64(utils.ParseInt(itemId)))
+	item = item.GetItem(int64(itemID))
 
 	skill := models.NewSkill()
 	skill = skill.GetSkill(int64(item.SkillId))
@@ -250,6 +314,7 @@ func RunActiveAction(c echo.Context) error {
 		},
 		Character: character.LoadFullCharacter(),
 	}
+	data = withPacing(data, character)
 
 	templates.RenderGroup(c, http.StatusOK, "oob-action-button", data, viewPatterns...)
 	templates.RenderGroup(c, http.StatusOK, "oob-resources", data, viewPatterns...)

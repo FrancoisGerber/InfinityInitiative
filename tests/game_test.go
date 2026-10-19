@@ -90,8 +90,8 @@ func gameFixture(t *testing.T) (models.User, models.Character, models.Item, mode
 		Type:             "Resource",
 		LevelId:          int(level.ID),
 		ExperienceGained: 100,
-		Runtime:          time.Second,
-		RuntimeString:    "1s",
+		Runtime:          0,
+		RuntimeString:    "0s",
 		SkillId:          1,
 	})
 	if _, err := gather.Create(); err != nil {
@@ -104,8 +104,8 @@ func gameFixture(t *testing.T) (models.User, models.Character, models.Item, mode
 		Type:             "Resource",
 		LevelId:          int(level.ID),
 		ExperienceGained: 200,
-		Runtime:          time.Second,
-		RuntimeString:    "1s",
+		Runtime:          0,
+		RuntimeString:    "0s",
 		SkillId:          5,
 	})
 	if _, err := craft.Create(); err != nil {
@@ -178,11 +178,21 @@ func TestRunActionIsAtomic(t *testing.T) {
 	cookie := signedSessionCookie(t, store, user.ID)
 	craftPath := "/game/action/" + strconv.FormatUint(uint64(craft.ID), 10)
 
-	// 5 coal pays for two crafts (2 + 2) and leaves one behind.
+	// 5 coal pays for two crafts (2 + 2) and leaves one behind. Each craft is a start
+	// click and a collect click: the first grants nothing.
 	for i := 0; i < 2; i++ {
 		rec := doRequest(e, http.MethodPost, craftPath, &cookie)
 		if rec.Code != http.StatusOK {
-			t.Fatalf("craft %d returned %d: %q", i+1, rec.Code, rec.Body.String())
+			t.Fatalf("craft %d start returned %d: %q", i+1, rec.Code, rec.Body.String())
+		}
+
+		if got := inventoryItemFor(craft.ID, character.ID).Amount; got != int64(i) {
+			t.Fatalf("the start click granted an item: rubies = %d, want %d", got, i)
+		}
+
+		rec = doRequest(e, http.MethodPost, "/game/action/collect", &cookie)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("craft %d collect returned %d: %q", i+1, rec.Code, rec.Body.String())
 		}
 	}
 
@@ -362,7 +372,12 @@ func TestActionsApplyToTheActiveCharacter(t *testing.T) {
 
 	rec = doRequest(e, http.MethodPost, "/game/action/"+strconv.FormatUint(uint64(gather.ID), 10), &cookie)
 	if rec.Code != http.StatusOK {
-		t.Fatalf("action returned %d: %q", rec.Code, rec.Body.String())
+		t.Fatalf("action start returned %d: %q", rec.Code, rec.Body.String())
+	}
+
+	rec = doRequest(e, http.MethodPost, "/game/action/collect", &cookie)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("action collect returned %d: %q", rec.Code, rec.Body.String())
 	}
 
 	inSecond := inventoryItemFor(gather.ID, second.ID)
@@ -373,5 +388,48 @@ func TestActionsApplyToTheActiveCharacter(t *testing.T) {
 	inFirst := inventoryItemFor(gather.ID, first.ID)
 	if inFirst.Amount != 0 {
 		t.Fatalf("the inactive character was credited: amount = %d", inFirst.Amount)
+	}
+}
+
+// The runtime must actually gate the payout: an action with a long runtime produces
+// nothing until it has elapsed.
+func TestActionRespectsRuntime(t *testing.T) {
+	user, character, gather, _ := gameFixture(t)
+
+	slow := models.InitItem(&models.Item{
+		Name:             "Ancient Carrot",
+		Type:             "Resource",
+		LevelId:          gather.LevelId,
+		ExperienceGained: 500,
+		Runtime:          time.Hour,
+		RuntimeString:    "1h",
+		SkillId:          gather.SkillId,
+	})
+	if _, err := slow.Create(); err != nil {
+		t.Fatalf("slow item: %v", err)
+	}
+	slow = itemByID(slow.ID)
+
+	e, store := newTestServer()
+	cookie := signedSessionCookie(t, store, user.ID)
+	path := "/game/action/" + strconv.FormatUint(uint64(slow.ID), 10)
+
+	if rec := doRequest(e, http.MethodPost, path, &cookie); rec.Code != http.StatusOK {
+		t.Fatalf("start returned %d", rec.Code)
+	}
+
+	// Collecting before the runtime elapses grants nothing (the panel just keeps counting).
+	if rec := doRequest(e, http.MethodPost, "/game/action/collect", &cookie); rec.Code != http.StatusOK {
+		t.Fatalf("early collect returned %d", rec.Code)
+	}
+
+	if got := inventoryItemFor(slow.ID, character.ID).Amount; got != 0 {
+		t.Fatalf("an action granted its output before its runtime elapsed: amount = %d", got)
+	}
+
+	// The pending action is recorded, so a later collect can finish it.
+	reloaded := characterForUserID(user.ID)
+	if reloaded.ActionItemId != slow.ID || reloaded.ActionReadyAt <= 0 {
+		t.Fatalf("pending action not recorded: item=%d ready=%d", reloaded.ActionItemId, reloaded.ActionReadyAt)
 	}
 }

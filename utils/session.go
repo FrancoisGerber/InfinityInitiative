@@ -3,6 +3,7 @@ package utils
 import (
 	"crypto/sha256"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -92,6 +93,39 @@ func sessionUserID(value any) uint {
 	return 0
 }
 
+// saveSession writes the session, and retries once with a fresh id when the store cannot
+// use the id the client sent. A cookie issued by an older store decodes into a value that
+// is not a valid file name, which made every login fail with a 500 until the cookie was
+// cleared by hand.
+func saveSession(c echo.Context, sess *sessions.Session) error {
+	if err := sess.Save(c.Request(), c.Response()); err == nil {
+		return nil
+	}
+
+	sess.ID = ""
+
+	return sess.Save(c.Request(), c.Response())
+}
+
+// viableSession returns the request's session, or a brand-new empty one when the cookie
+// the client sent cannot be decoded. A cookie issued by a previous session store is
+// undecodable, and treating that as fatal made login fail with a 500 until the browser was
+// cleared by hand.
+func viableSession(c echo.Context) (*sessions.Session, error) {
+	sess, err := session.Get("session", c)
+	if err == nil && sess != nil {
+		return sess, nil
+	}
+
+	// echo-contrib keeps the store under this context key and offers no getter.
+	store, ok := c.Get("_session_store").(sessions.Store)
+	if !ok || store == nil {
+		return nil, fmt.Errorf("no session store configured")
+	}
+
+	return sessions.NewSession(store, "session"), nil
+}
+
 func GetSessionUser(c echo.Context) (uint, error) {
 	sess, err := session.Get("session", c)
 	if err != nil {
@@ -104,16 +138,18 @@ func GetSessionUser(c echo.Context) (uint, error) {
 // SetSessionUser logs the user in and rotates the session id, so a session fixed before
 // login (an attacker-supplied id) cannot be reused afterwards.
 func SetSessionUser(c echo.Context, userId uint) error {
-	sess, err := session.Get("session", c)
+	// A login always starts a new session: the id rotates, and nothing the client sent
+	// (possibly from an older store) is carried over.
+	sess, err := viableSession(c)
 	if err != nil {
 		return err
 	}
 
 	sess.Options = sessionOptions()
 	sess.ID = ""
-	sess.Values["userId"] = uint(userId)
+	sess.Values = map[any]any{"userId": uint(userId)}
 
-	return sess.Save(c.Request(), c.Response())
+	return saveSession(c, sess)
 }
 
 func GetGameState(c echo.Context) GameState {
@@ -141,7 +177,7 @@ func GetGameState(c echo.Context) GameState {
 }
 
 func SetGameState(c echo.Context, gameState GameState) error {
-	sess, err := session.Get("session", c)
+	sess, err := viableSession(c)
 	if err != nil {
 		return err
 	}
@@ -155,7 +191,7 @@ func SetGameState(c echo.Context, gameState GameState) error {
 
 	sess.Values["GameState"] = string(state)
 
-	return sess.Save(c.Request(), c.Response())
+	return saveSession(c, sess)
 }
 
 // GetSessionCharacter returns the character the player is currently controlling (0 when
@@ -171,7 +207,7 @@ func GetSessionCharacter(c echo.Context) uint {
 
 // SetSessionCharacter pins the active character. Ownership must be checked by the caller.
 func SetSessionCharacter(c echo.Context, characterId uint) error {
-	sess, err := session.Get("session", c)
+	sess, err := viableSession(c)
 	if err != nil {
 		return err
 	}
@@ -179,5 +215,5 @@ func SetSessionCharacter(c echo.Context, characterId uint) error {
 	sess.Options = sessionOptions()
 	sess.Values["characterId"] = uint(characterId)
 
-	return sess.Save(c.Request(), c.Response())
+	return saveSession(c, sess)
 }

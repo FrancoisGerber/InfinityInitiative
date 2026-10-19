@@ -1,6 +1,9 @@
 package models
 
-import "slices"
+import (
+	"slices"
+	"time"
+)
 
 type Game struct {
 	Base
@@ -19,6 +22,10 @@ func (model *Game) LoadCharacterProgress(character Character, skillId uint) stru
 	NextLevel    Level
 	ActiveItem   Item
 	PercentageXP float64
+	// Pacing of the action that is currently running (the runtime shown in the UI).
+	Working     bool
+	WaitMs      int64
+	SecondsLeft int64
 } {
 
 	characterSkill := NewCharacterSkill()
@@ -49,16 +56,29 @@ func (model *Game) LoadCharacterProgress(character Character, skillId uint) stru
 		}
 	}
 
+	now := time.Now().UnixMilli()
+	waitMs := int64(0)
+	working := character.ActionItemId != 0 && character.ActionReadyAt > now
+	if working {
+		waitMs = character.ActionReadyAt - now
+	}
+
 	characterSkillDto := struct {
 		CharacterSkill
 		NextLevel    Level
 		ActiveItem   Item
 		PercentageXP float64
+		Working      bool
+		WaitMs       int64
+		SecondsLeft  int64
 	}{
 		characterSkill,
 		nextLevel,
 		activeItem,
 		percentageXP,
+		working,
+		waitMs,
+		(waitMs + 999) / 1000,
 	}
 
 	return characterSkillDto

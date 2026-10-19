@@ -14,6 +14,11 @@ type Data struct {
 	ActivePage   string
 	Id           int64
 	Character    FullCharacter
+
+	// Pacing of the action currently running (set by the game handlers only).
+	Working        bool
+	WorkingSeconds int64
+	WaitMs         int64
 }
 
 // Classes are the playable classes. Keep this list in step with the art in

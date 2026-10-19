@@ -7,6 +7,16 @@
     <h1 class="text-error card-title">Select a resource</h1>
     {{end}} {{if .Page.ActiveItem.Name}}
     <div class="badge badge-outline gap-2">Level: {{.Page.Level.Name}}</div>
+
+    {{if .Page.Working}}
+    <img src="{{.Page.ActiveItem.Image}}" id="action-button-main" class="w-5/12 opacity-60" style="cursor: progress;" />
+    <div class="badge badge-primary gap-2 mb-1">
+      <span class="loading loading-bars loading-sm"></span>
+      <span>Working… {{.Page.SecondsLeft}}s</span>
+    </div>
+    <!-- Fires the collect when the runtime elapses; nothing is granted before that. -->
+    <div hx-post="/game/action/collect" hx-trigger="load delay:{{.Page.WaitMs}}ms" hx-swap="none"></div>
+    {{else}}
     <img
       src="{{.Page.ActiveItem.Image}}"
       id="action-button-main"
@@ -17,6 +27,7 @@
       hx-swap="none"
       hx-post="/game/action/{{.Page.ActiveItem.ID}}"
     />
+    {{end}}
 
     <span class="loading loading-bars text-primary loading-lg htmx-indicator running-action mb-1"></span>
     {{else}}
