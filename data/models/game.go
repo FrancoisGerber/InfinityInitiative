@@ -14,17 +14,15 @@ func NewGame() Game {
 }
 
 // Get complete character skill progress
-func (model *Game) LoadCharacterProgress(userId int64, skillId uint) struct {
+func (model *Game) LoadCharacterProgress(character Character, skillId uint) struct {
 	CharacterSkill
 	NextLevel    Level
 	ActiveItem   Item
 	PercentageXP float64
 } {
 
-	character := NewCharacter()
 	characterSkill := NewCharacterSkill()
 	level := NewLevel()
-	character = character.GetCharacterForUser(userId)
 	characterSkill = characterSkill.GetCharacterProgress(character.ID, skillId)
 
 	nextLevelName := characterSkill.Level.Name + 1
@@ -67,15 +65,13 @@ func (model *Game) LoadCharacterProgress(userId int64, skillId uint) struct {
 }
 
 // Get complete Items with recipes
-func (model *Game) LoadFullItems(skill *Skill, userId int64) []struct {
+func (model *Game) LoadFullItems(skill *Skill, character Character) []struct {
 	Item
 	Recipes    []Recipe
 	ActiveItem Item
 } {
 
 	item := NewItem()
-	character := NewCharacter()
-	character = character.GetCharacterForUser(userId)
 	items := item.GetAllItemsForSkill(skill.ID)
 
 	var itemDtos []struct {
@@ -105,10 +101,8 @@ func (model *Game) LoadFullItems(skill *Skill, userId int64) []struct {
 }
 
 // Get the character's full inventory
-func (model *Game) LoadInventory(userId int64) []Inventory {
+func (model *Game) LoadInventory(character Character) []Inventory {
 	inventory := NewInventory()
-	character := NewCharacter()
-	character = character.GetCharacterForUser(userId)
 	inventoryList := inventory.GetInventoryForCharacter(int64(character.ID))
 
 	return inventoryList

@@ -34,4 +34,7 @@
 **Build Binary for Prod:**
 `make build`
 
+## Not implemented
 
+- **No service worker / offline mode.** `views/assets/manifest.json` makes the app
+  installable, but everything is server-rendered and there is no offline cache.

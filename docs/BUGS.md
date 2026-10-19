@@ -87,7 +87,7 @@ piece is purely the role check.
 | B2 | Default admin seeding removed; first admin only via `SEED_ADMIN_EMAIL` + `SEED_ADMIN_PASSWORD` (12+ chars). |
 | B3, B4, B18 | `data/models/action.go` `RunAction()`: one transaction, conditional ingredient decrement (`UPDATE ... WHERE amount >= ?`), output + XP inside it, **no sleep**. Measured: a 1 s-runtime action now resolves in ~5 ms. |
 | B5 | `updateAll()` in `base.go` — explicit column list, associations omitted; all ten `Update()` methods use it. |
-| B6 (partial) | Cookie is now `HttpOnly`, `SameSite=Lax`, 30-day `MaxAge`, `Secure` unless `INSECURE_COOKIES=1`. CSRF is still open. |
+| B6 | Cookie is `HttpOnly`, `SameSite=Lax`, 30-day `MaxAge`, `Secure` unless `INSECURE_COOKIES=1`; `middleware.CSRF` guards every mutating request (header `X-CSRF-Token` from the `_csrf` cookie, injected by the `htmx:configRequest` hook in both shells); the session id rotates on login. A login POST without the token returns 400. |
 | B9 | XP percentage clamped to 0–100 and guarded when there is no next level. |
 | B10 | Capacity counts live stacks (`amount > 0`); stacking into an existing row is always allowed. |
 | B11 | Inventory lookup is ordered (`equipped DESC, amount DESC, id ASC`); duplicate live stacks are merged by migration. |
@@ -99,12 +99,23 @@ piece is purely the role check.
 | B21 | `middleware.CORS()` removed. |
 | B24 | `SessionAuth` returns the handler's error instead of swallowing it. |
 | B27 | `data/db_remote.go` deleted and `libsql-client-go` dropped from `go.mod`. |
-| B28 | Tests get a throwaway DB per run (`TestMain`); suite passes repeatedly and under `-race`. |
+| B28 | Tests get a throwaway DB per run (`TestMain`) and run from the repo root; suite passes repeatedly and under `-race`. |
+| B7 | The session pins the active character; `GetCharacterForUserAndId` puts ownership in the `WHERE`; a sidebar panel lists the account's characters, switches them (`HX-Refresh`) and creates up to `MaxCharacters`. Every game lookup — progress, items, inventory, actions, equip, notes — now takes that character instead of `First(user_id)`. |
+| B8 | Registration collects a character name + class and creates the character in the same request (user row rolled back if it fails); accounts that predate this get a default character on first page load instead of writing rows for character 0. |
+| B16 | `templates.RenderGroup()` renders straight to the response; all ten controllers stopped assigning `c.Echo().Renderer` (zero mutations remain), and parsed sets are cached per pattern group. |
+| B19 | The two remaining alert+`c.String` pairs return a single alert payload; `ShowAlert*` renders through the layout set. |
+| B20 | Saving a `Resource` that belongs to a skill without a runtime is rejected, so no item can become a free instant action. |
+| B22 | Sessions moved to a server-side filesystem store: the cookie carries a 160-byte id instead of the whole session (GameState included), so UI state can no longer hit the 4 KB cookie ceiling. |
+| B23 | The stored user id is normalised for `uint/int/int64/float64` instead of a bare type assertion. |
+| B25 | `Classes` trimmed to the four with portraits (Fighter, Mage, Cleric, Ranger). |
+| B26 | `MaxInventorySize` is a `const`. |
+| B29 | README no longer claims SSE and now states there is no service worker / offline mode. |
+| B30 | A missing `DBNAME` is fatal instead of silently opening an unnamed database, the resolved path is logged at boot, and the stray `app-test.db` created during this audit was removed. The three pre-existing `*.db` backups in the repo stay (gitignored, real data). |
 
 **Also fixed while in there:** duplicate live recipes are impossible (`UNIQUE(parent_item_id, item_id)`),
 and every model shares one SQLite handle (WAL, `busy_timeout`, `MaxOpenConns(1)`) instead of opening a
 pool per model construction — the data-layer half of the improvement plans.
 
-**Still open:** B6 CSRF + session rotation, B7 multi-character, B8 create-character on registration,
-B16 per-request renderer swap, B19 double payload on error paths, B22 UI state in the cookie,
-B29 PWA/SSE claims, B30 stray database files.
+**All audited bugs are closed.** Remaining work is the *design* backlog from `docs/game-systems/`
+and `docs/improvements/` — there is no combat endpoint, and the 11 sidebar entries still have no
+model, route or table.

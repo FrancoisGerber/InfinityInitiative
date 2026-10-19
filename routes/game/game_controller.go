@@ -5,6 +5,8 @@ import (
 	"InfinityInitiative/utils"
 	templates "InfinityInitiative/views"
 	"net/http"
+	"slices"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 )
@@ -19,6 +21,168 @@ func SetupEndpoints(g *echo.Group) {
 	g.POST("/game/state/:name", SetGameState)
 	g.POST("/game/notes", SetGameNotes)
 	g.POST("/game/equipitem/:itemId", SetEquipedItem)
+	g.GET("/game/characters", GetCharacterPanel)
+	g.POST("/game/character", CreateCharacter)
+	g.POST("/game/character/:characterId", SwitchCharacter)
+}
+
+// activeCharacter resolves the character this request is playing.
+//
+// The session pins the choice; without it the account's first character is used and pinned
+// so the sidebar, actions and inventory all agree. Previously every lookup was
+// First(user_id), which made a second character invisible and unplayable (B7).
+func activeCharacter(c echo.Context, userId uint) models.Character {
+	characterModel := models.NewCharacter()
+
+	if characterId := utils.GetSessionCharacter(c); characterId != 0 {
+		if character := characterModel.GetCharacterForUserAndId(int64(userId), int64(characterId)); character.ID != 0 {
+			return character
+		}
+	}
+
+	character := characterModel.GetCharacterForUser(int64(userId))
+	if character.ID == 0 {
+		// Accounts created before registration built a character would otherwise render
+		// the page against character 0 and write rows for it. Give them the default.
+		character = createDefaultCharacter(userId)
+	}
+
+	if character.ID != 0 {
+		utils.SetSessionCharacter(c, character.ID)
+	}
+
+	return character
+}
+
+// createDefaultCharacter gives an account its first character (name = username).
+func createDefaultCharacter(userId uint) models.Character {
+	userModel := models.NewUser()
+	user := userModel.GetUser(int64(userId))
+
+	name := strings.TrimSpace(user.Username)
+	if len(name) < 3 {
+		name = "Adventurer"
+	}
+	if len(name) > 24 {
+		name = name[:24]
+	}
+
+	level := models.NewLevel()
+	firstLevel := level.GetLevelByName(1)
+
+	character := models.InitCharacter(&models.Character{
+		Name:          name,
+		Class:         models.Classes[0],
+		UserId:        userId,
+		LevelId:       firstLevel.ID,
+		CombatLevelId: firstLevel.ID,
+		Health:        10,
+		MaxHealth:     10,
+		Attack:        1,
+		Strength:      1,
+		Defence:       1,
+	})
+
+	if _, err := character.Create(); err != nil {
+		return models.Character{}
+	}
+
+	return character
+}
+
+// GetCharacterPanel renders the sidebar character list and the create-character form.
+func GetCharacterPanel(c echo.Context) error {
+	userId := c.Get("UserId").(uint)
+	characterModel := models.NewCharacter()
+
+	data := models.Data{
+		DropdownData: map[string]any{
+			"Characters": characterModel.GetCharactersForUser(int64(userId)),
+			"ActiveId":   utils.GetSessionCharacter(c),
+			"Classes":    models.Classes,
+			"Max":        models.MaxCharacters,
+		},
+	}
+
+	return templates.RenderGroup(c, http.StatusOK, "character-panel", data, viewPatterns...)
+}
+
+// SwitchCharacter pins another character of the same account to the session.
+func SwitchCharacter(c echo.Context) error {
+	userId := c.Get("UserId").(uint)
+
+	characterModel := models.NewCharacter()
+	character := characterModel.GetCharacterForUserAndId(int64(userId), int64(utils.ParseInt(c.Param("characterId"))))
+	if character.ID == 0 {
+		utils.ShowAlertError(c, "You do not have that character.")
+		return nil
+	}
+
+	if err := utils.SetSessionCharacter(c, character.ID); err != nil {
+		return err
+	}
+
+	// Reload: the page data underneath (skills, inventory, notes) belongs to the old one.
+	c.Response().Header().Set("HX-Refresh", "true")
+
+	return c.NoContent(http.StatusOK)
+}
+
+type newCharacterDto struct {
+	Name  string
+	Class string
+}
+
+// CreateCharacter adds another character to the account.
+func CreateCharacter(c echo.Context) error {
+	userId := c.Get("UserId").(uint)
+	characterModel := models.NewCharacter()
+
+	if characterModel.CountForUser(int64(userId)) >= models.MaxCharacters {
+		utils.ShowAlertError(c, "This account already has the maximum number of characters.")
+		return nil
+	}
+
+	dto := newCharacterDto{
+		Name:  c.FormValue("Name"),
+		Class: c.FormValue("Class"),
+	}
+
+	dto.Name = strings.TrimSpace(dto.Name)
+	if len(dto.Name) < 3 || len(dto.Name) > 24 {
+		utils.ShowAlertError(c, "Character name must be between 3 and 24 characters.")
+		return nil
+	}
+
+	if !slices.Contains(models.Classes, dto.Class) {
+		dto.Class = models.Classes[0]
+	}
+
+	level := models.NewLevel()
+	firstLevel := level.GetLevelByName(1)
+
+	character := models.InitCharacter(&models.Character{
+		Name:          dto.Name,
+		Class:         dto.Class,
+		UserId:        userId,
+		LevelId:       firstLevel.ID,
+		CombatLevelId: firstLevel.ID,
+		Health:        10,
+		MaxHealth:     10,
+		Attack:        1,
+		Strength:      1,
+		Defence:       1,
+	})
+
+	if _, err := character.Create(); err != nil {
+		return err
+	}
+
+	if err := utils.SetSessionCharacter(c, character.ID); err != nil {
+		return err
+	}
+
+	return GetCharacterPanel(c)
 }
 
 func GetGamePage(c echo.Context) error {
@@ -36,17 +200,18 @@ func GetGamePage(c echo.Context) error {
 	}
 
 	userId := c.Get("UserId").(uint)
+	character = activeCharacter(c, userId)
 
 	data := models.Data{
-		Page:       game.LoadCharacterProgress(int64(userId), skill.ID),
+		Page:       game.LoadCharacterProgress(character, skill.ID),
 		ActivePage: skillName,
 		DropdownData: map[string]any{
-			"Items":            game.LoadFullItems(&skill, int64(userId)),
-			"Inventory":        game.LoadInventory(int64(userId)),
+			"Items":            game.LoadFullItems(&skill, character),
+			"Inventory":        game.LoadInventory(character),
 			"GameState":        utils.GetGameState(c),
 			"MaxInventorySize": models.MaxInventorySize,
 		},
-		Character: character.GetFullCharacterForUser(int64(userId)),
+		Character: character.LoadFullCharacter(),
 	}
 
 	return templates.RenderGroup(c, http.StatusOK, "index.html", data, viewPatterns...)
@@ -61,7 +226,9 @@ func RunActiveAction(c echo.Context) error {
 
 	// One atomic action: ingredients, XP and output in a single transaction, with no
 	// sleep inside the request (see data/models/action.go).
-	if _, err := game.RunAction(userId, uint(utils.ParseInt(itemId))); err != nil {
+	character := activeCharacter(c, userId)
+
+	if _, err := game.RunAction(character.ID, uint(utils.ParseInt(itemId))); err != nil {
 		utils.ShowAlertError(c, err.Error())
 		return nil
 	}
@@ -72,19 +239,16 @@ func RunActiveAction(c echo.Context) error {
 	skill := models.NewSkill()
 	skill = skill.GetSkill(int64(item.SkillId))
 
-	character := models.NewCharacter()
-	character = character.GetCharacterForUser(int64(userId))
-
 	data := models.Data{
-		Page:       game.LoadCharacterProgress(int64(userId), skill.ID),
+		Page:       game.LoadCharacterProgress(character, skill.ID),
 		ActivePage: skill.Name,
 		DropdownData: map[string]any{
-			"Items":            game.LoadFullItems(&skill, int64(userId)),
-			"Inventory":        game.LoadInventory(int64(userId)),
+			"Items":            game.LoadFullItems(&skill, character),
+			"Inventory":        game.LoadInventory(character),
 			"GameState":        utils.GetGameState(c),
 			"MaxInventorySize": models.MaxInventorySize,
 		},
-		Character: character.GetFullCharacterForUser(int64(userId)),
+		Character: character.LoadFullCharacter(),
 	}
 
 	templates.RenderGroup(c, http.StatusOK, "oob-action-button", data, viewPatterns...)
@@ -108,7 +272,7 @@ func GetActiveAction(c echo.Context) error {
 
 	// Load Data
 	item = item.GetItem(int64(utils.ParseInt(itemId)))
-	character = character.GetCharacterForUser(int64(userId))
+	character = activeCharacter(c, userId)
 	skill = skill.GetSkill(int64(item.SkillId))
 	recipeItems := recipe.GetRecipesForParentItem(int64(item.ID))
 	characterSkill = characterSkill.GetCharacterProgress(character.ID, skill.ID)
@@ -139,14 +303,14 @@ func GetActiveAction(c echo.Context) error {
 
 	// Get viewmodel ready
 	data := models.Data{
-		Page: game.LoadCharacterProgress(int64(userId), uint(item.SkillId)),
+		Page: game.LoadCharacterProgress(character, uint(item.SkillId)),
 		DropdownData: map[string]any{
-			"Items":            game.LoadFullItems(&skill, int64(userId)),
-			"Inventory":        game.LoadInventory(int64(userId)),
+			"Items":            game.LoadFullItems(&skill, character),
+			"Inventory":        game.LoadInventory(character),
 			"GameState":        utils.GetGameState(c),
 			"MaxInventorySize": models.MaxInventorySize,
 		},
-		Character: character.GetFullCharacterForUser(int64(userId)),
+		Character: character.LoadFullCharacter(),
 	}
 
 	// Load views
@@ -159,7 +323,7 @@ func SetGameNotes(c echo.Context) error {
 	userId := c.Get("UserId").(uint)
 
 	character := models.NewCharacter()
-	character = character.GetCharacterForUser(int64(userId))
+	character = activeCharacter(c, userId)
 
 	character.Notes = c.FormValue("Notes")
 	_, err := character.Update()
@@ -175,7 +339,7 @@ func SetGameState(c echo.Context) error {
 	userId := c.Get("UserId").(uint)
 
 	character := models.NewCharacter()
-	character = character.GetCharacterForUser(int64(userId))
+	character = activeCharacter(c, userId)
 
 	switch c.Param("name") {
 	case "InventoryState":
@@ -204,16 +368,17 @@ func SetGameState(c echo.Context) error {
 
 	if c.Param("name") == "InventoryState" || c.Param("name") == "InventoryTabState" || c.Param("name") == "EquipmentTabState" || c.Param("name") == "CharacterTabState" {
 		userId := c.Get("UserId").(uint)
+		character = activeCharacter(c, userId)
 		game := models.NewGame()
 
 		// Get Viewmodel ready
 		data := models.Data{
 			DropdownData: map[string]any{
-				"Inventory":        game.LoadInventory(int64(userId)),
+				"Inventory":        game.LoadInventory(character),
 				"GameState":        utils.GetGameState(c),
 				"MaxInventorySize": models.MaxInventorySize,
 			},
-			Character: character.GetFullCharacterForUser(int64(userId)),
+			Character: character.LoadFullCharacter(),
 		}
 
 		// Load views
@@ -236,7 +401,7 @@ func SetEquipedItem(c echo.Context) error {
 
 	// Load Data
 	item = item.GetItem(int64(utils.ParseInt(itemId)))
-	character = character.GetCharacterForUser(int64(userId))
+	character = activeCharacter(c, userId)
 
 	// Equip the item
 	msg := game.EquipItem(int64(character.ID), int64(item.ID), inventory)
@@ -248,12 +413,12 @@ func SetEquipedItem(c echo.Context) error {
 	// Get Viewmodel ready
 	data := models.Data{
 		DropdownData: map[string]any{
-			"Items":            game.LoadFullItems(&skill, int64(userId)),
-			"Inventory":        game.LoadInventory(int64(userId)),
+			"Items":            game.LoadFullItems(&skill, character),
+			"Inventory":        game.LoadInventory(character),
 			"GameState":        utils.GetGameState(c),
 			"MaxInventorySize": models.MaxInventorySize,
 		},
-		Character: character.GetFullCharacterForUser(int64(userId)),
+		Character: character.LoadFullCharacter(),
 	}
 
 	// Load views

@@ -21,6 +21,12 @@ func main() {
 		panic("Error loading .env file")
 	}
 
+	// The database must be named explicitly: an empty DBNAME made SQLite open its own
+	// unnamed database, and a typo silently started the app on a brand-new empty file.
+	if utils.DBName() == "" {
+		panic("DBNAME must point at the SQLite file to use (see .env)")
+	}
+
 	// Session signing key: an empty key makes cookies forgeable, a short one is weak.
 	if len(utils.Secret()) == 0 {
 		panic("SECRET must be set (32+ random bytes), e.g. openssl rand -base64 48")
@@ -28,6 +34,8 @@ func main() {
 
 	// Setup Echo
 	e := echo.New()
+
+	e.Logger.Infof("database: %s", utils.DBName())
 
 	if len(utils.Secret()) < 32 {
 		e.Logger.Warn("SECRET is shorter than 32 bytes — rotate it to a random 32+ byte value")

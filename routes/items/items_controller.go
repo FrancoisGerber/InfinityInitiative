@@ -87,6 +87,13 @@ func SaveItem(c echo.Context) error {
 		item.Runtime = runtimeDuration
 	}
 
+	// A resource that belongs to a skill is an action. Without a runtime it resolves
+	// instantly, so every click is free XP and a free copy of itself (B20).
+	if item.Type == "Resource" && item.SkillId != 0 && item.Runtime <= 0 {
+		utils.ShowAlertError(c, `A resource needs a runtime, e.g. "3s".`)
+		return nil
+	}
+
 	if item.ID != 0 {
 		_, err = item.Update()
 	} else {

@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"InfinityInitiative/data/models"
 	"InfinityInitiative/routes/auth"
 	"InfinityInitiative/routes/characters"
 	"InfinityInitiative/routes/game"
@@ -12,6 +13,7 @@ import (
 	"InfinityInitiative/routes/skills"
 	"InfinityInitiative/routes/users"
 	"InfinityInitiative/utils"
+	"net/http"
 
 	"github.com/labstack/echo/v4"
 )
@@ -28,6 +30,17 @@ func Router(e *echo.Echo) {
 	sessionGroup := e.Group("")
 	sessionGroup.Use(utils.SessionAuth)
 	game.SetupEndpoints(sessionGroup)
+
+	// "/" has no page of its own: send the player to their first skill instead of a 404.
+	sessionGroup.GET("/", func(c echo.Context) error {
+		skillModel := models.NewSkill()
+		skills := skillModel.GetAllSkills()
+		if len(skills) == 0 {
+			return c.Redirect(http.StatusTemporaryRedirect, "/login")
+		}
+
+		return c.Redirect(http.StatusTemporaryRedirect, "/game/"+skills[0].Name)
+	})
 
 	// Admin: content management. Requires a logged-in user *with the admin role* —
 	// hiding links in the sidebar is not authorisation.

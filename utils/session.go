@@ -149,3 +149,27 @@ func SetGameState(c echo.Context, gameState GameState) error {
 
 	return sess.Save(c.Request(), c.Response())
 }
+
+// GetSessionCharacter returns the character the player is currently controlling (0 when
+// nothing is selected yet — an account may own several).
+func GetSessionCharacter(c echo.Context) uint {
+	sess, err := session.Get("session", c)
+	if err != nil {
+		return 0
+	}
+
+	return sessionUserID(sess.Values["characterId"])
+}
+
+// SetSessionCharacter pins the active character. Ownership must be checked by the caller.
+func SetSessionCharacter(c echo.Context, characterId uint) error {
+	sess, err := session.Get("session", c)
+	if err != nil {
+		return err
+	}
+
+	sess.Options = sessionOptions()
+	sess.Values["characterId"] = uint(characterId)
+
+	return sess.Save(c.Request(), c.Response())
+}

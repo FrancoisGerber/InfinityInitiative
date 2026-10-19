@@ -29,12 +29,12 @@ type ActionResult struct {
 // The previous flow removed the ingredients, then slept inside the HTTP handler for up
 // to a minute, then granted XP and the output — with no transaction, so a crash or a
 // disconnect lost the ingredients while a duplicate request paid out twice.
-func (model *Game) RunAction(userID uint, itemID uint) (ActionResult, error) {
+func (model *Game) RunAction(characterID uint, itemID uint) (ActionResult, error) {
 	var result ActionResult
 
 	err := model.db.Transaction(func(tx *gorm.DB) error {
 		var character Character
-		if err := tx.Preload("Level").First(&character, "user_id = ?", userID).Error; err != nil {
+		if err := tx.Preload("Level").First(&character, "id = ?", characterID).Error; err != nil {
 			return ErrNoCharacter
 		}
 

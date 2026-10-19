@@ -151,3 +151,47 @@ func (model *Character) LoadCharacterActualStats(characterId int64) {
 		}
 	}
 }
+
+// GetCharactersForUser returns every character the account owns, oldest first.
+func (model *Character) GetCharactersForUser(userId int64) (characters []Character) {
+	model.db.Preload("Level").Where("user_id = ?", userId).Order("id").Find(&characters)
+
+	for i := range characters {
+		characters[i] = InitCharacter(&characters[i])
+	}
+
+	return characters
+}
+
+// GetCharacterForUserAndId puts the ownership check in the WHERE clause, so a guessed id
+// cannot reach another account's character.
+func (model *Character) GetCharacterForUserAndId(userId int64, characterId int64) Character {
+	var character Character
+	model.db.Preload("User").Preload("Level").Preload("ActiveItem").
+		First(&character, "user_id = ? AND id = ?", userId, characterId)
+
+	return InitCharacter(&character)
+}
+
+// CountForUser is used to cap how many characters one account can own.
+func (model *Character) CountForUser(userId int64) int64 {
+	var count int64
+	model.db.Model(&Character{}).Where("user_id = ?", userId).Count(&count)
+
+	return count
+}
+
+// LoadFullCharacter builds the view model (character + skills + live stats) for an
+// already-loaded character, so a handler can render whichever character is active in the
+// session instead of always the account's first one.
+func (model *Character) LoadFullCharacter() FullCharacter {
+	characterSkill := NewCharacterSkill()
+	characterSkills := characterSkill.GetAllCharacterSkillsPerCharacter(int64(model.ID))
+
+	model.LoadCharacterActualStats(int64(model.ID))
+
+	return FullCharacter{
+		*model,
+		characterSkills,
+	}
+}

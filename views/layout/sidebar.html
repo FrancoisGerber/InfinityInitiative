@@ -3,6 +3,7 @@
   <!-- Sidebar content here -->
   <li>
     <div id="characterInfo">{{template "character-info" .}}</div>
+    <div id="character-panel" hx-get="/game/characters" hx-trigger="load" hx-swap="innerHTML"></div>
   </li>
   <li class="menu-title mt-10">Information</li>
   <li><a>Character Sheet</a></li>
