@@ -4,7 +4,7 @@
     hx-trigger="click"
     hx-swap="none"
     hx-get="/game/action/{{.ID}}"
-    class="grid grid-rows-2 grid-flow-col bg-base-100 {{if eq .ActiveItem.ID .ID}}active-neutral{{end}}" 
+    class="grid w-full grid-rows-2 grid-flow-col bg-base-100 {{if eq .ActiveItem.ID .ID}}active-neutral{{end}}" 
   >
     <div class="row-span-2">
       <img class="max-w-10 w-10" src="{{.Image}}" />
