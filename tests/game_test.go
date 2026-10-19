@@ -293,6 +293,66 @@ func TestEquipTogglesOneUnitPerItem(t *testing.T) {
 	}
 }
 
+// Two armour pieces may be worn at once, and both must reach the character's stats — the
+// aggregation gated on the legacy Equipped boolean instead of the worn count.
+func TestWornItemsStackTheirStats(t *testing.T) {
+	_, character, _, _ := gameFixture(t)
+
+	level := levelByName(1)
+
+	before := characterForUserID(character.UserId)
+	before.LoadCharacterActualStats(int64(before.ID))
+
+	makeArmour := func(name string, attack float64) models.Item {
+		t.Helper()
+
+		item := models.InitItem(&models.Item{Name: name, Type: "Armor", LevelId: int(level.ID), SkillId: 4, Attack: attack})
+		if _, err := item.Create(); err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+
+		item = itemByID(item.ID)
+
+		row := models.InitInventory(&models.Inventory{CharacterId: character.ID, ItemId: item.ID, Amount: 1})
+		if _, err := row.Create(); err != nil {
+			t.Fatalf("%s inventory row: %v", name, err)
+		}
+
+		return item
+	}
+
+	helm := makeArmour("Iron Helm", 10)
+	plate := makeArmour("Iron Plate", 15)
+
+	game := models.NewGame()
+	inventory := models.NewInventory()
+
+	for _, item := range []models.Item{helm, plate} {
+		if msg := game.EquipItem(int64(character.ID), int64(item.ID), inventory); msg != "" {
+			t.Fatalf("equip %s: %s", item.Name, msg)
+		}
+	}
+
+	after := characterForUserID(character.UserId)
+	after.LoadCharacterActualStats(int64(after.ID))
+
+	if gained := after.Attack - before.Attack; gained != 25 {
+		t.Fatalf("attack from two worn armour pieces = %v, want 25", gained)
+	}
+
+	// Taking one piece off removes only that piece's bonus.
+	if msg := game.EquipItem(int64(character.ID), int64(helm.ID), inventory); msg != "" {
+		t.Fatalf("unequip helm: %s", msg)
+	}
+
+	unequipped := characterForUserID(character.UserId)
+	unequipped.LoadCharacterActualStats(int64(unequipped.ID))
+
+	if gained := unequipped.Attack - before.Attack; gained != 15 {
+		t.Fatalf("attack after taking the helm off = %v, want 15", gained)
+	}
+}
+
 func TestGameRepo(t *testing.T) {
 	repo := models.NewGame()
 

@@ -91,7 +91,7 @@ piece is purely the role check.
 | B9 | XP percentage clamped to 0–100 and guarded when there is no next level. |
 | B10 | Capacity counts live stacks (`amount > 0`); stacking into an existing row is always allowed. |
 | B11 | Inventory lookup is ordered (`equipped DESC, amount DESC, id ASC`); duplicate live stacks are merged by migration. |
-| B12 | New `inventory.equipped_amount`; equipping no longer moves quantity, one item per type, zero-amount ghosts soft-deleted. |
+| B12 | New `inventory.equipped_amount`; equipping no longer moves quantity. One unit of each item may be worn and distinct items stack freely (several armour pieces, weapon, accessory); zero-amount ghosts soft-deleted. |
 | B13 | `UNIQUE(character_id, skill_id)` + `FirstOrCreate`. |
 | B14 | Level-up loops until the XP no longer meets the next threshold. |
 | B15 | Character XP is its own counter (+25 % of action XP) instead of `sum(skill XP)/len(allSkills)`. |

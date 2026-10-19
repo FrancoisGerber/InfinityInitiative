@@ -147,7 +147,9 @@ func (model *Character) LoadCharacterActualStats(characterId int64) {
 	inventory := NewInventory()
 	inventoryList := inventory.GetInventoryForCharacter(int64(model.ID))
 	for _, inventoryItem := range inventoryList {
-		if inventoryItem.Equipped {
+		// Gate on the worn count, not the legacy boolean: they are written together now,
+		// but if they ever drift the boolean silently drops the item's stats.
+		if inventoryItem.EquippedAmount > 0 {
 			model.Attack += inventoryItem.Item.Attack
 			model.Strength += inventoryItem.Item.Strength
 			model.Defence += inventoryItem.Item.Defence
