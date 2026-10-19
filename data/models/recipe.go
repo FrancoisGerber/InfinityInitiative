@@ -29,7 +29,28 @@ func InitRecipe(model *Recipe) Recipe {
 }
 
 func (model *Recipe) Migrate() error {
-	return model.db.AutoMigrate(&model)
+	if err := model.db.AutoMigrate(&model); err != nil {
+		return err
+	}
+
+	// The recipe editor could save the same ingredient twice for one item, which made
+	// crafting charge for it twice over. Keep the oldest row per (parent, ingredient),
+	// then make it impossible to reintroduce.
+	model.db.Exec(`
+		DELETE FROM recipes
+		WHERE deleted_at IS NULL
+		  AND id NOT IN (
+				SELECT MIN(id) FROM recipes
+				WHERE deleted_at IS NULL
+				GROUP BY parent_item_id, item_id
+		  )
+	`)
+
+	return model.db.Exec(`
+		CREATE UNIQUE INDEX IF NOT EXISTS idx_recipe_parent_item
+		ON recipes(parent_item_id, item_id)
+		WHERE deleted_at IS NULL
+	`).Error
 }
 
 func (model *Recipe) GetAllRecipes() (models []Recipe) {
@@ -62,7 +83,7 @@ func (model *Recipe) Create() (int64, error) {
 }
 
 func (model *Recipe) Update() (int64, error) {
-	result := model.db.Select("*").Updates(&model)
+	result := updateAll(model.db, model)
 
 	if result.Error != nil {
 		return 0, result.Error
@@ -72,7 +93,7 @@ func (model *Recipe) Update() (int64, error) {
 }
 
 func (model *Recipe) Delete() (int64, error) {
-	result := model.db.Delete(&model, &model.ID)
+	result := model.db.Delete(model)
 
 	if result.Error != nil {
 		return 0, result.Error

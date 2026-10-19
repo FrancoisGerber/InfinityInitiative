@@ -76,3 +76,35 @@ piece is purely the role check.
   See `docs/improvements/06-data-layer-and-tests.md`.
 - **Rewrite risk**: B3/B4/B5 are all "fix the action engine and the model write path" — doing them
   one at a time will thrash the same files. Sequence them as one piece of work.
+
+## Fix status — branch `feat/game-systems`
+
+**Fixed and verified (build + `go test -race` + a run against a copy of real data):**
+
+| Bug | How it was closed |
+|---|---|
+| B1 | `routes/authz.go` `requireRole()` loads the user per request and returns 403; admin resources moved behind it. Regression tests: `tests/auth_test.go`. |
+| B2 | Default admin seeding removed; first admin only via `SEED_ADMIN_EMAIL` + `SEED_ADMIN_PASSWORD` (12+ chars). |
+| B3, B4, B18 | `data/models/action.go` `RunAction()`: one transaction, conditional ingredient decrement (`UPDATE ... WHERE amount >= ?`), output + XP inside it, **no sleep**. Measured: a 1 s-runtime action now resolves in ~5 ms. |
+| B5 | `updateAll()` in `base.go` — explicit column list, associations omitted; all ten `Update()` methods use it. |
+| B6 (partial) | Cookie is now `HttpOnly`, `SameSite=Lax`, 30-day `MaxAge`, `Secure` unless `INSECURE_COOKIES=1`. CSRF is still open. |
+| B9 | XP percentage clamped to 0–100 and guarded when there is no next level. |
+| B10 | Capacity counts live stacks (`amount > 0`); stacking into an existing row is always allowed. |
+| B11 | Inventory lookup is ordered (`equipped DESC, amount DESC, id ASC`); duplicate live stacks are merged by migration. |
+| B12 | New `inventory.equipped_amount`; equipping no longer moves quantity, one item per type, zero-amount ghosts soft-deleted. |
+| B13 | `UNIQUE(character_id, skill_id)` + `FirstOrCreate`. |
+| B14 | Level-up loops until the XP no longer meets the next threshold. |
+| B15 | Character XP is its own counter (+25 % of action XP) instead of `sum(skill XP)/len(allSkills)`. |
+| B17 | The role middleware loads the user, so deleted/demoted accounts lose access immediately. |
+| B21 | `middleware.CORS()` removed. |
+| B24 | `SessionAuth` returns the handler's error instead of swallowing it. |
+| B27 | `data/db_remote.go` deleted and `libsql-client-go` dropped from `go.mod`. |
+| B28 | Tests get a throwaway DB per run (`TestMain`); suite passes repeatedly and under `-race`. |
+
+**Also fixed while in there:** duplicate live recipes are impossible (`UNIQUE(parent_item_id, item_id)`),
+and every model shares one SQLite handle (WAL, `busy_timeout`, `MaxOpenConns(1)`) instead of opening a
+pool per model construction — the data-layer half of the improvement plans.
+
+**Still open:** B6 CSRF + session rotation, B7 multi-character, B8 create-character on registration,
+B16 per-request renderer swap, B19 double payload on error paths, B22 UI state in the cookie,
+B29 PWA/SSE claims, B30 stray database files.

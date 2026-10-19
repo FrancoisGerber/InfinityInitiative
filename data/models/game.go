@@ -38,7 +38,18 @@ func (model *Game) LoadCharacterProgress(userId int64, skillId uint) struct {
 	newMax := nextLevel.ExperienceNeeded - characterSkill.Level.ExperienceNeeded
 	newXp := characterSkill.ExperiencePoints - characterSkill.Level.ExperienceNeeded
 
-	percentageXP := (float64(newXp) / float64(newMax) * 100)
+	// At the level cap there is no "next" level, so the divisor collapses to zero. Guard
+	// it instead of rendering NaN/Inf into the XP bar.
+	percentageXP := 0.0
+	if newMax > 0 {
+		percentageXP = float64(newXp) / float64(newMax) * 100
+		if percentageXP < 0 {
+			percentageXP = 0
+		}
+		if percentageXP > 100 {
+			percentageXP = 100
+		}
+	}
 
 	characterSkillDto := struct {
 		CharacterSkill
@@ -222,7 +233,11 @@ func (model *Game) AddNewItemForCharacter(inventory Inventory, character Charact
 	return nil
 }
 
-// Equip items in inventory on character
+// EquipItem toggles one unit of an item between "carried" and "equipped".
+//
+// It used to move quantity out of the stack (Amount -= 1) and flip a boolean, which left
+// empty rows behind and let a character wear two weapons. Now the row keeps the total and
+// tracks how many of it are worn, and equipping one type unequips the others.
 func (model *Game) EquipItem(characterId int64, itemId int64, inventory Inventory) string {
 	inventoryItem := inventory.GetInventoryItemForCharacter(itemId, characterId)
 
@@ -234,17 +249,35 @@ func (model *Game) EquipItem(characterId int64, itemId int64, inventory Inventor
 		return "That item is not equippable"
 	}
 
-	inventoryItem.Equipped = !inventoryItem.Equipped
+	// Unequip one.
+	if inventoryItem.EquippedAmount > 0 {
+		model.db.Exec(
+			`UPDATE inventories SET equipped_amount = equipped_amount - 1,
+			        equipped = (equipped_amount - 1) > 0
+			 WHERE id = ?`, inventoryItem.ID,
+		)
 
-	if inventoryItem.Equipped {
-		inventoryItem.Amount -= 1
-	} else {
-		inventoryItem.Amount += 1
+		return ""
 	}
-	_, err := inventoryItem.Update()
-	if err != nil {
-		return err.Error()
+
+	if inventoryItem.Amount <= 0 {
+		return "You do not have the item in your inventory."
 	}
+
+	// Equip one: only one item of each type may be worn at a time.
+	var sameType []Inventory
+	model.db.Preload("Item").
+		Joins("JOIN items ON items.id = inventories.item_id").
+		Where(`inventories.character_id = ? AND inventories.equipped_amount > 0
+		       AND items.type = ? AND inventories.id <> ?`,
+			characterId, inventoryItem.Item.Type, inventoryItem.ID).
+		Find(&sameType)
+
+	for _, other := range sameType {
+		model.db.Exec("UPDATE inventories SET equipped = ?, equipped_amount = 0 WHERE id = ?", false, other.ID)
+	}
+
+	model.db.Exec("UPDATE inventories SET equipped_amount = equipped_amount + 1, equipped = ? WHERE id = ?", true, inventoryItem.ID)
 
 	return ""
 }

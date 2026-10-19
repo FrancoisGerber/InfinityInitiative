@@ -93,7 +93,7 @@ func (model *Character) Create() (int64, error) {
 }
 
 func (model *Character) Update() (int64, error) {
-	result := model.db.Select("*").Updates(&model)
+	result := updateAll(model.db, model)
 
 	if result.Error != nil {
 		return 0, result.Error
@@ -103,7 +103,7 @@ func (model *Character) Update() (int64, error) {
 }
 
 func (model *Character) Delete() (int64, error) {
-	result := model.db.Delete(&model, &model.ID)
+	result := model.db.Delete(model)
 
 	if result.Error != nil {
 		return 0, result.Error

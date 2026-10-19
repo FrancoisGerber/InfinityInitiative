@@ -5,7 +5,6 @@ import (
 	"InfinityInitiative/utils"
 	templates "InfinityInitiative/views"
 	"net/http"
-	"time"
 
 	"github.com/labstack/echo/v4"
 )
@@ -64,70 +63,23 @@ func RunActiveAction(c echo.Context) error {
 	userId := c.Get("UserId").(uint)
 
 	game := models.NewGame()
-	character := models.NewCharacter()
-	characterSkill := models.NewCharacterSkill()
-	item := models.NewItem()
-	inventory := models.NewInventory()
-	level := models.NewLevel()
-	skill := models.NewSkill()
-	recipe := models.NewRecipe()
 
-	// Load Data
-	item = item.GetItem(int64(utils.ParseInt(itemId)))
-	character = character.GetCharacterForUser(int64(userId))
-	inventoryCount := inventory.GetInventoryForCharacterLen(int64(character.ID))
-	characterSkill = characterSkill.GetCharacterProgress(character.ID, uint(item.SkillId))
-	skills := skill.GetAllSkills()
-	skill = skill.GetSkill(int64(item.SkillId))
-
-	nextLevelName := characterSkill.Level.Name + 1
-	nextLevel := level.GetLevelByName(nextLevelName)
-
-	nextCharacterLevelName := character.Level.Name + 1
-	nextCharacterLevel := level.GetLevelByName(nextCharacterLevelName)
-
-	inventory = inventory.GetInventoryItemForCharacter(int64(item.ID), int64(character.ID))
-	recipeItems := recipe.GetRecipesForParentItem(int64(item.ID))
-
-	// Check if inventory is full
-	if inventoryCount >= models.MaxInventorySize {
-		utils.ShowAlertError(c, "Your inventory is full!")
+	// One atomic action: ingredients, XP and output in a single transaction, with no
+	// sleep inside the request (see data/models/action.go).
+	if _, err := game.RunAction(userId, uint(utils.ParseInt(itemId))); err != nil {
+		utils.ShowAlertError(c, err.Error())
 		return nil
 	}
 
-	// Check if character has required items for the action
-	if errorMessage := game.CharacterHasItems(character, recipeItems); errorMessage != "" {
-		utils.ShowAlertError(c, errorMessage)
-		return c.String(http.StatusBadRequest, errorMessage)
-	}
+	item := models.NewItem()
+	item = item.GetItem(int64(utils.ParseInt(itemId)))
 
-	// Remove Recipe Items from Inventory
-	if errorMessage := game.RemoveRecipeItemsFromInventory(recipeItems, inventory, character); errorMessage != "" {
-		utils.ShowAlertError(c, errorMessage)
-	}
+	skill := models.NewSkill()
+	skill = skill.GetSkill(int64(item.SkillId))
 
-	// Wait for action to run
-	time.Sleep(item.Runtime)
+	character := models.NewCharacter()
+	character = character.GetCharacterForUser(int64(userId))
 
-	// Update CharacterSkill XP
-	err := game.IncreaseCharacterSkill(characterSkill, nextLevel, item)
-	if err != nil {
-		return c.String(http.StatusInternalServerError, "Could Not Update Character Skill")
-	}
-
-	// Update Character XP
-	err = game.IncreaseCharacterXP(characterSkill, character, nextCharacterLevel, skills)
-	if err != nil {
-		return c.String(http.StatusInternalServerError, "Could Not Update Character")
-	}
-
-	// Add made item to inventory
-	err = game.AddNewItemForCharacter(inventory, character, item)
-	if err != nil {
-		return c.String(http.StatusInternalServerError, "Could Not Update Inventory")
-	}
-
-	// Get Viewmodel ready
 	data := models.Data{
 		Page:       game.LoadCharacterProgress(int64(userId), skill.ID),
 		ActivePage: skill.Name,
@@ -140,7 +92,8 @@ func RunActiveAction(c echo.Context) error {
 		Character: character.GetFullCharacterForUser(int64(userId)),
 	}
 
-	// Load views
+	c.Render(http.StatusOK, "oob-action-button", data)
+	c.Render(http.StatusOK, "oob-resources", data)
 	c.Render(http.StatusOK, "oob-action", data)
 	c.Render(http.StatusOK, "oob-side-bar", data)
 	return c.Render(http.StatusOK, "oob-inventory", data)

@@ -3,6 +3,7 @@ package tests
 import (
 	"InfinityInitiative/data"
 	"InfinityInitiative/data/models"
+	"InfinityInitiative/utils"
 	"testing"
 )
 
@@ -11,10 +12,17 @@ func TestUser(t *testing.T) {
 	user := models.NewUser()
 	data.AutoMigration(&user)
 
+	roleModel := models.NewRole()
+	userRole := roleModel.GetRoleByName("User")
+	if userRole.ID == 0 {
+		t.Fatal("User role was not seeded")
+	}
+
 	u := models.InitUser(&models.User{
 		Username: "Test",
 		Email:    "test@test.com",
-		Password: "test",
+		Password: utils.HashPassword("Passw0rd!123"),
+		RoleId:   userRole.ID,
 	})
 
 	rows, err := u.Create()

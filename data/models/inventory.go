@@ -12,8 +12,9 @@ type Inventory struct {
 	Character   Character `json:"Character" form:"Character" query:"Character"`
 	ItemId      uint      `json:"ItemId" form:"ItemId" query:"ItemId"`
 	Item        Item      `json:"Item" form:"Item" query:"Item"`
-	Equipped    bool      `json:"Equipped" form:"Equipped" query:"Equipped"`
-	Amount      int64     `json:"Amount" form:"Amount" query:"Amount"`
+	Equipped       bool      `json:"Equipped" form:"Equipped" query:"Equipped"`
+	EquippedAmount int64     `json:"EquippedAmount" form:"EquippedAmount" query:"EquippedAmount"`
+	Amount         int64     `json:"Amount" form:"Amount" query:"Amount"`
 }
 
 func NewInventory() Inventory {
@@ -30,7 +31,63 @@ func InitInventory(model *Inventory) Inventory {
 }
 
 func (model *Inventory) Migrate() error {
-	return model.db.AutoMigrate(&model)
+	if err := model.db.AutoMigrate(&model); err != nil {
+		return err
+	}
+
+	// Older code could create several rows for the same item on one character (the
+	// lookup used Find with no ordering, and equipping split stacks). Merge them so the
+	// unique index below can exist and the grid shows real totals.
+	model.mergeDuplicateStacks()
+
+	// Ghost rows left by the old equip logic: zero quantity but still counted in the grid.
+	model.db.Exec(`
+		UPDATE inventories SET deleted_at = CURRENT_TIMESTAMP
+		WHERE amount <= 0 AND deleted_at IS NULL
+	`)
+
+	// Partial unique index: soft-deleted rows must not collide.
+	return model.db.Exec(`
+		CREATE UNIQUE INDEX IF NOT EXISTS idx_inventory_character_item
+		ON inventories(character_id, item_id)
+		WHERE deleted_at IS NULL
+	`).Error
+}
+
+// mergeDuplicateStacks collapses duplicate (character_id, item_id) rows into the oldest
+// one: amounts are summed, an equipped flag on any duplicate is preserved.
+func (model *Inventory) mergeDuplicateStacks() {
+	model.db.Exec(`
+		UPDATE inventories
+		SET amount = (
+				SELECT SUM(i2.amount) FROM inventories i2
+				WHERE i2.character_id = inventories.character_id
+				  AND i2.item_id = inventories.item_id
+				  AND i2.deleted_at IS NULL
+			),
+			equipped = (
+				SELECT MAX(i2.equipped) FROM inventories i2
+				WHERE i2.character_id = inventories.character_id
+				  AND i2.item_id = inventories.item_id
+				  AND i2.deleted_at IS NULL
+			)
+		WHERE deleted_at IS NULL
+		  AND id IN (
+				SELECT MIN(id) FROM inventories
+				WHERE deleted_at IS NULL
+				GROUP BY character_id, item_id
+		  )
+	`)
+
+	model.db.Exec(`
+		DELETE FROM inventories
+		WHERE deleted_at IS NULL
+		  AND id NOT IN (
+				SELECT MIN(id) FROM inventories
+				WHERE deleted_at IS NULL
+				GROUP BY character_id, item_id
+		  )
+	`)
 }
 
 func (model *Inventory) GetAllInventorys() (models []Inventory) {
@@ -63,7 +120,7 @@ func (model *Inventory) Create() (int64, error) {
 }
 
 func (model *Inventory) Update() (int64, error) {
-	result := model.db.Select("*").Updates(&model)
+	result := updateAll(model.db, model)
 
 	if result.Error != nil {
 		return 0, result.Error
@@ -73,7 +130,7 @@ func (model *Inventory) Update() (int64, error) {
 }
 
 func (model *Inventory) Delete() (int64, error) {
-	result := model.db.Delete(&model, &model.ID)
+	result := model.db.Delete(model)
 
 	if result.Error != nil {
 		return 0, result.Error
@@ -94,7 +151,13 @@ func (model *Inventory) GetInventoryForCharacter(id int64) (models []Inventory) 
 
 func (model *Inventory) GetInventoryItemForCharacter(itemId int64, characterId int64) Inventory {
 	var inventory Inventory
-	model.db.Preload("Character").Preload("Item").Find(&inventory, "item_id = ? and character_id = ?", itemId, characterId)
+
+	// Deterministic pick: prefer the equipped row, then the largest stack. Previously
+	// this used Find with no ordering and could return an empty duplicate row.
+	model.db.Preload("Character").Preload("Item").
+		Where("item_id = ? AND character_id = ?", itemId, characterId).
+		Order("equipped DESC, amount DESC, id ASC").
+		First(&inventory)
 
 	inventory = InitInventory(&inventory)
 

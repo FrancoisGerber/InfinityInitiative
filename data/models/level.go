@@ -80,7 +80,7 @@ func (model *Level) Create() (int64, error) {
 }
 
 func (model *Level) Update() (int64, error) {
-	result := model.db.Select("*").Updates(&model)
+	result := updateAll(model.db, model)
 
 	if result.Error != nil {
 		return 0, result.Error
@@ -90,7 +90,7 @@ func (model *Level) Update() (int64, error) {
 }
 
 func (model *Level) Delete() (int64, error) {
-	result := model.db.Delete(&model, &model.ID)
+	result := model.db.Delete(model)
 
 	if result.Error != nil {
 		return 0, result.Error

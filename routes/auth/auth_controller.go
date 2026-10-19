@@ -84,10 +84,16 @@ func PostRegister(c echo.Context) error {
 	userDto.Password = utils.HashPassword(userDto.Password)
 
 	user := models.InitUser(userDto)
-	userRole := models.NewRole()
-	userRole = userRole.GetRoleByName("User")
 
-	user.Role = userRole
+	roleModel := models.NewRole()
+	userRole := roleModel.GetRoleByName("User")
+	if userRole.ID == 0 {
+		return c.String(http.StatusInternalServerError, "Registration is not configured: the User role is missing")
+	}
+
+	// Set the foreign key explicitly; assigning the association made GORM upsert the
+	// role row and left role_id at 0 when it did not.
+	user.RoleId = userRole.ID
 
 	_, err := user.Create()
 
