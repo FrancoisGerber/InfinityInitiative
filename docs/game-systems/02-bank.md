@@ -26,6 +26,11 @@ which is the classic bank bug.
 
 ## Data
 
+Melvor's bank is the reference for the UI: **tabs** (a fixed set, one per item category, expandable),
+**10 slots per tab**, a **search box with category filters**, and a "bank completion" count. Our bank
+should ship with tabs + search from the start — it is the difference between a storage bin and an
+inventory players actually use.
+
 ```go
 // inventories (extended)
 Location string // "bag" | "bank", default "bag", indexed with character_id + item_id

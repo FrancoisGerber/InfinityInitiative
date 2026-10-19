@@ -20,6 +20,12 @@ Read-only. No actions, no spending, no mutations — which is why it is a good f
 4. Skills table: per-skill level, XP into current level, XP to next, actions available.
 5. Bio / image.
 
+Mirror the reference UI (IdleMMO's right rail): a **skill card** per skill showing level, an XP bar
+with "X EXP needed — Y%" and lifetime **metrics** (items gathered, total experience, time spent) is
+the single most convincing "this is a real game" element in that UI, and every number already exists
+in `character_skills` + `inventories`.
+
+
 ## Data
 
 Nothing new. `Character`, `CharacterSkill`, `Inventory` + `Item` already carry everything.

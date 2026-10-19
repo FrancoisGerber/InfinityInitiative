@@ -30,9 +30,10 @@ boss_retaliation = damage_to_character unless dodged
 ```
 
 - Attack gated by `LastAttackAt + CooldownSeconds` (e.g. 30s) — a stored timestamp, no scheduler.
-- **Offline catch-up**: on page load, `missed = min(now - LastAttackAt / cooldown, cap)` and the
-  missed attacks resolve in one batch with a summary ("while you were away: 42 attacks, 180k
-  damage"). Cap the batch (e.g. 100) so a week away does not become a 10-minute request.
+- **Each attack is a click.** No offline catch-up and no auto-batch: a click resolves one hit group
+  against the shared pool and appends to the log. If nobody is clicking, the boss is not being
+  damaged — that is the point of a clicker raid.
+
 - Boss HP decrement must be an atomic `UPDATE raids SET Health = Health - ? WHERE id = ? AND
   Health > 0` — SQLite with concurrent players will otherwise go negative.
 
@@ -62,6 +63,17 @@ Claimed        bool
 Contribution tiers, not winner-takes-all: e.g. 1% damage = base reward, 10% = +1 tier, top 3 =
 unique item. Everyone who dealt ≥1% gets something, so a solo player is never locked out.
 
+IdleMMO's world bosses are the closest reference and worth copying where we can:
+
+- **Respawn is world state, not player progress** — an 8–11h respawn timer is fine (nobody accrues
+  anything while away), but the *2-hour pre-fight queue* is exactly the kind of timer we reject.
+  Our version: the boss appears when someone finds it (a Scout/Explore click) and is open while alive.
+- **Battle length is fixed, not click-counted** — IdleMMO resolves a 600–900s fight. Ours resolves a
+  fixed number of **rounds per click** against the shared pool, so a fight is ~20–40 clicks of work.
+- **Loot is the draw**: IdleMMO's world bosses are the main source of pet eggs. Ours should drop
+  something no other system drops (essence for the Shop's merchant tier, or an Initiative banner).
+
+
 ## Routes and views
 
 - `GET /raids` — active raid card (boss art, HP bar, timer, your damage + rank), history of past raids.
@@ -74,8 +86,8 @@ unique item. Everyone who dealt ≥1% gets something, so a solo player is never 
 
 1. **Solo-first or Initiative-only?** (Recommendation: solo v1, group v2 — but that means building
    the same reward tiers twice. Worth it to avoid blocking on 07.)
-2. Attack cadence: manual clicks only, or auto-catch-up while offline? (Recommendation: catch-up —
-   it is the "idle" in idle MMO.)
+2. Attack pacing: one click = one hit group (recommended), or a short in-session cooldown between
+   clicks so a raid cannot be solo-bursted in ten seconds?
 3. Does the boss fight back (character can die) or is it a pure DPS race? Retaliation makes
    HP/Food matter; a pure race is simpler and kinder.
 4. Duration and cadence: one raid at a time, weekly reset? Overlapping raids with different levels?

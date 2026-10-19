@@ -29,6 +29,18 @@ Call sites: `game.IncreaseCharacterSkill` / `AddNewItemForCharacter` / `RemoveRe
 (in `routes/game/game_controller.go`), and later the battle resolver. One hook, every future
 feature (dungeons, initiatives) can emit the same events.
 
+## Borrowed structure
+
+- **From OSRS**: quests have explicit *requirements* (skill levels, quest points, items), explicit
+  *rewards* (XP, items, unlocks) and pay **quest points** — a meta-currency that gates later content.
+  Steal that: `quests.RequiredLevel`, `RequiredQuestPoints`, `QuestPoints` on the character, and
+  chains that unlock systems (Dungeons, Initiatives).
+- **From IdleMMO**: its *guild challenges* are essentially this system done co-operatively — 24-hour
+  objectives ("contribute 50 Oak Logs"), created by officers, contributing pays the member 2 XP per
+  item whether or not the goal is met, and the guild earns Marks on completion. Same event hook, one
+  extra table (`challenge_contributions`), so a guild-quest board is a cheap second surface once the
+  personal quest list exists.
+
 ## Data model
 
 ```go

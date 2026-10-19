@@ -21,7 +21,22 @@ Enter (consume key) → encounter 1 → 2 → 3 → boss → rewards
 **HP does not reset between encounters.** That is the entire tension: do you push to the boss on
 40 HP, or leave with the guaranteed reward?
 
+## Difficulty gate (adopted from IdleMMO)
+
+IdleMMO gives every dungeon a **difficulty rating** and gates entry on total combat stats:
+
+- entry needs combat stats ≥ **70%** of the rating, or the door is shut;
+- after a clear you lose health, and *how much* depends on stats vs rating (at exactly 70% you lose
+  everything; at 100% about half; at ≥130% almost nothing);
+- above 130% you gain a **Magic Find** bonus that scales with how far over you are — the reason to
+  come back and farm an easier dungeon.
+
+That single number replaces a level requirement and a loot table tweak in one go. Our version:
+`difficulty` on the dungeon row, `combatStats = Attack + Protection + Agility + Accuracy` derived from
+the character, and health cost / magic find computed from the ratio on entry.
+
 ## Resolution model (the key decision)
+
 
 - **(A) Resolve the whole run in one request** and render a long log. Fits the blocking engine
   perfectly, zero state, but the player is a spectator — the "should I push on?" decision lives

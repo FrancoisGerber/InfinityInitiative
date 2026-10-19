@@ -21,15 +21,22 @@ Either way, the schema and UI are the same; only the seeding differs.
 
 ## Rules that keep it honest
 
-- **Listing fee** (1% of asking price, minimum 1 gold) — paid on listing, not on sale. This is the
-  anti-spam and the gold sink.
+Modelled on IdleMMO's Market (listings **and** market orders, listings expire after 90 days) and
+OSRS's Grand Exchange (buy/sell offers with collection).
+
+- **Two ways to trade**: a *listing* (seller names a price, buyer takes it) and an *order* (buyer
+  posts "I want 100 Iron Ore at 5g each", sellers fill it). Orders are what keeps a thin market
+  usable — someone always has a standing bid.
+- **Listing fee** (1% of asking price, minimum 1 gold) — paid on listing, not on sale. Anti-spam and
+  gold sink.
 - **Sales tax** (5%) on sale — the second gold sink.
-- **Expiry** (7 days) — item returns to the bag/bank on expiry, no refund of the listing fee.
-- **Price bounds**: min = the item's Shop sell price, max = 50× Shop buy price (or a per-item cap).
-  Without a floor, two alts launder gold; without a ceiling, a rare goes for 10^9.
+- **Expiry** (90 days, matching IdleMMO) — item returns to the bag/bank, no fee refund.
+- **Price bounds**: min = the item's Shop sell price, max = 50× Shop buy price. Without a floor, two
+  alts launder gold; without a ceiling, a rare goes for 10^9.
 - **Max 5 active listings** per character.
-- Item binding: loot marked bound (dungeon first-clears, quest rewards) cannot be listed. Add a
-  `Bound bool` to `inventory` when first needed, or v1 simply allows everything.
+- **Auctions** as a later tab (IdleMMO has them): one item, time-boxed bids — but a fixed-price
+  market must work first.
+
 
 ## Data
 

@@ -11,16 +11,18 @@ quest rewards mean something — and the first place a player converts effort in
 ## Two shops or one?
 
 The art folder already carries `gold.png`, `silver.png` and `premium.png`, so the original design
-implied more than one currency. Decide now:
+implied more than one currency. IdleMMO settles this cleanly, and we should copy the split:
 
-- **Gold shop** (this doc): ordinary vendor, gated by character level.
-- **Premium shop**: Diamond-priced (Diamonds default to 10 per character, no purchase flow exists).
-  If Diamonds never become purchasable, a premium shop is a second progression currency, not a
-  monetisation surface — fine, but it means Diamond *sources* have to be designed (dungeon first
-  clears, raid tiers, achievements).
+- **General Goods** (gold): bait, tools, vials, keys, bank slots, low-tier gear. The everyday sink.
+- **Merchants** (a second currency, call it **Shards**): shards are earnable only in-game (high-level
+  dungeon clears, war seasons) and buy the prestige tier — cosmetic skins, pets, essence crystals.
+  Never purchasable, so it is a *progression* currency, not monetisation.
+- **Diamonds** (already in `characters`): keep them as the third, premium-ish currency and give them
+  no sink until something is actually worth buying.
 
-Recommendation for v1: **build the gold shop only**, and leave Diamonds as a reward-only currency
-with no sink until there is something worth buying.
+**Bartering** (new skill) is the reason to sell: +% gold from vendor sales, capped at +20%, and it
+levels *by selling*. That single hook makes the Shop a place players return to rather than a one-off.
+
 
 ## What it sells
 

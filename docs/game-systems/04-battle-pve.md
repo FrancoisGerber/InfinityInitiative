@@ -18,11 +18,17 @@ already blocks while sleeping (`game_controller.go:110`), so sleeping per round 
 useless — do the arithmetic in a loop and render the result.
 
 ```
-initiative = Attack + (ArmourRating * 0.5)        // who acts first each round
-hit        = clamp(0.75 + (atk.Attack - def.Defence) / 100, 0.25, 0.95)
-damage     = max(1, round((atk.Attack + atk.Strength * 0.5) - (def.Defence + def.ArmourRating * 0.5)))
-crit       = 10% chance, damage * 1.5
+agility   = Speed * 2.4        // turn order each round (this is our "Initiative")
+accuracy  = Dexterity * 2.4    // vs enemy evasion -> hit chance
+protect   = Defence * 2.4      // damage absorbed
+hit        = clamp(0.55 + (accuracy - enemy_evasion) / 200, 0.25, 0.95)
+damage     = max(1, round((Strength * 2.4 + Attack) - (enemy_protect + enemy_ArmourRating * 0.5)))
+crit       = CritChance% chance, +CritDamage flat
 ```
+
+Two rounds per click (yours, then theirs) so a click is a *trade*, not a single swing — the exchange
+is the unit of play. Always at least 1 damage taken per exchange.
+
 
 Loop until one side reaches 0 HP, **hard cap 200 rounds** (draw → loss, HP restored, no rewards).
 The log keeps round numbers, damage rolls and the killing blow, so the player can read what
@@ -58,7 +64,7 @@ drops list rather than adding a separate crate of pages.
   "known from" info. Sidebar entry gets `href="/battle"`.
 - `POST /battle/:monsterId` — resolve, persist rewards, return a battle-log fragment plus
   `oob-side-bar` + `oob-inventory` (HP, gold, new items all change at once).
-- `POST /battle/:monsterId/repeat` — start/stop auto-repeat (see the idle question below).
+- `POST /battle/:monsterId/stack` — build or replace the enemy stack (max 3).
 - `views/battle/battle.html`, `views/battle/log.html`.
 
 ## Health and death
@@ -71,24 +77,32 @@ drops list rather than adding a separate crate of pages.
   respawn timer. Default to something mild in v1; a harsh penalty on a blocking request feels
   awful.
 
-## The idle question (decide before building)
+## Clicker combat (not idle timers)
 
-"Idle" here can mean three different products:
+The player is present. One click resolves **one exchange**, or clears one enemy from the stack:
 
-1. **Active** — the player clicks each fight, sees each log. (Cheapest, matches the current
-   action engine exactly.)
-2. **Auto-repeat** — a fight resolves, then a cooldown (`NextBattleAt`) gates the next one; on page
-   load, resolve the fights that elapsed (batched, capped at e.g. 25) and show a summary. This is
-   real idle progress with zero new infrastructure.
-3. **Background combat** — server-side scheduler writing to the DB while nobody watches. Needs a
-   job runner, which the repo does not have.
+1. Click `Attack` → resolve one exchange between you and the current enemy, append the log line(s).
+2. Enemy at 0 HP → loot roll, XP, advance to the next enemy in the stack.
+3. Your HP at 0 → fight over, no rewards from the current enemy.
 
-**Recommendation: (2).** It is the only flavour that fits the blocking engine, and it is what
-Raids/Wars will need anyway.
+No auto-repeat, no queued fights, no catch-up on load — deliberately the opposite of IdleMMO's 6-hour
+idle actions. The fun has to come from the exchange you just clicked, so the log is the product:
+round number, hit/miss, damage, crit, killing blow.
+
+Borrowed from IdleMMO because it makes clicking more interesting:
+
+- **Stacks** of up to 3 enemies (IdleMMO allows 6) chosen before the fight — gives the click rhythm a
+  goal, not just a single opponent.
+- **Scout** — a click that reveals 1–3 enemies for the stack. `Hunting Mastery` raises how many turn
+  up; unengaged enemies flee after ~20 in-session clicks, so scouting is not a free stockpile.
+- **At least 1 damage taken per fight**, always — no free wins.
+- **Enemy scaling** unlocked at level 80 (slider to 150): higher level enemies mean more XP and a
+  bigger **Magic Find** multiplier on loot. It is the clicker's answer to "same monster forever".
 
 ## Decisions to make
 
-1. Active, auto-repeat, or both (recommended: both, with (2) as the default mode)?
+1. Stack size 3 or 6, and does clearing a stack pay a completion bonus?
+
 2. Do we add a real `Initiative` stat (turn order) to characters and monsters? It makes combat
    deeper *and* makes the game's name literal — but it is one more number to balance.
 3. Is combat its own skill row (`Combat` icon already exists in `views/assets/img/skills/`) with
@@ -97,7 +111,8 @@ Raids/Wars will need anyway.
 5. Level gating: can a level 1 character attack a level 50 monster (and lose), or is the list
    filtered?
 6. Do monsters respawn / have per-monster cooldowns, or is the same monster farmable forever?
-7. Should fights cost anything (stamina, food)? Without a cost, auto-repeat is infinite free XP.
+7. Should fights cost anything (stamina, food)? With one click per exchange, a cost is what stops
+   unbounded farming.
 
 ## Risks
 

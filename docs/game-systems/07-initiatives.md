@@ -25,10 +25,28 @@ Perks are the reason a solo player joins one (and why an empty guild is a real c
 | Upgrade | Effect | Notes |
 |---|---|---|
 | Charter | +5 members per level | gate on Initiative level |
-| Vault | +N shared storage slots | reuses the Bank container pattern (02) |
+| Vault | +N vault slots | reuses the Bank container pattern (02) |
 | Workshop | +X% skill XP for members | multiplier read at action time |
-| War Drums | +war attack slots / faster cooldowns | feeds 08 |
+| War Drums | +war assault slots / faster attack cooldowns | feeds 08 |
 | Bounty Board | +Y% gold from battles | feeds 04 |
+
+### Marks, and why the treasury is not gold
+
+Adopted from IdleMMO: the Initiative has **its own currency, Marks**, earned by completing guild
+challenges (1 mark each) and by placing in a war season. Marks pay for challenges refreshes, raids and
+hall components. Gold stays personal — a guild that holds gold is a theft/dupe surface and a reason
+for members to distrust officers.
+
+**Stockpile**: resources contributed to the Initiative cannot be withdrawn again — they exist only to
+build and repair hall components. That is the safe version of a guild bank and it is exactly what
+IdleMMO does (its stockpile is explicitly non-withdrawable).
+
+### Levels gate structure, not just numbers
+
+IdleMMO's rule is worth copying: guild level raises the **member cap** and unlocks **more daily
+challenges**, and the **Guild Hall requires level 10** before any component (conquest banner, vault,
+workshop) can be built. Concrete milestones beat a flat percentage ladder.
+
 
 **Never bake a perk into a character row.** Compute it per request from
 `initiative_members → initiatives → initiative_upgrades`, or buffs will persist after leaving.

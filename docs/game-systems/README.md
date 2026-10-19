@@ -4,6 +4,9 @@ Planning documents for every player-facing sidebar entry that currently has no
 implementation. **Nothing here is built.** Each file is a proposal to be discussed,
 argued with, and then cut down before code starts.
 
+**Read `00-research-and-principles.md` first** — it records the one rule that overrides every plan
+below (a clicker, not background timers), and the IdleMMO/Melvor/OSRS systems each plan borrows from.
+
 Status legend: **plan** = written, **agreed** = decided with the owner, **built** = shipped.
 
 | # | Sidebar entry | Section | Size | Depends on | Status |
@@ -80,8 +83,9 @@ XP and items but no way to spend or lose anything.
 1. **Is combat turn-based and logged, or instant-resolved?** (04) This decides the shape of
    dungeons, raids and wars.
 2. **Does a "Combat" skill become a real row in `skills`?** Or are combat levels separate?
-3. **Idle or active?** Today every action is a blocking POST the player triggers. Do we keep
-   that, or add offline resolution? Raids and wars are meaningless without the latter.
+3. **Idle or active?** Settled: **active clicker, no background timers or offline progress** (see
+   `00-research-and-principles.md`). Everything time-based resolves on the click that crosses it.
+
 4. **Multiplayer reality check**: one user maps to one character
    (`GetCharacterForUser`), the chat bar is static markup, and there is no party model.
    Initiatives, wars, raids and the market all assume other players exist.

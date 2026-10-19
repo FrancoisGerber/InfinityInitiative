@@ -35,6 +35,15 @@ Rule: **unlocks over multipliers**, and any multiplier must be a single clearly-
 these stack with Initiative perks (07) and gear, and three stacked multipliers is how idle games
 break their own balance.
 
+**Construction is the skill that builds the house** (IdleMMO calls it exactly that). Room
+construction and upgrades should award Construction XP, and the room list should be gated by both
+house level and Construction level — that gives an eighth skill a consumer without inventing a new
+system.
+
+**No decay, no upkeep.** IdleMMO's guild hall components decay and need repairs; for a personal house
+in a clicker that is a chore with no drama. Rooms, once built, stay built.
+
+
 ## Data
 
 ```go
@@ -82,8 +91,8 @@ Slot  int64               // 0..(Slots-1); unique per house
    no drama.)
 5. Can rooms be **refunded** or moved freely? Moving should be free; refunds should not (otherwise
    it is a free respec merry-go-round).
-6. Do buffs apply while offline (they must, since actions can be catch-up resolved)? Any buff that
-   only applies on-screen would be a bug in the idle loop.
+6. Do buffs apply to every click? They must — computed on the same request that resolves the action.
+   A buff that only applies sometimes is a bug, not a feature.
 
 ## Risks
 

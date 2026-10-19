@@ -8,19 +8,29 @@ This is the game's endgame and the reason "Initiative" is in the title: two Init
 their members to a time-boxed war, and the side that wins takes something real. It is also the
 place where the word earns its double meaning — battles are resolved in **initiative order**.
 
-## Shape
+## Shape (rebuilt around IdleMMO's Conquest)
 
-A war is a scheduled, time-boxed contest between two Initiatives (48h default):
+IdleMMO does not run live PvP arenas — it runs **assaults on locations**: a guild picks a place, and
+every enemy its members defeat there feeds guild EXP, conquest EXP and the member's Guild Mastery.
+At the end of a season the top guilds in each location *own* it and get tiered percentage boosts
+(primary skill EXP, dungeon magic find, combat EXP …) for the next season.
+
+That is a much better fit for a clicker with one player per account than duel queues, and it keeps the
+name honest: the war is fought over territory, and every clash inside it is resolved in **initiative
+order** from the Speed/Agility stat.
 
 ```
-declare / accept ──► war opens
-                      ├── members set a stance: attack | defend
-                      ├── server resolves duels on per-character cooldowns (idle friendly)
-                      └── each win = score; at EndsAt the higher score takes the stakes
+declare war on an Initiative  ──►  war opens
+   ├── each member picks a target location and clicks "Assault" (a clash resolves instantly)
+   ├── every won clash: +war score, +Initiative EXP, +Guild Mastery to the member
+   ├── when two members attack the same location in the same tick, resolve a head-to-head clash
+   └── at season end: highest score owns the location, tiered boosts for its members
 ```
 
-No live sockets are needed. Every duel is resolved arithmetically from stored timestamps, exactly
-like raids (06) — which is what lets an idle player participate.
+**Duels still exist, but as the exception** — the flavour event when two Initiatives meet in the same
+place — not as the primary loop. No live sockets, no lobbies, no countdowns: everything resolves on
+the click that triggers it.
+
 
 ## How a duel resolves
 
@@ -30,7 +40,9 @@ they were set to `defend`.
 
 - Attacker pays nothing to attack; attacking breaks their defensive stance for the cooldown.
 - Cooldown per character (e.g. 10 minutes), stored as `NextAttackAt`.
-- **Idle catch-up**: on page load, resolve missed attacks up to a cap and show a war-feed summary.
+- **Every duel in the feed is a click.** No offline catch-up: an assault click resolves your
+  character's next clash and writes the feed entry. Members who are not clicking are not fighting.
+
 - Every resolved duel writes a log row the player can read — the war feed is the content.
 
 ## Data
