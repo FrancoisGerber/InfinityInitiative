@@ -2,7 +2,7 @@
 {{if .Working}}
 <div class="btn btn-outline btn-primary mx-2">
   <img src="{{.Character.ActiveItem.Image}}" class="h-7 mx-1" />
-  <span><span class="action-seconds">{{.WorkingSeconds}}</span>s…</span>
+  <span>{{.Character.ActiveItem.Name}}</span>
   <span class="loading loading-bars loading-sm"></span>
 </div>
 {{else}}
