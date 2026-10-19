@@ -19,7 +19,7 @@ func SetupEndpoints(g *echo.Group) {
 }
 
 func GetGamePage(c echo.Context) error {
-	c.Echo().Renderer = templates.For("views/layout/*.html","views/game/*.html")
+	c.Echo().Renderer = templates.For("views/layout/*.html", "views/game/*.html")
 
 	skillName := c.Param("skillName")
 
@@ -51,7 +51,7 @@ func GetGamePage(c echo.Context) error {
 }
 
 func RunActiveAction(c echo.Context) error {
-	c.Echo().Renderer = templates.For("views/layout/*.html","views/game/*.html")
+	c.Echo().Renderer = templates.For("views/layout/*.html", "views/game/*.html")
 
 	itemId := c.Param("itemId")
 	userId := c.Get("UserId").(uint)
@@ -94,7 +94,7 @@ func RunActiveAction(c echo.Context) error {
 }
 
 func GetActiveAction(c echo.Context) error {
-	c.Echo().Renderer = templates.For("views/layout/*.html","views/game/*.html")
+	c.Echo().Renderer = templates.For("views/layout/*.html", "views/game/*.html")
 
 	itemId := c.Param("itemId")
 	userId := c.Get("UserId").(uint)
@@ -127,7 +127,11 @@ func GetActiveAction(c echo.Context) error {
 	}
 
 	// Set active action that may be performed
+	//
+	// The foreign key must be set explicitly: updateAll() omits associations, so assigning
+	// character.ActiveItem alone never reaches characters.active_item_id.
 	character.ActiveItem = item
+	character.ActiveItemId = &item.ID
 	_, err := character.Update()
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "Could Not Update Character")
@@ -220,7 +224,7 @@ func SetGameState(c echo.Context) error {
 }
 
 func SetEquipedItem(c echo.Context) error {
-	c.Echo().Renderer = templates.For("views/layout/*.html","views/game/*.html")
+	c.Echo().Renderer = templates.For("views/layout/*.html", "views/game/*.html")
 
 	itemId := c.Param("itemId")
 	userId := c.Get("UserId").(uint)

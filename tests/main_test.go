@@ -21,6 +21,14 @@ func TestMain(m *testing.M) {
 
 	os.Setenv("DBNAME", filepath.Join(dir, "test.db"))
 
+	// Handlers resolve templates relative to the process working directory ("views/..."),
+	// exactly as the server does when started from the repo root. The test binary starts
+	// in tests/, so step up once.
+	if err := os.Chdir(".."); err != nil {
+		fmt.Println("could not chdir to the repo root:", err)
+		os.Exit(1)
+	}
+
 	// Minimal schema for the models the tests touch.
 	user := models.NewUser()
 	role := models.NewRole()

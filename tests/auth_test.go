@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -55,6 +56,14 @@ func newTestServer() (*echo.Echo, sessions.Store) {
 	e.Renderer = stubRenderer{}
 	e.Use(middleware.Recover())
 	e.Use(session.Middleware(store))
+
+	// Echo hides handler errors behind a generic 500; print the cause so a failing
+	// assertion shows what actually broke.
+	e.HTTPErrorHandler = func(err error, c echo.Context) {
+		fmt.Printf("handler error on %s %s: %+v\n", c.Request().Method, c.Request().URL.Path, err)
+		e.DefaultHTTPErrorHandler(err, c)
+	}
+
 	routes.Router(e)
 
 	return e, store

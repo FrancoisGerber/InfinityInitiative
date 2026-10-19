@@ -176,63 +176,6 @@ func (model *Game) RemoveRecipeItemsFromInventory(recipeItems []Recipe, inventor
 	return ""
 }
 
-// Update CharacterSkill XP
-func (model *Game) IncreaseCharacterSkill(characterSkill CharacterSkill, nextLevel Level, item Item) error {
-	characterSkill.ExperiencePoints = characterSkill.ExperiencePoints + item.ExperienceGained
-
-	if characterSkill.ExperiencePoints >= nextLevel.ExperienceNeeded {
-		characterSkill.Level = nextLevel
-	}
-	_, err := characterSkill.Update()
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Update Character XP
-func (model *Game) IncreaseCharacterXP(characterSkill CharacterSkill, character Character, nextCharacterLevel Level, skills []Skill) error {
-	totalXP := characterSkill.CalcCharacterTotalXP(character.ID)
-	character.ExperiencePoints = int64(float64(totalXP) / float64(len(skills)))
-
-	if character.ExperiencePoints >= nextCharacterLevel.ExperienceNeeded {
-		character.Level = nextCharacterLevel
-	}
-	_, err := character.Update()
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Add made item to inventory
-func (model *Game) AddNewItemForCharacter(inventory Inventory, character Character, item Item) error {
-	var err error
-	if inventory.ID == 0 {
-		inventoryItem := InitInventory(&Inventory{
-			Character: character,
-			Item:      item,
-			Amount:    1,
-			Equipped:  false,
-		})
-
-		_, err = inventoryItem.Create()
-	} else {
-		inventory.Amount += 1
-		_, err = inventory.Update()
-	}
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // EquipItem toggles one unit of an item between "carried" and "equipped".
 //
 // It used to move quantity out of the stack (Amount -= 1) and flip a boolean, which left
