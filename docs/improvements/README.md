@@ -14,6 +14,7 @@ Read `../BUGS.md` alongside — each plan names the bug IDs it closes.
 | 04 | [Security and admin](04-security-and-admin.md) | B1, B2, B6, B17, B24 | M |
 | 05 | [Rendering and UX](05-rendering-and-ux.md) | B16, B19, B22, B29 | S–M |
 | 06 | [Data layer and tests](06-data-layer-and-tests.md) | B5, B13, B27, B28 | M |
+| 07 | [Character switcher UI](07-character-switcher-ui.md) | — (finishes B7 in the UI) | S |
 
 ## Suggested order
 

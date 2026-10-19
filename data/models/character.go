@@ -194,10 +194,13 @@ func (model *Character) LoadFullCharacter() FullCharacter {
 	characterSkill := NewCharacterSkill()
 	characterSkills := characterSkill.GetAllCharacterSkillsPerCharacter(int64(model.ID))
 
-	model.LoadCharacterActualStats(int64(model.ID))
+	// Work on a copy: LoadCharacterActualStats adds the worn items' bonuses to its
+	// receiver, so calling this twice on one struct doubled the character's stats.
+	character := *model
+	character.LoadCharacterActualStats(int64(character.ID))
 
 	return FullCharacter{
-		*model,
+		character,
 		characterSkills,
 	}
 }

@@ -5,6 +5,8 @@ import (
 	"InfinityInitiative/utils"
 	templates "InfinityInitiative/views"
 	"net/http"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -85,6 +87,13 @@ func SaveItem(c echo.Context) error {
 		}
 
 		item.Runtime = runtimeDuration
+	}
+
+	// The form offers a <select>, but nothing validated the posted value: an unknown type
+	// saved an item that could never be equipped or crafted, with no error to explain it.
+	if !slices.Contains(models.ItemTypes, item.Type) {
+		utils.ShowAlertError(c, "Unknown item type. Pick one of: "+strings.Join(models.ItemTypes, ", "))
+		return nil
 	}
 
 	// A resource that belongs to a skill is an action. Without a runtime it resolves
