@@ -5,7 +5,9 @@ import (
 	"InfinityInitiative/data/models"
 	"InfinityInitiative/routes"
 	"InfinityInitiative/utils"
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo-contrib/session"
@@ -64,6 +66,26 @@ func main() {
 
 	// Static files and templates
 	e.Static("/assets", "views/assets")
+
+	// Errors: a rejected CSRF token means the page the browser posted from is stale, which
+	// is invisible as a bare 400.
+	e.HTTPErrorHandler = func(err error, c echo.Context) {
+		if c.Response().Committed {
+			return
+		}
+
+		if he, ok := err.(*echo.HTTPError); ok && he.Code == http.StatusBadRequest &&
+			(strings.Contains(fmt.Sprint(he.Message), "csrf") || he.Internal != nil && strings.Contains(fmt.Sprint(he.Internal), "csrf")) {
+			c.Response().Header().Set("Cache-Control", "no-store")
+			_ = c.HTML(http.StatusBadRequest, "<!doctype html><title>Session expired</title>"+
+				"<body style=\"font-family:system-ui;padding:3rem;background:#0f192d;color:#e5e7eb\">"+
+				"<h1>Session expired</h1><p>Your browser posted an out-of-date form (the security token was missing or stale).</p>"+
+				"<p><a style=\"color:#93c5fd\" href=\"/login\">Reload the login page</a> and try again.</p></body>")
+			return
+		}
+
+		e.DefaultHTTPErrorHandler(err, c)
+	}
 
 	// Router
 	routes.Router(e)

@@ -70,6 +70,10 @@ func RenderGroup(c echo.Context, status int, name string, data any, patterns ...
 	t := For(patterns...)
 
 	if !c.Response().Committed {
+		// HTML is per-session: a stale copy (an old login page without the CSRF hook, for
+		// instance) fails in ways the user cannot diagnose.
+		c.Response().Header().Set("Cache-Control", "no-store, must-revalidate")
+		c.Response().Header().Set("Pragma", "no-cache")
 		c.Response().WriteHeader(status)
 	}
 
