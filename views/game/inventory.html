@@ -30,7 +30,7 @@
       />
       <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-6">
         <div class="grid lg:grid-cols-4 grid-cols-4 content-center gap-4">
-          {{range .DropdownData.Inventory}} {{if ne .Amount 0 }}
+          {{range .DropdownData.Inventory}} {{if gt .Carried 0}}
           <div class="tooltip tooltip-top tooltip-primary" data-tip="{{.Item.Name}}">
             <div
               class="indicator rounded-box bg-neutral h-20 w-full content-center cursor-pointer"
@@ -39,7 +39,7 @@
               hx-swap="none"
             >
               <span class="indicator-item indicator-start badge border-2 border-neutral-600"
-                >{{.Amount}}</span
+                >{{.Carried}}</span
               >
               <img src="{{.Item.Image}}" class="h-12 w-12 mx-auto my-auto" />
             </div>
@@ -61,7 +61,7 @@
       />
       <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-6">
         <div class="grid lg:grid-cols-4 grid-cols-4 content-center gap-4">
-          {{range .DropdownData.Inventory}} {{if .Equipped}}
+          {{range .DropdownData.Inventory}} {{if gt .EquippedAmount 0}}
           <div class="tooltip tooltip-top tooltip-primary" data-tip="{{.Item.Name}}">
             <div
               class="indicator rounded-box bg-neutral h-20 w-full content-center cursor-pointer"
@@ -69,6 +69,9 @@
               hx-trigger="click"
               hx-swap="none"
             >
+              <span class="indicator-item indicator-start badge border-2 border-neutral-600"
+                >{{.EquippedAmount}}</span
+              >
               <img src="{{.Item.Image}}" class="h-12 w-12 mx-auto my-auto" />
             </div>
           </div>

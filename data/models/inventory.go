@@ -15,6 +15,10 @@ type Inventory struct {
 	Equipped       bool      `json:"Equipped" form:"Equipped" query:"Equipped"`
 	EquippedAmount int64     `json:"EquippedAmount" form:"EquippedAmount" query:"EquippedAmount"`
 	Amount         int64     `json:"Amount" form:"Amount" query:"Amount"`
+	// Carried is what the Inventory tab shows: owned units minus worn ones. Equipping a
+	// unit leaves Amount alone and raises EquippedAmount, so without this the Inventory
+	// tab looked unchanged after a click (nothing appeared to happen).
+	Carried int64 `json:"Carried" form:"Carried" query:"Carried" gorm:"-"`
 }
 
 func NewInventory() Inventory {
@@ -40,10 +44,22 @@ func (model *Inventory) Migrate() error {
 	// unique index below can exist and the grid shows real totals.
 	model.mergeDuplicateStacks()
 
+	// equipped_amount was added nullable, so rows created before it hold NULL and any
+	// "equipped_amount + 1" keeps them NULL — equip clicks did nothing. Backfill first.
+	model.db.Exec(`UPDATE inventories SET equipped_amount = 0 WHERE equipped_amount IS NULL`)
+
 	// Ghost rows left by the old equip logic: zero quantity but still counted in the grid.
 	model.db.Exec(`
 		UPDATE inventories SET deleted_at = CURRENT_TIMESTAMP
-		WHERE amount <= 0 AND deleted_at IS NULL
+		WHERE amount <= 0 AND deleted_at IS NULL AND equipped = 0
+	`)
+
+	// The old equip logic flipped a boolean and moved the unit out of amount; carry those
+	// rows into the equipped_amount model so the Equipment tab still shows them and
+	// unequipping gives the unit back.
+	model.db.Exec(`
+		UPDATE inventories SET amount = amount + 1, equipped_amount = 1
+		WHERE equipped = 1 AND equipped_amount = 0 AND deleted_at IS NULL
 	`)
 
 	// Partial unique index: soft-deleted rows must not collide.
@@ -142,8 +158,12 @@ func (model *Inventory) Delete() (int64, error) {
 func (model *Inventory) GetInventoryForCharacter(id int64) (models []Inventory) {
 	model.db.Preload("Character").Preload("Item").Find(&models, "character_id = ?", id)
 
-	for _, m := range models {
-		m = InitInventory(&m)
+	for i := range models {
+		models[i] = InitInventory(&models[i])
+		models[i].Carried = models[i].Amount - models[i].EquippedAmount
+		if models[i].Carried < 0 {
+			models[i].Carried = 0
+		}
 	}
 
 	return models

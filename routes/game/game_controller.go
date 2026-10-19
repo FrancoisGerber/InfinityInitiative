@@ -515,6 +515,5 @@ func SetEquipedItem(c echo.Context) error {
 	}
 
 	// Load views
-	templates.RenderGroup(c, http.StatusOK, "oob-equipped-items", data, viewPatterns...)
 	return templates.RenderGroup(c, http.StatusOK, "oob-inventory", data, viewPatterns...)
 }

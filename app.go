@@ -2,10 +2,12 @@ package main
 
 import (
 	"InfinityInitiative/data"
+	"InfinityInitiative/data/interfaces"
 	"InfinityInitiative/data/models"
 	"InfinityInitiative/routes"
 	"InfinityInitiative/utils"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -116,14 +118,14 @@ func autoMigrations() {
 	role := models.NewRole()
 	user := models.NewUser()
 
-	data.AutoMigration(&character)
-	data.AutoMigration(&characterSkill)
-	data.AutoMigration(&level)
-	data.AutoMigration(&item)
-	data.AutoMigration(&skill)
-	data.AutoMigration(&recipe)
-	data.AutoMigration(&monster)
-	data.AutoMigration(&inventory)
-	data.AutoMigration(&role)
-	data.AutoMigration(&user)
+	// Errors were ignored, which hid a failing AutoMigrate and with it every backfill in
+	// Inventory.Migrate (equip columns stayed NULL and equip clicks silently did nothing).
+	for _, model := range []interfaces.Model{
+		&character, &characterSkill, &level, &item, &skill,
+		&recipe, &monster, &inventory, &role, &user,
+	} {
+		if err := data.AutoMigration(model); err != nil {
+			log.Printf("migration failed for %T: %v", model, err)
+		}
+	}
 }
