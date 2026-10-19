@@ -10,6 +10,16 @@
     <script src="/assets/js/htmx.min.js"></script>
     <link rel="manifest" href="/assets/manifest.json" />
     <meta name="theme-color" content="#0f192d" />
+    <script>
+      // htmx has to echo the CSRF cookie in a header; the server checks it on every
+      // mutating request (POST/PUT/DELETE).
+      document.addEventListener("htmx:configRequest", function (event) {
+        var match = document.cookie.match(/(?:^|;\s*)_csrf=([^;]*)/);
+        if (match) {
+          event.detail.headers["X-CSRF-Token"] = decodeURIComponent(match[1]);
+        }
+      });
+    </script>
   </head>
   <body>
     {{block "auth_content" .}}{{end}}

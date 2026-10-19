@@ -1,6 +1,10 @@
 package models
 
-var MaxInventorySize int64 = 36
+// MaxInventorySize is how many distinct stacks a character can hold.
+const MaxInventorySize int64 = 36
+
+// MaxCharacters caps how many characters one account may own.
+const MaxCharacters int64 = 5
 
 type Data struct {
 	Page         interface{}
@@ -10,18 +14,21 @@ type Data struct {
 	ActivePage   string
 	Id           int64
 	Character    FullCharacter
+
+	// Pacing of the action currently running (set by the game handlers only).
+	Working        bool
+	WorkingSeconds int64
+	WaitMs         int64
 }
 
+// Classes are the playable classes. Keep this list in step with the art in
+// views/assets/img/classes — Rogue, Druid, Paladin, Bard and Monk had no portrait, so a
+// character created with them rendered a broken image (B25).
 var Classes = []string{
 	"Fighter",
 	"Mage",
-	"Rogue",
 	"Cleric",
-	"Druid",
-	"Paladin",
 	"Ranger",
-	"Bard",
-	"Monk",
 }
 
 var ItemTypes = []string{

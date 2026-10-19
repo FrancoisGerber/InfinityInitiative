@@ -1,6 +1,9 @@
 package models
 
-import "slices"
+import (
+	"slices"
+	"time"
+)
 
 type Game struct {
 	Base
@@ -14,17 +17,19 @@ func NewGame() Game {
 }
 
 // Get complete character skill progress
-func (model *Game) LoadCharacterProgress(userId int64, skillId uint) struct {
+func (model *Game) LoadCharacterProgress(character Character, skillId uint) struct {
 	CharacterSkill
 	NextLevel    Level
 	ActiveItem   Item
 	PercentageXP float64
+	// Pacing of the action that is currently running (the runtime shown in the UI).
+	Working     bool
+	WaitMs      int64
+	SecondsLeft int64
 } {
 
-	character := NewCharacter()
 	characterSkill := NewCharacterSkill()
 	level := NewLevel()
-	character = character.GetCharacterForUser(userId)
 	characterSkill = characterSkill.GetCharacterProgress(character.ID, skillId)
 
 	nextLevelName := characterSkill.Level.Name + 1
@@ -38,33 +43,55 @@ func (model *Game) LoadCharacterProgress(userId int64, skillId uint) struct {
 	newMax := nextLevel.ExperienceNeeded - characterSkill.Level.ExperienceNeeded
 	newXp := characterSkill.ExperiencePoints - characterSkill.Level.ExperienceNeeded
 
-	percentageXP := (float64(newXp) / float64(newMax) * 100)
+	// At the level cap there is no "next" level, so the divisor collapses to zero. Guard
+	// it instead of rendering NaN/Inf into the XP bar.
+	percentageXP := 0.0
+	if newMax > 0 {
+		percentageXP = float64(newXp) / float64(newMax) * 100
+		if percentageXP < 0 {
+			percentageXP = 0
+		}
+		if percentageXP > 100 {
+			percentageXP = 100
+		}
+	}
+
+	now := time.Now().UnixMilli()
+	waitMs := int64(0)
+	working := character.ActionItemId != 0 && character.ActionReadyAt > now
+	if working {
+		waitMs = character.ActionReadyAt - now
+	}
 
 	characterSkillDto := struct {
 		CharacterSkill
 		NextLevel    Level
 		ActiveItem   Item
 		PercentageXP float64
+		Working      bool
+		WaitMs       int64
+		SecondsLeft  int64
 	}{
 		characterSkill,
 		nextLevel,
 		activeItem,
 		percentageXP,
+		working,
+		waitMs,
+		(waitMs + 999) / 1000,
 	}
 
 	return characterSkillDto
 }
 
 // Get complete Items with recipes
-func (model *Game) LoadFullItems(skill *Skill, userId int64) []struct {
+func (model *Game) LoadFullItems(skill *Skill, character Character) []struct {
 	Item
 	Recipes    []Recipe
 	ActiveItem Item
 } {
 
 	item := NewItem()
-	character := NewCharacter()
-	character = character.GetCharacterForUser(userId)
 	items := item.GetAllItemsForSkill(skill.ID)
 
 	var itemDtos []struct {
@@ -94,10 +121,8 @@ func (model *Game) LoadFullItems(skill *Skill, userId int64) []struct {
 }
 
 // Get the character's full inventory
-func (model *Game) LoadInventory(userId int64) []Inventory {
+func (model *Game) LoadInventory(character Character) []Inventory {
 	inventory := NewInventory()
-	character := NewCharacter()
-	character = character.GetCharacterForUser(userId)
 	inventoryList := inventory.GetInventoryForCharacter(int64(character.ID))
 
 	return inventoryList
@@ -165,64 +190,11 @@ func (model *Game) RemoveRecipeItemsFromInventory(recipeItems []Recipe, inventor
 	return ""
 }
 
-// Update CharacterSkill XP
-func (model *Game) IncreaseCharacterSkill(characterSkill CharacterSkill, nextLevel Level, item Item) error {
-	characterSkill.ExperiencePoints = characterSkill.ExperiencePoints + item.ExperienceGained
-
-	if characterSkill.ExperiencePoints >= nextLevel.ExperienceNeeded {
-		characterSkill.Level = nextLevel
-	}
-	_, err := characterSkill.Update()
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Update Character XP
-func (model *Game) IncreaseCharacterXP(characterSkill CharacterSkill, character Character, nextCharacterLevel Level, skills []Skill) error {
-	totalXP := characterSkill.CalcCharacterTotalXP(character.ID)
-	character.ExperiencePoints = int64(float64(totalXP) / float64(len(skills)))
-
-	if character.ExperiencePoints >= nextCharacterLevel.ExperienceNeeded {
-		character.Level = nextCharacterLevel
-	}
-	_, err := character.Update()
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Add made item to inventory
-func (model *Game) AddNewItemForCharacter(inventory Inventory, character Character, item Item) error {
-	var err error
-	if inventory.ID == 0 {
-		inventoryItem := InitInventory(&Inventory{
-			Character: character,
-			Item:      item,
-			Amount:    1,
-			Equipped:  false,
-		})
-
-		_, err = inventoryItem.Create()
-	} else {
-		inventory.Amount += 1
-		_, err = inventory.Update()
-	}
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Equip items in inventory on character
+// EquipItem toggles one unit of an item between "carried" and "equipped".
+//
+// It used to move quantity out of the stack (Amount -= 1) and flip a boolean, which left
+// empty rows behind and let a character wear two weapons. Now the row keeps the total and
+// tracks how many of it are worn, and equipping one type unequips the others.
 func (model *Game) EquipItem(characterId int64, itemId int64, inventory Inventory) string {
 	inventoryItem := inventory.GetInventoryItemForCharacter(itemId, characterId)
 
@@ -234,17 +206,24 @@ func (model *Game) EquipItem(characterId int64, itemId int64, inventory Inventor
 		return "That item is not equippable"
 	}
 
-	inventoryItem.Equipped = !inventoryItem.Equipped
+	// Unequip one.
+	if inventoryItem.EquippedAmount > 0 {
+		model.db.Exec(
+			`UPDATE inventories SET equipped_amount = 0, equipped = 0 WHERE id = ?`,
+			inventoryItem.ID,
+		)
 
-	if inventoryItem.Equipped {
-		inventoryItem.Amount -= 1
-	} else {
-		inventoryItem.Amount += 1
+		return ""
 	}
-	_, err := inventoryItem.Update()
-	if err != nil {
-		return err.Error()
+
+	if inventoryItem.Amount <= 0 {
+		return "You do not have the item in your inventory."
 	}
+
+	// One unit of each item may be worn, and different items may be worn together even of
+	// the same type: several armour pieces at once are fine, two of the same named item are
+	// not (clicking a worn item takes it off).
+	model.db.Exec("UPDATE inventories SET equipped_amount = 1, equipped = 1 WHERE id = ?", inventoryItem.ID)
 
 	return ""
 }

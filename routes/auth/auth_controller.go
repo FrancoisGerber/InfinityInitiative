@@ -6,6 +6,15 @@ import (
 	"InfinityInitiative/views"
 	"github.com/labstack/echo/v4"
 	"net/http"
+	"slices"
+	"strings"
+)
+
+// viewPatterns for the auth screens: the shells plus the per-screen fragments.
+var (
+	authViewPatterns     = "views/auth/*.html"
+	loginViewPatterns    = "views/auth/login/*.html"
+	registerViewPatterns = "views/auth/register/*.html"
 )
 
 func SetupEndpoints(g *echo.Group) {
@@ -18,12 +27,7 @@ func SetupEndpoints(g *echo.Group) {
 }
 
 func Login(c echo.Context) error {
-	c.Echo().Renderer = templates.ParseTemplates([]string{
-		"views/auth/*.html",
-		"views/auth/login/*.html",
-	})
-
-	return c.Render(http.StatusOK, "login.html", nil)
+	return templates.RenderGroup(c, http.StatusOK, "login.html", nil, authViewPatterns, loginViewPatterns)
 }
 
 func PostLogin(c echo.Context) error {
@@ -66,33 +70,95 @@ func Logout(c echo.Context) error {
 }
 
 func Register(c echo.Context) error {
-	c.Echo().Renderer = templates.ParseTemplates([]string{
-		"views/auth/*.html",
-		"views/auth/register/*.html",
-	})
+	return templates.RenderGroup(c, http.StatusOK, "register.html", models.Data{
+		DropdownData: map[string]any{
+			"Classes":    models.Classes,
+			"Characters": 0,
+		},
+	}, authViewPatterns, registerViewPatterns)
+}
 
-	return c.Render(http.StatusOK, "register.html", nil)
+// registrationDto carries the account *and* the first character: an account without a
+// character could not play at all, and the game page used to write rows for character 0.
+type registrationDto struct {
+	Email         string
+	Username      string
+	Password      string
+	CharacterName string
+	Class         string
 }
 
 func PostRegister(c echo.Context) error {
-	userDto := new(models.User)
-
-	if err := c.Bind(userDto); err != nil {
-		return c.String(http.StatusBadRequest, "bad request")
+	// Read the fields explicitly: Echo's binder needs `form` tags on the struct, and this
+	// DTO is not a model (a missing tag silently bound every field as empty).
+	dto := registrationDto{
+		Email:         c.FormValue("Email"),
+		Username:      c.FormValue("Username"),
+		Password:      c.FormValue("Password"),
+		CharacterName: c.FormValue("CharacterName"),
+		Class:         c.FormValue("Class"),
 	}
 
-	userDto.Password = utils.HashPassword(userDto.Password)
+	if len(dto.Password) < 8 {
+		utils.ShowAlertError(c, "Password must be at least 8 characters.")
+		return nil
+	}
 
-	user := models.InitUser(userDto)
-	userRole := models.NewRole()
-	userRole = userRole.GetRoleByName("User")
+	characterName := strings.TrimSpace(dto.CharacterName)
+	if characterName == "" {
+		characterName = dto.Username
+	}
 
-	user.Role = userRole
+	if len(characterName) < 3 || len(characterName) > 24 {
+		utils.ShowAlertError(c, "Character name must be between 3 and 24 characters.")
+		return nil
+	}
 
-	_, err := user.Create()
+	if !slices.Contains(models.Classes, dto.Class) {
+		dto.Class = models.Classes[0]
+	}
 
-	if err != nil {
-		return c.String(http.StatusInternalServerError, "Could Not Save User")
+	roleModel := models.NewRole()
+	userRole := roleModel.GetRoleByName("User")
+	if userRole.ID == 0 {
+		return c.String(http.StatusInternalServerError, "Registration is not configured: the User role is missing")
+	}
+
+	user := models.InitUser(&models.User{
+		Username: dto.Username,
+		Email:    dto.Email,
+		Password: utils.HashPassword(dto.Password),
+		// Set the foreign key explicitly; assigning the association made GORM upsert the
+		// role row and left role_id at 0 when it did not.
+		RoleId: userRole.ID,
+	})
+
+	if _, err := user.Create(); err != nil {
+		utils.ShowAlertError(c, "That email or username is already taken.")
+		return nil
+	}
+
+	level := models.NewLevel()
+	firstLevel := level.GetLevelByName(1)
+
+	character := models.InitCharacter(&models.Character{
+		Name:          characterName,
+		Class:         dto.Class,
+		UserId:        user.ID,
+		LevelId:       firstLevel.ID,
+		CombatLevelId: firstLevel.ID,
+		Health:        10,
+		MaxHealth:     10,
+		Attack:        1,
+		Strength:      1,
+		Defence:       1,
+	})
+
+	if _, err := character.Create(); err != nil {
+		// The account would be unusable without a character, so do not keep it.
+		user.Delete()
+		utils.ShowAlertError(c, "Could not create the character, please try again.")
+		return nil
 	}
 
 	c.Response().Header().Set("HX-Redirect", "/login")
@@ -102,6 +168,5 @@ func PostRegister(c echo.Context) error {
 }
 
 func ClearAlert(c echo.Context) error {
-	c.Render(http.StatusOK, "oob-alert-empty", nil)
-	return nil
+	return templates.RenderGroup(c, http.StatusOK, "oob-alert-empty", nil, authViewPatterns)
 }

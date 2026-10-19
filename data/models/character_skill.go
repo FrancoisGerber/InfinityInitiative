@@ -8,9 +8,9 @@ type CharacterSkill struct {
 	Base
 	gorm.Model
 	ID               uint      `json:"ID" form:"ID" query:"ID"`
-	CharacterId      uint      `json:"CharacterId" form:"CharacterId" query:"CharacterId"`
+	CharacterId      uint      `json:"CharacterId" form:"CharacterId" query:"CharacterId" gorm:"uniqueIndex:idx_character_skill"`
 	Character        Character `json:"Character" form:"Character" query:"Character"`
-	SkillId          uint      `json:"SkillId" form:"SkillId" query:"SkillId"`
+	SkillId          uint      `json:"SkillId" form:"SkillId" query:"SkillId" gorm:"uniqueIndex:idx_character_skill"`
 	Skill            Skill     `json:"Skill" form:"Skill" query:"Skill"`
 	LevelId          uint      `json:"LevelId" form:"LevelId" query:"LevelId"`
 	Level            Level     `json:"Level" form:"Level" query:"Level"`
@@ -64,7 +64,7 @@ func (model *CharacterSkill) Create() (int64, error) {
 }
 
 func (model *CharacterSkill) Update() (int64, error) {
-	result := model.db.Select("*").Updates(&model)
+	result := updateAll(model.db, model)
 
 	if result.Error != nil {
 		return 0, result.Error
@@ -74,7 +74,7 @@ func (model *CharacterSkill) Update() (int64, error) {
 }
 
 func (model *CharacterSkill) Delete() (int64, error) {
-	result := model.db.Delete(&model, &model.ID)
+	result := model.db.Delete(model)
 
 	if result.Error != nil {
 		return 0, result.Error
@@ -84,26 +84,25 @@ func (model *CharacterSkill) Delete() (int64, error) {
 }
 
 func (model *CharacterSkill) GetCharacterProgress(characterId uint, skillId uint) CharacterSkill {
+	level1 := NewLevel()
+	level1 = level1.GetLevelByName(1)
+
+	// Get-or-create. The unique index (character_id, skill_id) makes the concurrent
+	// double-insert impossible; FirstOrCreate keeps the happy path a single statement.
+	seed := InitCharacterSkill(&CharacterSkill{
+		CharacterId: characterId,
+		SkillId:     skillId,
+		LevelId:     level1.ID,
+	})
+
+	model.db.Where("character_id = ? AND skill_id = ?", characterId, skillId).FirstOrCreate(&seed)
+
 	var characterSkill CharacterSkill
-	model.db.Preload("Level").Preload("Character").Preload("Skill").First(&characterSkill, "character_id = ? and skill_id = ?", characterId, skillId)
+	model.db.Preload("Level").Preload("Character").Preload("Skill").
+		Where("character_id = ? AND skill_id = ?", characterId, skillId).
+		First(&characterSkill)
 
-	if characterSkill.ID == 0 {
-		level1 := NewLevel()
-		level1 = level1.GetLevelByName(1)
-
-		characterSkill := InitCharacterSkill(&CharacterSkill{
-			CharacterId: characterId,
-			SkillId:     skillId,
-			LevelId:     level1.ID,
-		})
-
-		characterSkill.Create()
-
-		return characterSkill.GetCharacterSkill(int64(characterSkill.ID))
-	}
-
-	characterSkill = InitCharacterSkill(&characterSkill)
-	return characterSkill
+	return InitCharacterSkill(&characterSkill)
 }
 
 func (model *CharacterSkill) CalcCharacterTotalXP(characterId uint) int64 {

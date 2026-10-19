@@ -1,0 +1,27 @@
+{{define "character-panel"}}
+<div class="px-2 py-1 text-xs uppercase opacity-60">Characters</div>
+<div class="flex flex-col gap-1">
+  {{$ActiveId := .DropdownData.ActiveId}} {{range .DropdownData.Characters}}
+  <form hx-post="/game/character/{{.ID}}" hx-swap="none">
+    <button class="btn btn-sm w-full justify-between {{if eq .ID $ActiveId}}btn-primary{{else}}btn-ghost{{end}}">
+      <span>{{.Name}}</span>
+      <span class="badge badge-sm">Lv. {{.Level.Name}}</span>
+    </button>
+  </form>
+  {{end}}
+</div>
+
+{{if lt (len .DropdownData.Characters) 5}}
+<details class="mt-2">
+  <summary class="cursor-pointer text-xs opacity-70">New character</summary>
+  <form class="flex flex-col gap-1 mt-2" hx-post="/game/character" hx-target="#character-panel" hx-swap="innerHTML">
+    <input type="text" name="Name" placeholder="Name" class="input input-sm" minlength="3" maxlength="24" required />
+    <select name="Class" class="select select-sm">
+      {{range .DropdownData.Classes}}
+      <option value="{{.}}">{{.}}</option>
+      {{end}}
+    </select>
+    <button class="btn btn-sm btn-primary">Create</button>
+  </form>
+</details>
+{{end}} {{end}}

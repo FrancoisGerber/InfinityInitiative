@@ -16,10 +16,8 @@ func SessionAuth(next echo.HandlerFunc) echo.HandlerFunc {
 
 		c.Set("UserId", userId)
 
-		if err := next(c); err != nil {
-			c.Error(err)
-		}
-
-		return nil
+		// Let Echo's error handler deal with handler errors; swallowing them here made
+		// every failure look like a 200.
+		return next(c)
 	}
 }

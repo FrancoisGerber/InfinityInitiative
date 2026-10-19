@@ -2,6 +2,7 @@ package models
 
 import (
 	"InfinityInitiative/utils"
+	"os"
 
 	"gorm.io/gorm"
 )
@@ -33,19 +34,40 @@ func InitUser(model *User) User {
 
 func (model *User) Migrate() error {
 	migration := model.db.AutoMigrate(&model)
-
-	admin := model.GetUserByEmail("admin@admin.com")
-	if admin.ID == 0 {
-		admin := NewUser()
-		admin.Username = "admin"
-		admin.Email = "admin@admin.com"
-		admin.Password = utils.HashPassword("admin")
-		admin.RoleId = 1
-
-		admin.Create()
-	}
+	model.seedAdmin()
 
 	return migration
+}
+
+// seedAdmin creates the first administrator only when SEED_ADMIN_EMAIL and
+// SEED_ADMIN_PASSWORD are set in the environment. There is no default account and no
+// default password: a shipped "admin/admin" is an open door on any public deployment.
+func (model *User) seedAdmin() {
+	email := os.Getenv("SEED_ADMIN_EMAIL")
+	password := os.Getenv("SEED_ADMIN_PASSWORD")
+
+	if email == "" || password == "" {
+		return
+	}
+
+	if len(password) < 12 {
+		model.Log("seed admin skipped: SEED_ADMIN_PASSWORD must be at least 12 characters")
+		return
+	}
+
+	if model.GetUserByEmail(email).ID != 0 {
+		return
+	}
+
+	admin := NewUser()
+	admin.Username = "admin"
+	admin.Email = email
+	admin.Password = utils.HashPassword(password)
+	admin.RoleId = 1
+
+	if _, err := admin.Create(); err != nil {
+		model.Log("seed admin failed: ", err.Error())
+	}
 }
 
 func (model *User) GetAllUsers() (models []User) {
@@ -87,7 +109,7 @@ func (model *User) Create() (int64, error) {
 }
 
 func (model *User) Update() (int64, error) {
-	result := model.db.Select("*").Updates(&model)
+	result := updateAll(model.db, model)
 
 	if result.Error != nil {
 		return 0, result.Error
@@ -97,7 +119,7 @@ func (model *User) Update() (int64, error) {
 }
 
 func (model *User) Delete() (int64, error) {
-	result := model.db.Delete(&model, &model.ID)
+	result := model.db.Delete(model)
 
 	if result.Error != nil {
 		return 0, result.Error

@@ -5,10 +5,15 @@ import (
 	"InfinityInitiative/utils"
 	templates "InfinityInitiative/views"
 	"net/http"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
 )
+
+// viewPatterns is the template set this controller renders into.
+var viewPatterns = []string{"views/layout/*.html", "views/items/*.html"}
 
 func SetupEndpoints(g *echo.Group) {
 	g.GET("/items", GetAll)
@@ -23,10 +28,6 @@ func SetupEndpoints(g *echo.Group) {
 }
 
 func GetAll(c echo.Context) error {
-	c.Echo().Renderer = templates.ParseTemplates([]string{
-		"views/layout/*.html",
-		"views/items/*.html",
-	})
 
 	userId := c.Get("UserId").(uint)
 	item := models.NewItem()
@@ -40,14 +41,10 @@ func GetAll(c echo.Context) error {
 		Character:  character.GetFullCharacterForUser(int64(userId)),
 	}
 
-	return c.Render(http.StatusOK, "index.html", data)
+	return templates.RenderGroup(c, http.StatusOK, "index.html", data, viewPatterns...)
 }
 
 func EditItem(c echo.Context) error {
-	c.Echo().Renderer = templates.ParseTemplates([]string{
-		"views/layout/*.html",
-		"views/items/*.html",
-	})
 
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
@@ -69,7 +66,7 @@ func EditItem(c echo.Context) error {
 		},
 	}
 
-	return c.Render(http.StatusOK, "table-edit", data)
+	return templates.RenderGroup(c, http.StatusOK, "table-edit", data, viewPatterns...)
 }
 
 func SaveItem(c echo.Context) error {
@@ -92,6 +89,20 @@ func SaveItem(c echo.Context) error {
 		item.Runtime = runtimeDuration
 	}
 
+	// The form offers a <select>, but nothing validated the posted value: an unknown type
+	// saved an item that could never be equipped or crafted, with no error to explain it.
+	if !slices.Contains(models.ItemTypes, item.Type) {
+		utils.ShowAlertError(c, "Unknown item type. Pick one of: "+strings.Join(models.ItemTypes, ", "))
+		return nil
+	}
+
+	// A resource that belongs to a skill is an action. Without a runtime it resolves
+	// instantly, so every click is free XP and a free copy of itself (B20).
+	if item.Type == "Resource" && item.SkillId != 0 && item.Runtime <= 0 {
+		utils.ShowAlertError(c, `A resource needs a runtime, e.g. "3s".`)
+		return nil
+	}
+
 	if item.ID != 0 {
 		_, err = item.Update()
 	} else {
@@ -109,10 +120,6 @@ func SaveItem(c echo.Context) error {
 }
 
 func CreateItem(c echo.Context) error {
-	c.Echo().Renderer = templates.ParseTemplates([]string{
-		"views/layout/*.html",
-		"views/items/*.html",
-	})
 
 	level := models.NewLevel()
 	skill := models.NewSkill()
@@ -129,14 +136,10 @@ func CreateItem(c echo.Context) error {
 		},
 	}
 
-	return c.Render(http.StatusOK, "table-edit", data)
+	return templates.RenderGroup(c, http.StatusOK, "table-edit", data, viewPatterns...)
 }
 
 func ConfirmDeleteItem(c echo.Context) error {
-	c.Echo().Renderer = templates.ParseTemplates([]string{
-		"views/layout/*.html",
-		"views/items/*.html",
-	})
 
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
@@ -148,7 +151,7 @@ func ConfirmDeleteItem(c echo.Context) error {
 		Page: item,
 	}
 
-	return c.Render(http.StatusOK, "table-delete", data)
+	return templates.RenderGroup(c, http.StatusOK, "table-delete", data, viewPatterns...)
 }
 
 func DeleteItem(c echo.Context) error {
@@ -171,10 +174,6 @@ func DeleteItem(c echo.Context) error {
 }
 
 func EditRecipe(c echo.Context) error {
-	c.Echo().Renderer = templates.ParseTemplates([]string{
-		"views/layout/*.html",
-		"views/items/*.html",
-	})
 
 	id := c.Param("id")
 	ItemId := int64(utils.ParseInt(id))
@@ -207,14 +206,10 @@ func EditRecipe(c echo.Context) error {
 		Id:   ItemId,
 	}
 
-	return c.Render(http.StatusOK, "recipe-edit", data)
+	return templates.RenderGroup(c, http.StatusOK, "recipe-edit", data, viewPatterns...)
 }
 
 func AddRecipe(c echo.Context) error {
-	c.Echo().Renderer = templates.ParseTemplates([]string{
-		"views/layout/*.html",
-		"views/items/*.html",
-	})
 	item := models.NewItem()
 	items := item.GetAllItems()
 
@@ -226,7 +221,7 @@ func AddRecipe(c echo.Context) error {
 		Items:  items,
 	}
 
-	return c.Render(http.StatusOK, "recipe-edit-row", recipeDto)
+	return templates.RenderGroup(c, http.StatusOK, "recipe-edit-row", recipeDto, viewPatterns...)
 }
 
 func SaveRecipe(c echo.Context) error {

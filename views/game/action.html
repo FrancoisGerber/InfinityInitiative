@@ -7,6 +7,18 @@
     <h1 class="text-error card-title">Select a resource</h1>
     {{end}} {{if .Page.ActiveItem.Name}}
     <div class="badge badge-outline gap-2">Level: {{.Page.Level.Name}}</div>
+
+    {{if .Page.Working}}
+    <img
+      src="{{.Page.ActiveItem.Image}}"
+      id="action-button-main"
+      class="w-5/12 opacity-50"
+      style="cursor: progress;"
+      data-remaining="{{.Page.WaitMs}}"
+      data-collect="/game/collect"
+    />
+    <span class="loading loading-bars text-primary loading-lg mb-1"></span>
+    {{else}}
     <img
       src="{{.Page.ActiveItem.Image}}"
       id="action-button-main"
@@ -17,8 +29,8 @@
       hx-swap="none"
       hx-post="/game/action/{{.Page.ActiveItem.ID}}"
     />
-
     <span class="loading loading-bars text-primary loading-lg htmx-indicator running-action mb-1"></span>
+    {{end}}
     {{else}}
     <img src="{{.Page.Skill.Image}}" class="w-5/12" />
     {{end}}
@@ -36,4 +48,20 @@
   </div>
 </div>
 
+{{if .Page.Working}}
+<script>
+  // No timer UI: when the action's runtime elapses, collect it.
+  (function () {
+    var el = document.getElementById("action-button-main");
+    if (!el || !el.dataset.collect) return;
+
+    if (window.__actionTimer) clearTimeout(window.__actionTimer);
+
+    window.__actionTimer = setTimeout(function () {
+      window.__actionTimer = null;
+      htmx.ajax("POST", el.dataset.collect, { swap: "none" });
+    }, parseInt(el.dataset.remaining, 10) || 0);
+  })();
+</script>
+{{end}}
 {{end}}

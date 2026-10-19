@@ -11,7 +11,7 @@
 - **Language:** Go
 - **Front end Framework:** HTMX
 - **Back end Framework:** Echo
-- **Realtime Connection:** Server-sent Events
+- **Realtime Connection:** HTMX partial swaps over HTTP (no websockets/SSE yet)
 - **Database:** Sqlite
 - **ORM:** Gorm
 - **CSS:** Tailwindcss + daisyui (npm required)
@@ -34,4 +34,7 @@
 **Build Binary for Prod:**
 `make build`
 
+## Not implemented
 
+- **No service worker / offline mode.** `views/assets/manifest.json` makes the app
+  installable, but everything is server-rendered and there is no offline cache.

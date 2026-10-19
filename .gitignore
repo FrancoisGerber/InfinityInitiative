@@ -28,3 +28,7 @@ node_modules/
 settings.json
 InfinityInitiative
 *.env*
+
+# SQLite sidecar files (WAL mode) — never commit
+*.db-shm
+*.db-wal

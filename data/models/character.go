@@ -7,30 +7,34 @@ import (
 type Character struct {
 	Base
 	gorm.Model
-	ID                     uint    `json:"ID" form:"ID" query:"ID"`
-	Name                   string  `json:"Name" form:"Name" query:"Name"`
-	Class                  string  `json:"Class" form:"Class" query:"Class"`
-	Bio                    string  `json:"Bio" form:"Bio" query:"Bio"`
-	Image                  string  `json:"Image" form:"Image" query:"Image"`
-	Gold                   float64 `json:"Gold" form:"Gold" query:"Gold" gorm:"default:100"`
-	Diamonds               float64 `json:"Diamonds" form:"Diamonds" query:"Diamonds" gorm:"default:10"`
-	Health                 int64   `json:"Health" form:"Health" query:"Health" gorm:"default:10"`
-	MaxHealth              int64   `json:"MaxHealth" form:"MaxHealth" query:"MaxHealth" gorm:"default:10"`
-	LevelId                uint    `json:"LevelId" form:"LevelId" query:"LevelId"`
-	Level                  Level   `json:"Level" form:"Level" query:"Level"`
-	UserId                 uint    `json:"UserId" form:"UserId" query:"UserId"`
-	User                   User    `json:"User" form:"User" query:"User"`
-	Attack                 float64 `json:"Attack" form:"Attack" query:"Attack" gorm:"default:1"`
-	Strength               float64 `json:"Strength" form:"Strength" query:"Strength" gorm:"default:1"`
-	Defence                float64 `json:"Defence" form:"Defence" query:"Defence" gorm:"default:1"`
-	ArmourRating           float64 `json:"ArmourRating" form:"ArmourRating" query:"ArmourRating" gorm:"default:0"`
-	ExperiencePoints       int64   `json:"ExperiencePoints" form:"ExperiencePoints" query:"ExperiencePoints"`
-	ActiveItemId           *uint   `json:"ActiveItemId" form:"ActiveItemId" query:"ActiveItemId"`
-	ActiveItem             Item    `json:"ActiveItem" form:"ActiveItem" query:"ActiveItem"`
-	Notes                  string  `json:"Notes" form:"Notes" query:"Notes"`
-	CombatLevelId          uint    `json:"CombatLevelId" form:"CombatLevelId" query:"CombatLevelId"`
-	CombatLevel            Level   `json:"CombatLevel" form:"CombatLevel" query:"CombatLevel"`
-	CombatExperiencePoints int64   `json:"CombatExperiencePoints" form:"CombatExperiencePoints" query:"CombatExperiencePoints"`
+	ID               uint    `json:"ID" form:"ID" query:"ID"`
+	Name             string  `json:"Name" form:"Name" query:"Name"`
+	Class            string  `json:"Class" form:"Class" query:"Class"`
+	Bio              string  `json:"Bio" form:"Bio" query:"Bio"`
+	Image            string  `json:"Image" form:"Image" query:"Image"`
+	Gold             float64 `json:"Gold" form:"Gold" query:"Gold" gorm:"default:100"`
+	Diamonds         float64 `json:"Diamonds" form:"Diamonds" query:"Diamonds" gorm:"default:10"`
+	Health           int64   `json:"Health" form:"Health" query:"Health" gorm:"default:10"`
+	MaxHealth        int64   `json:"MaxHealth" form:"MaxHealth" query:"MaxHealth" gorm:"default:10"`
+	LevelId          uint    `json:"LevelId" form:"LevelId" query:"LevelId"`
+	Level            Level   `json:"Level" form:"Level" query:"Level"`
+	UserId           uint    `json:"UserId" form:"UserId" query:"UserId"`
+	User             User    `json:"User" form:"User" query:"User"`
+	Attack           float64 `json:"Attack" form:"Attack" query:"Attack" gorm:"default:1"`
+	Strength         float64 `json:"Strength" form:"Strength" query:"Strength" gorm:"default:1"`
+	Defence          float64 `json:"Defence" form:"Defence" query:"Defence" gorm:"default:1"`
+	ArmourRating     float64 `json:"ArmourRating" form:"ArmourRating" query:"ArmourRating" gorm:"default:0"`
+	ExperiencePoints int64   `json:"ExperiencePoints" form:"ExperiencePoints" query:"ExperiencePoints"`
+	// ActionItemId / ActionReadyAt pace the current action: the click arms it, and the
+	// item lands when the item's runtime has elapsed (zero = nothing running).
+	ActionItemId           uint   `json:"ActionItemId" form:"ActionItemId" query:"ActionItemId" gorm:"default:0"`
+	ActionReadyAt          int64  `json:"ActionReadyAt" form:"ActionReadyAt" query:"ActionReadyAt" gorm:"default:0"`
+	ActiveItemId           *uint  `json:"ActiveItemId" form:"ActiveItemId" query:"ActiveItemId"`
+	ActiveItem             Item   `json:"ActiveItem" form:"ActiveItem" query:"ActiveItem"`
+	Notes                  string `json:"Notes" form:"Notes" query:"Notes"`
+	CombatLevelId          uint   `json:"CombatLevelId" form:"CombatLevelId" query:"CombatLevelId"`
+	CombatLevel            Level  `json:"CombatLevel" form:"CombatLevel" query:"CombatLevel"`
+	CombatExperiencePoints int64  `json:"CombatExperiencePoints" form:"CombatExperiencePoints" query:"CombatExperiencePoints"`
 }
 
 type FullCharacter struct {
@@ -93,7 +97,7 @@ func (model *Character) Create() (int64, error) {
 }
 
 func (model *Character) Update() (int64, error) {
-	result := model.db.Select("*").Updates(&model)
+	result := updateAll(model.db, model)
 
 	if result.Error != nil {
 		return 0, result.Error
@@ -103,7 +107,7 @@ func (model *Character) Update() (int64, error) {
 }
 
 func (model *Character) Delete() (int64, error) {
-	result := model.db.Delete(&model, &model.ID)
+	result := model.db.Delete(model)
 
 	if result.Error != nil {
 		return 0, result.Error
@@ -143,11 +147,60 @@ func (model *Character) LoadCharacterActualStats(characterId int64) {
 	inventory := NewInventory()
 	inventoryList := inventory.GetInventoryForCharacter(int64(model.ID))
 	for _, inventoryItem := range inventoryList {
-		if inventoryItem.Equipped {
+		// Gate on the worn count, not the legacy boolean: they are written together now,
+		// but if they ever drift the boolean silently drops the item's stats.
+		if inventoryItem.EquippedAmount > 0 {
 			model.Attack += inventoryItem.Item.Attack
 			model.Strength += inventoryItem.Item.Strength
 			model.Defence += inventoryItem.Item.Defence
 			model.ArmourRating += inventoryItem.Item.ArmourRating
 		}
+	}
+}
+
+// GetCharactersForUser returns every character the account owns, oldest first.
+func (model *Character) GetCharactersForUser(userId int64) (characters []Character) {
+	model.db.Preload("Level").Where("user_id = ?", userId).Order("id").Find(&characters)
+
+	for i := range characters {
+		characters[i] = InitCharacter(&characters[i])
+	}
+
+	return characters
+}
+
+// GetCharacterForUserAndId puts the ownership check in the WHERE clause, so a guessed id
+// cannot reach another account's character.
+func (model *Character) GetCharacterForUserAndId(userId int64, characterId int64) Character {
+	var character Character
+	model.db.Preload("User").Preload("Level").Preload("ActiveItem").
+		First(&character, "user_id = ? AND id = ?", userId, characterId)
+
+	return InitCharacter(&character)
+}
+
+// CountForUser is used to cap how many characters one account can own.
+func (model *Character) CountForUser(userId int64) int64 {
+	var count int64
+	model.db.Model(&Character{}).Where("user_id = ?", userId).Count(&count)
+
+	return count
+}
+
+// LoadFullCharacter builds the view model (character + skills + live stats) for an
+// already-loaded character, so a handler can render whichever character is active in the
+// session instead of always the account's first one.
+func (model *Character) LoadFullCharacter() FullCharacter {
+	characterSkill := NewCharacterSkill()
+	characterSkills := characterSkill.GetAllCharacterSkillsPerCharacter(int64(model.ID))
+
+	// Work on a copy: LoadCharacterActualStats adds the worn items' bonuses to its
+	// receiver, so calling this twice on one struct doubled the character's stats.
+	character := *model
+	character.LoadCharacterActualStats(int64(character.ID))
+
+	return FullCharacter{
+		character,
+		characterSkills,
 	}
 }

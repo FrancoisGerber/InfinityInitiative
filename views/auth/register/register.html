@@ -23,6 +23,30 @@
 
         <div class="flex-col">
           <label class="label">
+            <span>Character Name</span>
+          </label>
+          <input
+            type="text"
+            name="CharacterName"
+            placeholder="Character Name"
+            class="input"
+            minlength="3"
+            maxlength="24"
+            required
+          />
+        </div>
+        <div class="flex-col">
+          <label class="label">
+            <span>Class</span>
+          </label>
+          <select name="Class" class="select">
+            {{range .DropdownData.Classes}}
+            <option value="{{.}}">{{.}}</option>
+            {{end}}
+          </select>
+        </div>
+        <div class="flex-col">
+          <label class="label">
             <span>Password</span>
           </label>
           <input
