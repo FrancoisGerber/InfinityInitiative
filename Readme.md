@@ -26,7 +26,7 @@
 `make dev`
 
 **Run Tailwind Compiler:**
-`./tailwindcss/npm install & ./tailwindcss/npm run dev`
+`npm --prefix tailwindcss install && npm --prefix tailwindcss run dev`
 
 **Run Tests:**
 `make test`

@@ -15,15 +15,15 @@
 
  {{$SelectedItemId := .ItemId}} 
  <div class="flex" id="recipe_row_{{$SelectedItemId}}">
-  <label class="gap-2 mt-5 mb-5 min-w-9/12 w-full form-control">
-    <select class="w-full select select-bordered" placeholder="Item" name="ItemId" value="{{.ItemId}}">
+  <label class="gap-2 mt-5 mb-5 min-w-9/12 w-full flex-col">
+    <select class="w-full select" placeholder="Item" name="ItemId" value="{{.ItemId}}">
      {{range .Items}}
       <option {{if eq .ID $SelectedItemId}} selected {{end}} value="{{.ID}}">{{.Name}}</option>
       {{end}}
     </select>
   </label>
 
-  <label class="flex w-3/12 gap-2 items-center ml-2 mt-5 mb-5 input input-bordered">
+  <label class="flex w-3/12 gap-2 items-center ml-2 mt-5 mb-5 input">
     <input type="number" class="grow w-full" placeholder="Amount" name="Amount" value="{{.Amount}}" />
   </label>
 

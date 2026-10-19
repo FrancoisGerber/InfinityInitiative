@@ -1,9 +1,19 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+/* Templates live one level up, outside the CLI's working directory. */
+@source "../views";
+/* Never scan the build output itself, or removed classes stay forever. */
+@source not "../views/assets/css";
+@source not "../views/assets/js";
+
+@plugin "@tailwindcss/typography";
+
+@plugin "daisyui" {
+  themes: night --default;
+}
 
 .active-neutral {
-  @apply bg-gray-600 !important;
+  background-color: var(--color-gray-600) !important;
 }
 
 #action-button {
@@ -59,6 +69,6 @@
   height: 100% !important;
 }
 
-.max-h-96{
-  max-height:39rem;
+.max-h-96 {
+  max-height: 39rem;
 }
