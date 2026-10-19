@@ -7,6 +7,7 @@ import (
 	"InfinityInitiative/utils"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/joho/godotenv"
@@ -93,8 +94,13 @@ func main() {
 	// Run DB migrations
 	autoMigrations()
 
-	// Start Server
-	e.Logger.Fatal(e.Start(":8069"))
+	// Start Server (PORT lets a second instance run beside the dev server)
+	addr := ":8069"
+	if port := os.Getenv("PORT"); port != "" {
+		addr = ":" + port
+	}
+
+	e.Logger.Fatal(e.Start(addr))
 }
 
 // Database auto migrations

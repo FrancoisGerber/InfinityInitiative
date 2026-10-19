@@ -9,13 +9,16 @@
     <div class="badge badge-outline gap-2">Level: {{.Page.Level.Name}}</div>
 
     {{if .Page.Working}}
-    <img src="{{.Page.ActiveItem.Image}}" id="action-button-main" class="w-5/12 opacity-60" style="cursor: progress;" />
-    <div class="badge badge-primary gap-2 mb-1">
+    <img src="{{.Page.ActiveItem.Image}}" class="w-5/12 opacity-50" />
+    <div
+      id="action-countdown"
+      class="badge badge-primary gap-2 my-1"
+      data-remaining="{{.Page.WaitMs}}"
+      data-collect="/game/collect"
+    >
       <span class="loading loading-bars loading-sm"></span>
-      <span>Working… {{.Page.SecondsLeft}}s</span>
+      <span>Working… <span class="action-seconds">{{.Page.SecondsLeft}}</span>s</span>
     </div>
-    <!-- Fires the collect when the runtime elapses; nothing is granted before that. -->
-    <div hx-post="/game/action/collect" hx-trigger="load delay:{{.Page.WaitMs}}ms" hx-swap="none"></div>
     {{else}}
     <img
       src="{{.Page.ActiveItem.Image}}"
@@ -27,9 +30,8 @@
       hx-swap="none"
       hx-post="/game/action/{{.Page.ActiveItem.ID}}"
     />
-    {{end}}
-
     <span class="loading loading-bars text-primary loading-lg htmx-indicator running-action mb-1"></span>
+    {{end}}
     {{else}}
     <img src="{{.Page.Skill.Image}}" class="w-5/12" />
     {{end}}
@@ -47,4 +49,45 @@
   </div>
 </div>
 
+{{if .Page.Working}}
+<script>
+  // The badge used to render one number and never move. Tick it every second and fire the
+  // collect when it reaches zero.
+  (function () {
+    var badge = document.getElementById("action-countdown");
+    if (!badge) return;
+
+    var remaining = parseInt(badge.dataset.remaining, 10) || 0;
+    var labels = document.querySelectorAll(".action-seconds");
+
+    if (window.__actionTimer) {
+      clearInterval(window.__actionTimer);
+      window.__actionTimer = null;
+    }
+
+    function paint() {
+      var secs = Math.max(0, Math.ceil(remaining / 1000));
+      labels.forEach(function (el) {
+        el.textContent = secs;
+      });
+    }
+
+    paint();
+
+    window.__actionTimer = setInterval(function () {
+      remaining -= 1000;
+
+      if (remaining <= 0) {
+        clearInterval(window.__actionTimer);
+        window.__actionTimer = null;
+        paint();
+        htmx.ajax("POST", badge.dataset.collect, { swap: "none" });
+        return;
+      }
+
+      paint();
+    }, 1000);
+  })();
+</script>
+{{end}}
 {{end}}

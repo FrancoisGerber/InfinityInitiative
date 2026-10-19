@@ -190,7 +190,7 @@ func TestRunActionIsAtomic(t *testing.T) {
 			t.Fatalf("the start click granted an item: rubies = %d, want %d", got, i)
 		}
 
-		rec = doRequest(e, http.MethodPost, "/game/action/collect", &cookie)
+		rec = doRequest(e, http.MethodPost, "/game/collect", &cookie)
 		if rec.Code != http.StatusOK {
 			t.Fatalf("craft %d collect returned %d: %q", i+1, rec.Code, rec.Body.String())
 		}
@@ -375,7 +375,7 @@ func TestActionsApplyToTheActiveCharacter(t *testing.T) {
 		t.Fatalf("action start returned %d: %q", rec.Code, rec.Body.String())
 	}
 
-	rec = doRequest(e, http.MethodPost, "/game/action/collect", &cookie)
+	rec = doRequest(e, http.MethodPost, "/game/collect", &cookie)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("action collect returned %d: %q", rec.Code, rec.Body.String())
 	}
@@ -419,7 +419,7 @@ func TestActionRespectsRuntime(t *testing.T) {
 	}
 
 	// Collecting before the runtime elapses grants nothing (the panel just keeps counting).
-	if rec := doRequest(e, http.MethodPost, "/game/action/collect", &cookie); rec.Code != http.StatusOK {
+	if rec := doRequest(e, http.MethodPost, "/game/collect", &cookie); rec.Code != http.StatusOK {
 		t.Fatalf("early collect returned %d", rec.Code)
 	}
 

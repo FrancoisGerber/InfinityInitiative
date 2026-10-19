@@ -23,6 +23,7 @@ func SetupEndpoints(g *echo.Group) {
 	g.POST("/game/state/:name", SetGameState)
 	g.POST("/game/notes", SetGameNotes)
 	g.POST("/game/equipitem/:itemId", SetEquipedItem)
+	g.POST("/game/collect", CollectActiveAction)
 	g.GET("/game/characters", GetCharacterPanel)
 	g.POST("/game/character", CreateCharacter)
 	g.POST("/game/character/:characterId", SwitchCharacter)
@@ -231,12 +232,26 @@ func RunActiveAction(c echo.Context) error {
 	switch {
 	case character.ActionItemId != 0 && now >= character.ActionReadyAt:
 		// The runtime has elapsed; this click collects what the action produced.
-		if _, err := game.CollectAction(character.ID); err != nil {
+		result, err := game.CollectAction(character.ID)
+		if err != nil {
 			utils.ShowAlertError(c, err.Error())
 			return nil
 		}
 
 		character = activeCharacter(c, userId)
+
+		// Keep the panel on the item that just finished.
+		if itemID == 0 {
+			itemID = result.Gained.ID
+		}
+
+		if itemID == 0 {
+			itemID = character.ActionItemId
+		}
+
+		if itemID == 0 && character.ActiveItemId != nil {
+			itemID = *character.ActiveItemId
+		}
 	case character.ActionItemId != 0:
 		// Still running: re-render the countdown, grant nothing.
 	default:
@@ -260,7 +275,8 @@ func CollectActiveAction(c echo.Context) error {
 	game := models.NewGame()
 	character := activeCharacter(c, userId)
 
-	if _, err := game.CollectAction(character.ID); err != nil {
+	result, err := game.CollectAction(character.ID)
+	if err != nil {
 		if !errors.Is(err, models.ErrActionInProgress) {
 			utils.ShowAlertError(c, err.Error())
 			return nil
@@ -271,7 +287,12 @@ func CollectActiveAction(c echo.Context) error {
 
 	character = activeCharacter(c, userId)
 
-	itemID := character.ActionItemId
+	// Render the panel around the item that was just collected, so it does not fall back to
+	// "Select a resource" when the reset click never persisted a selection.
+	itemID := result.Gained.ID
+	if itemID == 0 {
+		itemID = character.ActionItemId
+	}
 	if itemID == 0 && character.ActiveItemId != nil {
 		itemID = *character.ActiveItemId
 	}
@@ -302,6 +323,13 @@ func renderActionFragments(c echo.Context, userId uint, character models.Charact
 
 	skill := models.NewSkill()
 	skill = skill.GetSkill(int64(item.SkillId))
+
+	// The panel must show the item this click is about, even if the resource was never
+	// "selected" (the navbar button posts straight to an action).
+	if item.ID != 0 && (character.ActiveItemId == nil || *character.ActiveItemId != item.ID) {
+		character.ActiveItem = item
+		character.ActiveItemId = &item.ID
+	}
 
 	data := models.Data{
 		Page:       game.LoadCharacterProgress(character, skill.ID),
