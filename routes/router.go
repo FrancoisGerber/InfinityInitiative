@@ -16,23 +16,29 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// RoleAdmin is the role id allowed to reach the content-management screens.
+const RoleAdmin uint = 1
+
 func Router(e *echo.Echo) {
-	// Router groups
-	closedGroup := e.Group("")
+	// Public: login, register, logout.
 	openGroup := e.Group("")
-
-	// Auth
-	closedGroup.Use(utils.SessionAuth)
-
-	//Routes
 	auth.SetupEndpoints(openGroup)
-	game.SetupEndpoints(closedGroup)
-	users.SetupEndpoints(closedGroup)
-	roles.SetupEndpoints(closedGroup)
-	levels.SetupEndpoints(closedGroup)
-	skills.SetupEndpoints(closedGroup)
-	items.SetupEndpoints(closedGroup)
-	recipes.SetupEndpoints(closedGroup)
-	characters.SetupEndpoints(closedGroup)
-	monsters.SetupEndpoints(closedGroup)
+
+	// Authenticated: play the game.
+	sessionGroup := e.Group("")
+	sessionGroup.Use(utils.SessionAuth)
+	game.SetupEndpoints(sessionGroup)
+
+	// Admin: content management. Requires a logged-in user *with the admin role* —
+	// hiding links in the sidebar is not authorisation.
+	adminGroup := sessionGroup.Group("")
+	adminGroup.Use(requireRole(RoleAdmin))
+	users.SetupEndpoints(adminGroup)
+	roles.SetupEndpoints(adminGroup)
+	levels.SetupEndpoints(adminGroup)
+	skills.SetupEndpoints(adminGroup)
+	items.SetupEndpoints(adminGroup)
+	recipes.SetupEndpoints(adminGroup)
+	characters.SetupEndpoints(adminGroup)
+	monsters.SetupEndpoints(adminGroup)
 }

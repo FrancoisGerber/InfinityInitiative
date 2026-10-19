@@ -21,13 +21,21 @@ func main() {
 		panic("Error loading .env file")
 	}
 
+	// Session signing key: an empty key makes cookies forgeable, a short one is weak.
+	if len(utils.Secret()) == 0 {
+		panic("SECRET must be set (32+ random bytes), e.g. openssl rand -base64 48")
+	}
+
 	// Setup Echo
 	e := echo.New()
+
+	if len(utils.Secret()) < 32 {
+		e.Logger.Warn("SECRET is shorter than 32 bytes — rotate it to a random 32+ byte value")
+	}
 
 	// Root level middleware
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
-	e.Use(middleware.CORS())
 	e.Use(session.Middleware(sessions.NewCookieStore(utils.Secret())))
 
 	// Static files and templates

@@ -2,10 +2,27 @@ package utils
 
 import (
 	"encoding/json"
+	"net/http"
+	"os"
+
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 )
+
+func sessionOptions() *sessions.Options {
+	// Secure is on whenever the app is served over TLS (production/ngrok) and off for
+	// plain-http local development, which would otherwise never receive the cookie.
+	secure := os.Getenv("INSECURE_COOKIES") != "1"
+
+	return &sessions.Options{
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   secure,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   60 * 60 * 24 * 30, // 30 days
+	}
+}
 
 func GetSessionUser(c echo.Context) (uint, error) {
 	sess, err := session.Get("session", c)
@@ -18,7 +35,12 @@ func GetSessionUser(c echo.Context) (uint, error) {
 		userId = uint(0)
 	}
 
-	return userId.(uint), nil
+	value, ok := userId.(uint)
+	if !ok {
+		return uint(0), nil
+	}
+
+	return value, nil
 }
 
 func SetSessionUser(c echo.Context, userId uint) error {
@@ -27,9 +49,7 @@ func SetSessionUser(c echo.Context, userId uint) error {
 		return err
 	}
 
-	sess.Options = &sessions.Options{
-		Path: "/",
-	}
+	sess.Options = sessionOptions()
 
 	sess.Values["userId"] = uint(userId)
 	if err := sess.Save(c.Request(), c.Response()); err != nil {
@@ -62,9 +82,7 @@ func SetGameState(c echo.Context, gameState GameState) error {
 		return err
 	}
 
-	sess.Options = &sessions.Options{
-		Path: "/",
-	}
+	sess.Options = sessionOptions()
 
 	json, _ := json.Marshal(gameState)
 
