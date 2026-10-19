@@ -226,68 +226,70 @@ func TestRunActionIsAtomic(t *testing.T) {
 
 // Equipping must not move quantity out of the stack, and only one item of a type may be
 // worn at a time.
-func TestEquipKeepsQuantityAndOneItemPerType(t *testing.T) {
+func TestEquipTogglesOneUnitPerItem(t *testing.T) {
 	user, character, _, _ := gameFixture(t)
 
 	level := levelByName(1)
 
-	sword := models.InitItem(&models.Item{Name: "Bronze Sword", Type: "Weapon", LevelId: int(level.ID), SkillId: 4})
-	if _, err := sword.Create(); err != nil {
-		t.Fatalf("sword: %v", err)
-	}
-	sword = itemByID(sword.ID)
+	makeItem := func(name, itemType string, amount int64) models.Item {
+		t.Helper()
 
-	axe := models.InitItem(&models.Item{Name: "Bronze Axe", Type: "Weapon", LevelId: int(level.ID), SkillId: 4})
-	if _, err := axe.Create(); err != nil {
-		t.Fatalf("axe: %v", err)
-	}
-	axe = itemByID(axe.ID)
-
-	helm := models.InitItem(&models.Item{Name: "Bronze Helm", Type: "Armor", LevelId: int(level.ID), SkillId: 4})
-	if _, err := helm.Create(); err != nil {
-		t.Fatalf("helm: %v", err)
-	}
-	helm = itemByID(helm.ID)
-
-	for _, itemID := range []uint{sword.ID, axe.ID, helm.ID} {
-		row := models.InitInventory(&models.Inventory{CharacterId: character.ID, ItemId: itemID, Amount: 1})
-		if _, err := row.Create(); err != nil {
-			t.Fatalf("inventory row: %v", err)
+		item := models.InitItem(&models.Item{Name: name, Type: itemType, LevelId: int(level.ID), SkillId: 4})
+		if _, err := item.Create(); err != nil {
+			t.Fatalf("%s: %v", name, err)
 		}
+
+		item = itemByID(item.ID)
+
+		row := models.InitInventory(&models.Inventory{CharacterId: character.ID, ItemId: item.ID, Amount: amount})
+		if _, err := row.Create(); err != nil {
+			t.Fatalf("%s inventory row: %v", name, err)
+		}
+
+		return item
 	}
+
+	sword := makeItem("Bronze Sword", "Weapon", 1)
+	axe := makeItem("Bronze Axe", "Weapon", 1)
+	helm := makeItem("Bronze Helm", "Armor", 1)
+	plate := makeItem("Bronze Plate", "Armor", 5)
 
 	e, store := newTestServer()
 	cookie := signedSessionCookie(t, store, user.ID)
 
-	for _, itemID := range []uint{sword.ID, helm.ID} {
-		rec := doRequest(e, http.MethodPost, "/game/equipitem/"+strconv.FormatUint(uint64(itemID), 10), &cookie)
+	// Different items may be worn together, including several of the same type.
+	for _, item := range []models.Item{sword, axe, helm, plate} {
+		rec := doRequest(e, http.MethodPost, "/game/equipitem/"+strconv.FormatUint(uint64(item.ID), 10), &cookie)
 		if rec.Code != http.StatusOK {
-			t.Fatalf("equip %d returned %d", itemID, rec.Code)
+			t.Fatalf("equip %s returned %d", item.Name, rec.Code)
 		}
 	}
 
-	equippedSword := inventoryItemFor(sword.ID, character.ID)
-	if equippedSword.Amount != 1 {
-		t.Fatalf("equipping moved quantity: amount = %d, want 1", equippedSword.Amount)
-	}
-	if equippedSword.EquippedAmount != 1 {
-		t.Fatalf("sword equipped_amount = %d, want 1", equippedSword.EquippedAmount)
+	for _, item := range []models.Item{sword, axe, helm, plate} {
+		row := inventoryItemFor(item.ID, character.ID)
+		if row.EquippedAmount != 1 {
+			t.Fatalf("%s equipped_amount = %d, want 1", item.Name, row.EquippedAmount)
+		}
 	}
 
-	// A second weapon replaces the first; the armour stays on.
-	rec := doRequest(e, http.MethodPost, "/game/equipitem/"+strconv.FormatUint(uint64(axe.ID), 10), &cookie)
+	// Wearing an item never consumes the stack.
+	if plateRow := inventoryItemFor(plate.ID, character.ID); plateRow.Amount != 5 {
+		t.Fatalf("equipping changed the stack: amount = %d, want 5", plateRow.Amount)
+	}
+
+	// Clicking a worn item takes it off, and it never holds more than one unit.
+	rec := doRequest(e, http.MethodPost, "/game/equipitem/"+strconv.FormatUint(uint64(sword.ID), 10), &cookie)
 	if rec.Code != http.StatusOK {
-		t.Fatalf("equip axe returned %d", rec.Code)
+		t.Fatalf("unequip sword returned %d", rec.Code)
 	}
 
-	swordAfter := inventoryItemFor(sword.ID, character.ID)
-	if swordAfter.EquippedAmount != 0 {
-		t.Fatalf("two weapons equipped at once: sword equipped_amount = %d", swordAfter.EquippedAmount)
+	if row := inventoryItemFor(sword.ID, character.ID); row.EquippedAmount != 0 {
+		t.Fatalf("sword equipped_amount = %d after unequip, want 0", row.EquippedAmount)
 	}
 
-	helmAfter := inventoryItemFor(helm.ID, character.ID)
-	if helmAfter.EquippedAmount != 1 {
-		t.Fatalf("equipping a weapon unequipped the armour")
+	// The other pieces stay on.
+	if row := inventoryItemFor(axe.ID, character.ID); row.EquippedAmount != 1 {
+		t.Fatalf("unequipping the sword took the axe off too")
 	}
 }
 

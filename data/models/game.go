@@ -209,9 +209,8 @@ func (model *Game) EquipItem(characterId int64, itemId int64, inventory Inventor
 	// Unequip one.
 	if inventoryItem.EquippedAmount > 0 {
 		model.db.Exec(
-			`UPDATE inventories SET equipped_amount = equipped_amount - 1,
-			        equipped = (equipped_amount - 1) > 0
-			 WHERE id = ?`, inventoryItem.ID,
+			`UPDATE inventories SET equipped_amount = 0, equipped = 0 WHERE id = ?`,
+			inventoryItem.ID,
 		)
 
 		return ""
@@ -221,20 +220,10 @@ func (model *Game) EquipItem(characterId int64, itemId int64, inventory Inventor
 		return "You do not have the item in your inventory."
 	}
 
-	// Equip one: only one item of each type may be worn at a time.
-	var sameType []Inventory
-	model.db.Preload("Item").
-		Joins("JOIN items ON items.id = inventories.item_id").
-		Where(`inventories.character_id = ? AND inventories.equipped_amount > 0
-		       AND items.type = ? AND inventories.id <> ?`,
-			characterId, inventoryItem.Item.Type, inventoryItem.ID).
-		Find(&sameType)
-
-	for _, other := range sameType {
-		model.db.Exec("UPDATE inventories SET equipped = ?, equipped_amount = 0 WHERE id = ?", false, other.ID)
-	}
-
-	model.db.Exec("UPDATE inventories SET equipped_amount = equipped_amount + 1, equipped = ? WHERE id = ?", true, inventoryItem.ID)
+	// One unit of each item may be worn, and different items may be worn together even of
+	// the same type: several armour pieces at once are fine, two of the same named item are
+	// not (clicking a worn item takes it off).
+	model.db.Exec("UPDATE inventories SET equipped_amount = 1, equipped = 1 WHERE id = ?", inventoryItem.ID)
 
 	return ""
 }
