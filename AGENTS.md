@@ -19,6 +19,26 @@ Go + Echo + HTMX + SQLite/GORM, server-rendered `html/template` views, Tailwind 
 
 The server listens on `:8069` (hardcoded in `app.go`).
 
+## Design rules
+
+- **Idle means clicker, not background timers.** Progress happens while the player is on the page
+  and acting. No offline/background timers, no catch-up bursts of accumulated actions — that is
+  explicitly what this game does *differently* from IdleMMO. Time-based mechanics (cooldowns,
+  regen) must resolve immediately and visibly when the player acts.
+- Learn from the reference games by reading their wikis and playing them. **Never read their
+  client code or source** — behaviour and systems only.
+
+## References
+
+| What | Where |
+|---|---|
+| IdleMMO wiki (primary inspiration) | https://wiki.idle-mmo.com/ |
+| IdleMMO live, signed-in reference profile | https://web.idle-mmo.com/@Alir |
+| Melvor Idle wiki (secondary) | https://wiki.melvoridle.com/w/Main_Page |
+| Old School RuneScape wiki | https://oldschool.runescape.wiki/ |
+| RuneScape wiki | https://runescape.wiki/ |
+| Game-system plans (this repo) | `docs/game-systems/` |
+
 ## Architecture map
 
 - `app.go` — bootstrap, `AutoMigration` for every model, Echo start.
