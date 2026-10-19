@@ -19,10 +19,7 @@ func SetupEndpoints(g *echo.Group) {
 }
 
 func GetAll(c echo.Context) error {
-	c.Echo().Renderer = templates.ParseTemplates([]string{
-		"views/layout/*.html",
-		"views/monsters/*.html",
-	})
+	c.Echo().Renderer = templates.For("views/layout/*.html","views/monsters/*.html")
 
 	userId := c.Get("UserId").(uint)
 
@@ -40,10 +37,7 @@ func GetAll(c echo.Context) error {
 }
 
 func EditMonster(c echo.Context) error {
-	c.Echo().Renderer = templates.ParseTemplates([]string{
-		"views/layout/*.html",
-		"views/monsters/*.html",
-	})
+	c.Echo().Renderer = templates.For("views/layout/*.html","views/monsters/*.html")
 
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
@@ -91,10 +85,7 @@ func SaveMonster(c echo.Context) error {
 }
 
 func CreateMonster(c echo.Context) error {
-	c.Echo().Renderer = templates.ParseTemplates([]string{
-		"views/layout/*.html",
-		"views/monsters/*.html",
-	})
+	c.Echo().Renderer = templates.For("views/layout/*.html","views/monsters/*.html")
 
 	level := models.NewLevel()
 	levels := level.GetAllLevels()
@@ -111,10 +102,7 @@ func CreateMonster(c echo.Context) error {
 }
 
 func ConfirmDeleteMonster(c echo.Context) error {
-	c.Echo().Renderer = templates.ParseTemplates([]string{
-		"views/layout/*.html",
-		"views/monsters/*.html",
-	})
+	c.Echo().Renderer = templates.For("views/layout/*.html","views/monsters/*.html")
 
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))

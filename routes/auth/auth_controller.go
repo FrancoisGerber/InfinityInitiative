@@ -18,10 +18,7 @@ func SetupEndpoints(g *echo.Group) {
 }
 
 func Login(c echo.Context) error {
-	c.Echo().Renderer = templates.ParseTemplates([]string{
-		"views/auth/*.html",
-		"views/auth/login/*.html",
-	})
+	c.Echo().Renderer = templates.For("views/auth/*.html","views/auth/login/*.html")
 
 	return c.Render(http.StatusOK, "login.html", nil)
 }
@@ -66,10 +63,7 @@ func Logout(c echo.Context) error {
 }
 
 func Register(c echo.Context) error {
-	c.Echo().Renderer = templates.ParseTemplates([]string{
-		"views/auth/*.html",
-		"views/auth/register/*.html",
-	})
+	c.Echo().Renderer = templates.For("views/auth/*.html","views/auth/register/*.html")
 
 	return c.Render(http.StatusOK, "register.html", nil)
 }

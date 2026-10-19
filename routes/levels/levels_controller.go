@@ -19,10 +19,7 @@ func SetupEndpoints(g *echo.Group) {
 }
 
 func GetAll(c echo.Context) error {
-	c.Echo().Renderer = templates.ParseTemplates([]string{
-		"views/layout/*.html",
-		"views/levels/*.html",
-	})
+	c.Echo().Renderer = templates.For("views/layout/*.html","views/levels/*.html")
 
 	userId := c.Get("UserId").(uint)
 
@@ -40,10 +37,7 @@ func GetAll(c echo.Context) error {
 }
 
 func EditLevel(c echo.Context) error {
-	c.Echo().Renderer = templates.ParseTemplates([]string{
-		"views/layout/*.html",
-		"views/levels/*.html",
-	})
+	c.Echo().Renderer = templates.For("views/layout/*.html","views/levels/*.html")
 
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
@@ -85,19 +79,13 @@ func SaveLevel(c echo.Context) error {
 }
 
 func CreateLevel(c echo.Context) error {
-	c.Echo().Renderer = templates.ParseTemplates([]string{
-		"views/layout/*.html",
-		"views/levels/*.html",
-	})
+	c.Echo().Renderer = templates.For("views/layout/*.html","views/levels/*.html")
 
 	return c.Render(http.StatusOK, "table-edit", nil)
 }
 
 func ConfirmDeleteLevel(c echo.Context) error {
-	c.Echo().Renderer = templates.ParseTemplates([]string{
-		"views/layout/*.html",
-		"views/levels/*.html",
-	})
+	c.Echo().Renderer = templates.For("views/layout/*.html","views/levels/*.html")
 
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))

@@ -19,10 +19,7 @@ func SetupEndpoints(g *echo.Group) {
 }
 
 func GetAll(c echo.Context) error {
-	c.Echo().Renderer = templates.ParseTemplates([]string{
-		"views/layout/*.html",
-		"views/roles/*.html",
-	})
+	c.Echo().Renderer = templates.For("views/layout/*.html","views/roles/*.html")
 
 	userId := c.Get("UserId").(uint)
 
@@ -40,10 +37,7 @@ func GetAll(c echo.Context) error {
 }
 
 func EditRole(c echo.Context) error {
-	c.Echo().Renderer = templates.ParseTemplates([]string{
-		"views/layout/*.html",
-		"views/roles/*.html",
-	})
+	c.Echo().Renderer = templates.For("views/layout/*.html","views/roles/*.html")
 
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
@@ -85,19 +79,13 @@ func SaveRole(c echo.Context) error {
 }
 
 func CreateRole(c echo.Context) error {
-	c.Echo().Renderer = templates.ParseTemplates([]string{
-		"views/layout/*.html",
-		"views/roles/*.html",
-	})
+	c.Echo().Renderer = templates.For("views/layout/*.html","views/roles/*.html")
 
 	return c.Render(http.StatusOK, "table-edit", nil)
 }
 
 func ConfirmDeleteRole(c echo.Context) error {
-	c.Echo().Renderer = templates.ParseTemplates([]string{
-		"views/layout/*.html",
-		"views/roles/*.html",
-	})
+	c.Echo().Renderer = templates.For("views/layout/*.html","views/roles/*.html")
 
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))

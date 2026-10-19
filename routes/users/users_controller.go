@@ -20,10 +20,7 @@ func SetupEndpoints(g *echo.Group) {
 }
 
 func GetAll(c echo.Context) error {
-	c.Echo().Renderer = templates.ParseTemplates([]string{
-		"views/layout/*.html",
-		"views/users/*.html",
-	})
+	c.Echo().Renderer = templates.For("views/layout/*.html","views/users/*.html")
 
 	userId := c.Get("UserId").(uint)
 
@@ -42,10 +39,7 @@ func GetAll(c echo.Context) error {
 }
 
 func EditUser(c echo.Context) error {
-	c.Echo().Renderer = templates.ParseTemplates([]string{
-		"views/layout/*.html",
-		"views/users/*.html",
-	})
+	c.Echo().Renderer = templates.For("views/layout/*.html","views/users/*.html")
 
 	id := c.Param("id")
 	Id, _ := strconv.Atoi(id)
@@ -90,19 +84,13 @@ func SaveUser(c echo.Context) error {
 }
 
 func CreateUser(c echo.Context) error {
-	c.Echo().Renderer = templates.ParseTemplates([]string{
-		"views/layout/*.html",
-		"views/users/*.html",
-	})
+	c.Echo().Renderer = templates.For("views/layout/*.html","views/users/*.html")
 
 	return c.Render(http.StatusOK, "table-edit", nil)
 }
 
 func ConfirmDeleteUser(c echo.Context) error {
-	c.Echo().Renderer = templates.ParseTemplates([]string{
-		"views/layout/*.html",
-		"views/users/*.html",
-	})
+	c.Echo().Renderer = templates.For("views/layout/*.html","views/users/*.html")
 
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))

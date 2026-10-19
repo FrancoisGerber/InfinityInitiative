@@ -11,7 +11,7 @@
 - **Language:** Go
 - **Front end Framework:** HTMX
 - **Back end Framework:** Echo
-- **Realtime Connection:** Server-sent Events
+- **Realtime Connection:** HTMX partial swaps over HTTP (no websockets/SSE yet)
 - **Database:** Sqlite
 - **ORM:** Gorm
 - **CSS:** Tailwindcss + daisyui (npm required)

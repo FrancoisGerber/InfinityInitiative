@@ -19,10 +19,7 @@ func SetupEndpoints(g *echo.Group) {
 }
 
 func GetAll(c echo.Context) error {
-	c.Echo().Renderer = templates.ParseTemplates([]string{
-		"views/layout/*.html",
-		"views/recipes/*.html",
-	})
+	c.Echo().Renderer = templates.For("views/layout/*.html","views/recipes/*.html")
 
 	userId := c.Get("UserId").(uint)
 
@@ -41,10 +38,7 @@ func GetAll(c echo.Context) error {
 }
 
 func EditRecipe(c echo.Context) error {
-	c.Echo().Renderer = templates.ParseTemplates([]string{
-		"views/layout/*.html",
-		"views/recipes/*.html",
-	})
+	c.Echo().Renderer = templates.For("views/layout/*.html","views/recipes/*.html")
 
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))
@@ -92,10 +86,7 @@ func SaveRecipe(c echo.Context) error {
 }
 
 func CreateRecipe(c echo.Context) error {
-	c.Echo().Renderer = templates.ParseTemplates([]string{
-		"views/layout/*.html",
-		"views/recipes/*.html",
-	})
+	c.Echo().Renderer = templates.For("views/layout/*.html","views/recipes/*.html")
 
 	item := models.NewItem()
 	items := item.GetAllItems()
@@ -111,10 +102,7 @@ func CreateRecipe(c echo.Context) error {
 }
 
 func ConfirmDeleteRecipe(c echo.Context) error {
-	c.Echo().Renderer = templates.ParseTemplates([]string{
-		"views/layout/*.html",
-		"views/recipes/*.html",
-	})
+	c.Echo().Renderer = templates.For("views/layout/*.html","views/recipes/*.html")
 
 	id := c.Param("id")
 	Id := int64(utils.ParseInt(id))

@@ -19,10 +19,7 @@ func SetupEndpoints(g *echo.Group) {
 }
 
 func GetGamePage(c echo.Context) error {
-	c.Echo().Renderer = templates.ParseTemplates([]string{
-		"views/layout/*.html",
-		"views/game/*.html",
-	})
+	c.Echo().Renderer = templates.For("views/layout/*.html","views/game/*.html")
 
 	skillName := c.Param("skillName")
 
@@ -54,10 +51,7 @@ func GetGamePage(c echo.Context) error {
 }
 
 func RunActiveAction(c echo.Context) error {
-	c.Echo().Renderer = templates.ParseTemplates([]string{
-		"views/layout/*.html",
-		"views/game/*.html",
-	})
+	c.Echo().Renderer = templates.For("views/layout/*.html","views/game/*.html")
 
 	itemId := c.Param("itemId")
 	userId := c.Get("UserId").(uint)
@@ -100,10 +94,7 @@ func RunActiveAction(c echo.Context) error {
 }
 
 func GetActiveAction(c echo.Context) error {
-	c.Echo().Renderer = templates.ParseTemplates([]string{
-		"views/layout/*.html",
-		"views/game/*.html",
-	})
+	c.Echo().Renderer = templates.For("views/layout/*.html","views/game/*.html")
 
 	itemId := c.Param("itemId")
 	userId := c.Get("UserId").(uint)
@@ -124,14 +115,15 @@ func GetActiveAction(c echo.Context) error {
 
 	// Check character skill level
 	if characterSkill.Level.Name < item.Level.Name {
+		// One response only: the alert fragment is the payload htmx swaps in.
 		utils.ShowAlertError(c, "You don't have the required level for this Item!")
-		return c.String(http.StatusBadRequest, "You don't have the required level for this Item!!!!")
+		return nil
 	}
 
 	// Check if character has required items for the action
 	if errorMessage := game.CharacterHasItems(character, recipeItems); errorMessage != "" {
 		utils.ShowAlertError(c, errorMessage)
-		return c.String(http.StatusBadRequest, errorMessage)
+		return nil
 	}
 
 	// Set active action that may be performed
@@ -228,10 +220,7 @@ func SetGameState(c echo.Context) error {
 }
 
 func SetEquipedItem(c echo.Context) error {
-	c.Echo().Renderer = templates.ParseTemplates([]string{
-		"views/layout/*.html",
-		"views/game/*.html",
-	})
+	c.Echo().Renderer = templates.For("views/layout/*.html","views/game/*.html")
 
 	itemId := c.Param("itemId")
 	userId := c.Get("UserId").(uint)
