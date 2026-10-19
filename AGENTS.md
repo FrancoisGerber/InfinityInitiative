@@ -79,6 +79,10 @@ Combat *stats* exist on `characters` (`Health`, `MaxHealth`, `Attack`, `Strength
   directory). `TestEnv` fails if the suite is ever pointed at the real database, and the
   old `tests/InfinityInitiative.db` fixture is gone. `make test` can still look green from
   Go's test cache — use `-count=1` when you need a real run.
+- **cookie flags decide whether login works at all.** Cookies are only marked `Secure`
+  when `SECURE_COOKIES=1`; a Secure cookie sent over plain `http://` (localhost included) is
+  dropped, which silently breaks the session and the CSRF double-submit cookie, so every
+  POST fails with 400 while the page still renders. Set `SECURE_COOKIES=1` behind TLS.
 - **`updateAll()` writes columns, not associations.** `model.SomeAssociation = x` does not
   set `some_association_id`; assign the foreign key explicitly (see `GetActiveAction`).
   Preloaded associations are deliberately omitted so an update cannot upsert them.

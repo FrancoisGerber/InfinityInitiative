@@ -37,6 +37,10 @@ func main() {
 
 	e.Logger.Infof("database: %s", utils.DBName())
 
+	if !utils.SecureCookies() {
+		e.Logger.Warn("cookies are not marked Secure — set SECURE_COOKIES=1 when serving over HTTPS")
+	}
+
 	if len(utils.Secret()) < 32 {
 		e.Logger.Warn("SECRET is shorter than 32 bytes — rotate it to a random 32+ byte value")
 	}
@@ -54,7 +58,7 @@ func main() {
 		CookieName:     "_csrf",
 		CookiePath:     "/",
 		CookieHTTPOnly: false,
-		CookieSecure:   !utils.InsecureCookies(),
+		CookieSecure:   utils.SecureCookies(),
 		CookieSameSite: http.SameSiteLaxMode,
 	}))
 

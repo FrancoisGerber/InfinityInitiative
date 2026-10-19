@@ -12,17 +12,25 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// InsecureCookies reports whether the app is being served over plain HTTP, in which case
-// the Secure cookie flag would stop the browser from ever sending the cookie back.
-func InsecureCookies() bool {
-	return os.Getenv("INSECURE_COOKIES") == "1"
+// SecureCookies reports whether cookie traffic is TLS.
+//
+// The default is OFF: a Secure cookie sent over plain http:// is dropped by the browser
+// (even on localhost), which silently breaks both the session and the CSRF double-submit
+// cookie — every POST then fails with 400. Set SECURE_COOKIES=1 whenever the app is
+// actually served over HTTPS (ngrok, a proxy, a real deployment).
+func SecureCookies() bool {
+	if os.Getenv("INSECURE_COOKIES") == "1" {
+		return false
+	}
+
+	return os.Getenv("SECURE_COOKIES") == "1"
 }
 
 func sessionOptions() *sessions.Options {
 	return &sessions.Options{
 		Path:     "/",
 		HttpOnly: true,
-		Secure:   !InsecureCookies(),
+		Secure:   SecureCookies(),
 		SameSite: http.SameSiteLaxMode,
 		MaxAge:   60 * 60 * 24 * 30, // 30 days
 	}
