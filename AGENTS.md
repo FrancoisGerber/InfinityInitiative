@@ -74,7 +74,17 @@ Combat *stats* exist on `characters` (`Health`, `MaxHealth`, `Attack`, `Strength
 
 ## Gotchas learned the hard way
 
-- **Test DB is not idempotent.** `tests/InfinityInitiative.db` is a gitignored fixture; `TestUser` inserts a fixed `test@test.com`, so every run after the first fails with `UNIQUE constraint failed: users.email`. Remove the file, or point `DBNAME` at a temp path. `make test` can also look green from Go's test cache — use `-count=1` when you need a real run.
+- **The test suite owns a throwaway DB.** `tests/main_test.go` points `DBNAME` at a temp
+  dir and chdirs to the repo root (handlers resolve `views/` relative to the working
+  directory). `TestEnv` fails if the suite is ever pointed at the real database, and the
+  old `tests/InfinityInitiative.db` fixture is gone. `make test` can still look green from
+  Go's test cache — use `-count=1` when you need a real run.
+- **`updateAll()` writes columns, not associations.** `model.SomeAssociation = x` does not
+  set `some_association_id`; assign the foreign key explicitly (see `GetActiveAction`).
+  Preloaded associations are deliberately omitted so an update cannot upsert them.
+- **Handlers set `c.Echo().Renderer` per request.** `templates.For()` caches the parsed
+  sets so no files are read per request, but the shared field is still a data race between
+  concurrent route groups; rendering through a per-request renderer is the open fix.
 - **Never let Tailwind scan its own output.** `input.css` carries `@source not "../views/assets/css"` (and `.../assets/js`); without it, every emitted class becomes a permanent candidate and dead classes never disappear from the bundle.
 - **Tailwind 4 browser floor:** Chrome/Safari 16.4+/Firefox 128+.
 - **Experiments get a throwaway DB:** `DBNAME=/tmp/ii-scratch.db ./InfinityInitiative`. The repo's `InfinityInitiative.db` holds real data; `.env` holds `DBNAME` + a Turso token and must never be committed.
