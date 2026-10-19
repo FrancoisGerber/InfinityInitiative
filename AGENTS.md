@@ -89,6 +89,12 @@ Combat *stats* exist on `characters` (`Health`, `MaxHealth`, `Attack`, `Strength
 - **Handlers set `c.Echo().Renderer` per request.** `templates.For()` caches the parsed
   sets so no files are read per request, but the shared field is still a data race between
   concurrent route groups; rendering through a per-request renderer is the open fix.
+- **Tailwind silently drops classes glued to a Go template action.** In
+  `class="{{if eq .A .B}}active{{end}}grid grid-rows-2"` the extractor sees `{{end}}grid`
+  and emits neither `grid` nor `grid-rows-2`, so the layout silently loses its grid. Put
+  literal utility classes first and the template action last:
+  `class="grid grid-rows-2 {{if ...}}active{{end}}"`. `grep -c grid-flow-col
+  views/assets/css/styles.css` is the quick check after a rebuild.
 - **Never let Tailwind scan its own output.** `input.css` carries `@source not "../views/assets/css"` (and `.../assets/js`); without it, every emitted class becomes a permanent candidate and dead classes never disappear from the bundle.
 - **Tailwind 4 browser floor:** Chrome/Safari 16.4+/Firefox 128+.
 - **Experiments get a throwaway DB:** `DBNAME=/tmp/ii-scratch.db ./InfinityInitiative`. The repo's `InfinityInitiative.db` holds real data; `.env` holds `DBNAME` + a Turso token and must never be committed.
