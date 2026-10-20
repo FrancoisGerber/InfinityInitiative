@@ -1,8 +1,9 @@
 # 05 — Rendering and UX
 
-**Status:** implemented on branch `improvements/05-rendering-and-ux` (2026-10-20). See
-[Implementation](#implementation-2026-10-20) at the end for what changed, the two bugs found during the
-live pass, and the verification run.
+**Status:** **implemented** 2026-10-20 on branch `improvements/05-rendering-and-ux` (pushed; PR open,
+not merged). The plan text below is kept as written; what actually shipped, the two bugs found on the
+way and the verification run are in [Implementation](#implementation-2026-10-20) — read that before
+changing the templates, controllers or `input.css`. Do not re-plan this file.
 
 **Fixes:** B16 (per-request renderer swap + full re-parse), B19 (two payloads in one response), B22
 (UI state in the cookie), B29 (claims the PWA does not deliver) · **Effort:** S–M

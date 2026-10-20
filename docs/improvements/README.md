@@ -6,17 +6,25 @@ built; this folder covers what is.
 
 Read `../BUGS.md` alongside — each plan names the bug IDs it closes.
 
-| # | Plan | Fixes | Effort |
-|---|---|---|---|
-| 01 | [Action engine](01-action-engine.md) | B3, B4, B18, B19 | M–L |
-| 02 | [Items, inventory, crafting](02-items-inventory-crafting.md) | B10, B11, B12, B20 | M |
-| 03 | [Progression and balance](03-progression-and-balance.md) | B9, B14, B15 | M |
-| 04 | [Security and admin](04-security-and-admin.md) | B1, B2, B6, B17, B24 | M |
-| 05 | [Rendering and UX](05-rendering-and-ux.md) | B16, B19, B22, B29 | S–M |
-| 06 | [Data layer and tests](06-data-layer-and-tests.md) | B5, B13, B27, B28 | M |
-| 07 | [Character switcher UI](07-character-switcher-ui.md) | — (finishes B7 in the UI) | S |
+| # | Plan | Fixes | Effort | Status |
+|---|---|---|---|---|
+| 01 | [Action engine](01-action-engine.md) | B3, B4, B18, B19 | M–L | — |
+| 02 | [Items, inventory, crafting](02-items-inventory-crafting.md) | B10, B11, B12, B20 | M | — |
+| 03 | [Progression and balance](03-progression-and-balance.md) | B9, B14, B15 | M | — |
+| 04 | [Security and admin](04-security-and-admin.md) | B1, B2, B6, B17, B24 | M | — |
+| 05 | [Rendering and UX](05-rendering-and-ux.md) | B16, B19, B22, B29 | S–M | **Implemented** 2026-10-20 (`improvements/05-rendering-and-ux`; PR open, not merged) |
+| 06 | [Data layer and tests](06-data-layer-and-tests.md) | B5, B13, B27, B28 | M | — |
+| 07 | [Character switcher UI](07-character-switcher-ui.md) | — (finishes B7 in the UI) | S | Deferred by the owner |
+
+An implemented plan keeps its original text and adds an `Implementation` section with what changed,
+deviations and the verification run. Do not re-plan a plan marked implemented; read that section
+first. Plans left without a status have not been re-audited against the code — their bug IDs are
+listed as closed in `../BUGS.md`, but treat the rest of the plan as unverified.
 
 ## Suggested order
+
+The order below is the original sequencing. 05 is now implemented and 07 is deferred; it applies to
+the plans that are still open.
 
 1. **04 first (security).** B1 is live: any logged-in account is an admin. It is a middleware and a
    seed-removal, not a refactor, and it gates whether the thing can be put on the internet at all.
@@ -27,7 +35,8 @@ Read `../BUGS.md` alongside — each plan names the bug IDs it closes.
    both touch `character_skills` and `inventories`, so do them in one branch.
 4. **06 throughout.** The single-DB-handle and transaction helpers are the tools 01–03 need; land them
    early and reuse.
-5. **05 last.** Rendering is independent and mostly invisible; do it when the data model has settled.
+5. **05 done.** Rendering and UX landed on `improvements/05-rendering-and-ux`; keep new templates on
+   `templates.RenderGroup`, `templates.Preload()` and the alert/indicator rules it established.
 
 ## The rule everything here serves
 
