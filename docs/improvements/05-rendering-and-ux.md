@@ -111,7 +111,8 @@ wipes the form it came from. `oob-alert-empty` was dead and is deleted.
 **Clicker feel.** `input.css` defines the real htmx indicator contract (hidden by default, `opacity: 1`
 for `.htmx-request .htmx-indicator` / `.htmx-request.htmx-indicator`) and drops the stray
 `.htmx-request{display:block !important}`; progress bars transition their fill over 150 ms. The action
-panel carries a `#action-log` (`hx-preserve`, `aria-live="polite"`) rendered with daisyUI's `list` /
+panel carries a `#action-log` (`hx-preserve`, `aria-live="polite"`), hidden until the first result so
+an empty panel shows no heading or placeholder. It is rendered with daisyUI's `list` /
 `list-row` component: each resolved click sets an `HX-Trigger: actionResolved` event carrying the item
 name, its icon, the XP and (on a level) the skill and new level, and the layout listener **prepends** a
 row — icon, name, `+1` and `+200 XP` badges, plus a green skill badge and tinted row on a level-up.

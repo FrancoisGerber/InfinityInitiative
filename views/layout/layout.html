@@ -64,14 +64,13 @@
 
       // Every resolved action sends an HX-Trigger event. Render it as a daisyUI list row
       // (icon, name, +1 and XP badges) and prepend it, so the newest click is always on
-      // top; keep the last 20 and let the oldest fall off the bottom.
+      // top; keep the last 20 and let the oldest fall off the bottom. The list is hidden
+      // until the first result, so the empty panel has no placeholder or heading.
       document.addEventListener("actionResolved", function (event) {
         var log = document.getElementById("action-log");
         if (!log) return;
 
         var d = event.detail || {};
-        var placeholder = log.querySelector("[data-log-placeholder]");
-        if (placeholder) placeholder.remove();
 
         var row = document.createElement("li");
         row.className = "list-row items-center gap-3 p-2" + (d.leveledUp ? " bg-success/10" : "");
@@ -118,6 +117,7 @@
         row.appendChild(body);
 
         log.prepend(row);
+        log.classList.remove("hidden");
 
         while (log.children.length > 20) log.removeChild(log.lastElementChild);
       });
