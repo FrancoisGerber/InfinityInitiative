@@ -308,31 +308,39 @@ func CollectActiveAction(c echo.Context) error {
 	return renderActionFragments(c, userId, character, itemID)
 }
 
-// setActionLog sends the HX-Trigger event the page appends to the action log:
-// "+1 Oak Log · 25 XP", plus the new skill level when the click crossed a threshold.
+// setActionLog sends the HX-Trigger event the page prepends to the action log. The event
+// carries the item, its icon, the XP gained and (on a level-up) the skill and new level;
+// the client renders the row with the daisyUI list component.
 func setActionLog(c echo.Context, result models.ActionResult) {
 	if result.Gained.Name == "" {
 		return
 	}
 
-	line := fmt.Sprintf("+1 %s · %d XP", result.Gained.Name, result.Gained.ExperienceGained)
-
-	skill := models.NewSkill()
+	skillName := ""
 	if result.LeveledUp {
+		skill := models.NewSkill()
 		skill = skill.GetSkill(int64(result.SkillID))
-		line = fmt.Sprintf("%s · %s level %d", line, skill.Name, result.SkillLevel)
+		skillName = skill.Name
 	}
 
-	// HTTP header values are decoded as Latin-1, so a raw "·" arrives as mojibake and the
-	// log shows "Â·". Escape the line to \u sequences; JSON.parse restores the character.
-	payload := fmt.Sprintf(`{"actionResolved":{"text":%s}}`, strconv.QuoteToASCII(line))
+	// Build the JSON by hand with QuoteToASCII: header values are decoded as Latin-1, so a
+	// raw non-ASCII name would arrive mangled. JSON.parse restores the characters.
+	payload := fmt.Sprintf(
+		`{"actionResolved":{"item":%s,"image":%s,"xp":%d,"skill":%s,"level":%d,"leveledUp":%t}}`,
+		strconv.QuoteToASCII(result.Gained.Name),
+		strconv.QuoteToASCII(result.Gained.Image),
+		result.Gained.ExperienceGained,
+		strconv.QuoteToASCII(skillName),
+		result.SkillLevel,
+		result.LeveledUp,
+	)
 
 	// Headers must be set before anything is rendered: RenderGroup writes the status and
 	// flushes, and a later Set() is ignored.
 	c.Response().Header().Set("HX-Trigger", payload)
 
 	if result.LeveledUp {
-		utils.ShowAlertSuccess(c, fmt.Sprintf("%s is now level %d!", skill.Name, result.SkillLevel))
+		utils.ShowAlertSuccess(c, fmt.Sprintf("%s is now level %d!", skillName, result.SkillLevel))
 	}
 }
 

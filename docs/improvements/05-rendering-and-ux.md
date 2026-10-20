@@ -111,11 +111,13 @@ wipes the form it came from. `oob-alert-empty` was dead and is deleted.
 **Clicker feel.** `input.css` defines the real htmx indicator contract (hidden by default, `opacity: 1`
 for `.htmx-request .htmx-indicator` / `.htmx-request.htmx-indicator`) and drops the stray
 `.htmx-request{display:block !important}`; progress bars transition their fill over 150 ms. The action
-panel carries a `#action-log` (`hx-preserve`, `aria-live="polite"`); each resolved click sets an
-`HX-Trigger: actionResolved` event (`" +1 Coal · 100 XP"`, plus ` · Mining level 7` on a level) and the
-layout listener appends the line, trimming to the last 20. The line is escaped with
-`strconv.QuoteToASCII` because header values decode as Latin-1 — a raw `·` arrived as `Â·`. Success
-toasts now cover equips, character creation and level-ups.
+panel carries a `#action-log` (`hx-preserve`, `aria-live="polite"`) rendered with daisyUI's `list` /
+`list-row` component: each resolved click sets an `HX-Trigger: actionResolved` event carrying the item
+name, its icon, the XP and (on a level) the skill and new level, and the layout listener **prepends** a
+row — icon, name, `+1` and `+200 XP` badges, plus a green skill badge and tinted row on a level-up.
+Newest is on top, the list holds the last 20 and the oldest falls off the bottom, so the latest result
+never scrolls out of view. Payload strings are escaped with `strconv.QuoteToASCII` because header
+values decode as Latin-1. Success toasts now cover equips, character creation and level-ups.
 
 **Errors that explain themselves.** `MissingIngredientError` (`data/models/action.go`) wraps
 `ErrNotEnoughItems`, so both the click path (`checkAffordable`) and the spend path (`applyAction`,

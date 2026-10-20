@@ -49,15 +49,21 @@
       <span class="join-item rounded bg-gray-900 p-1">{{.Page.ExperiencePoints}} XP</span>
     </div>
 
-    <ul
-      id="action-log"
-      hx-preserve="true"
-      aria-live="polite"
-      aria-label="Recent actions"
-      class="mt-4 w-full max-h-32 overflow-y-auto text-left text-sm space-y-1"
-    >
-      <li data-log-placeholder class="opacity-50">Your actions will show up here.</li>
-    </ul>
+    <div class="mt-4 w-full text-left">
+      <div class="mb-1 text-xs font-semibold tracking-wide uppercase opacity-60">Recent actions</div>
+      <ul
+        id="action-log"
+        hx-preserve="true"
+        aria-live="polite"
+        aria-label="Recent actions"
+        class="list w-full max-h-44 overflow-y-auto rounded-box bg-base-200/50"
+      >
+        <li data-log-placeholder class="list-row items-center gap-3 p-2 opacity-50">
+          <span class="status status-neutral"></span>
+          <span class="list-col-grow text-sm">Your actions will show up here.</span>
+        </li>
+      </ul>
+    </div>
   </div>
 </div>
 
