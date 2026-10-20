@@ -207,10 +207,10 @@ func TestRunActionIsAtomic(t *testing.T) {
 	}
 
 	// The third click cannot be paid for: it must report the shortfall and leave the
-	// bag exactly as it was.
+	// bag exactly as it was. The message names the ingredient now, not "resources".
 	rec := doRequest(e, http.MethodPost, craftPath, &cookie)
-	if !strings.Contains(strings.ToLower(rec.Body.String()), "resources") {
-		t.Fatalf("expected a shortfall message, got %q", rec.Body.String())
+	if !strings.Contains(rec.Body.String(), "You need 1 more "+gather.Name) {
+		t.Fatalf("expected the shortfall to name %s, got %q", gather.Name, rec.Body.String())
 	}
 
 	remaining = inventoryItemFor(gather.ID, character.ID)

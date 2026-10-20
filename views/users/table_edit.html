@@ -1,7 +1,7 @@
 {{block "table-edit" .}}
 <h3 class="text-lg font-bold">{{if .Page.Username}} Edit {{else}} Create {{end}} User</h3>
 <div>
-  <form method="dialog" hx-post="/users">
+  <form method="dialog" hx-swap="none" hx-post="/users">
     <input type="hidden" name="ID" value="{{.Page.ID}}" />
     <input type="hidden" name="RoleId" value="{{.Page.RoleId}}" />
 

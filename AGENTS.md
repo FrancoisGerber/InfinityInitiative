@@ -98,4 +98,15 @@ Combat *stats* exist on `characters` (`Health`, `MaxHealth`, `Attack`, `Strength
 - **Never let Tailwind scan its own output.** `input.css` carries `@source not "../views/assets/css"` (and `.../assets/js`); without it, every emitted class becomes a permanent candidate and dead classes never disappear from the bundle.
 - **Tailwind 4 browser floor:** Chrome/Safari 16.4+/Firefox 128+.
 - **Experiments get a throwaway DB:** `DBNAME=/tmp/ii-scratch.db ./InfinityInitiative`. The repo's `InfinityInitiative.db` holds real data; `.env` holds `DBNAME` + a Turso token and must never be committed.
+- **The alert container must survive its own clear.** Toasts clear themselves with a 5-second
+  `hx-get="/clearalert"`; `ClearAlert` returns an empty 200 and the wrappers swap `innerHTML`. An
+  `hx-swap="delete"` there removes `#alerts` itself, after which htmx has no OOB target and every
+  later alert on that page disappears silently.
+- **`HX-Trigger` must be set before the first render.** `templates.RenderGroup` writes the status and
+  flushes, so a `Header().Set` after any fragment is dropped. Build the trigger JSON first, then call
+  the alert helper.
+- **Templates are parsed once per process at boot.** `templates.Preload()` in `app.go` walks
+  `views/*`; a syntax error stops startup. Render with `templates.RenderGroup`, never by assigning
+  `c.Echo().Renderer` (shared state), and keep the controller `viewPatterns` in step with the
+  directory grouping `templates.Groups()` derives.
 - `tailwindcss/node_modules` is gitignored; `views/assets/css/styles.css` is committed and must be regenerated with `npm run prod` whenever templates or `input.css` change.

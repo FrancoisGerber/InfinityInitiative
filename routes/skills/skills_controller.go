@@ -57,7 +57,8 @@ func SaveSkill(c echo.Context) error {
 	skillDto := new(models.Skill)
 
 	if err := c.Bind(skillDto); err != nil {
-		return c.String(http.StatusBadRequest, "bad request")
+		utils.ShowAlertError(c, "Could not read the form. Reload the page and try again.")
+		return nil
 	}
 
 	var err error
@@ -70,7 +71,8 @@ func SaveSkill(c echo.Context) error {
 	}
 
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "Could Not Save Skill")
+		utils.ShowAlertError(c, "Could Not Save Skill")
+		return nil
 	}
 
 	c.Response().Header().Set("HX-Redirect", "/skills")
@@ -109,7 +111,8 @@ func DeleteSkill(c echo.Context) error {
 	_, err := skill.Delete()
 
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "Could Not Delete Skill")
+		utils.ShowAlertError(c, "Could Not Delete Skill")
+		return nil
 	}
 
 	c.Response().Header().Set("HX-Redirect", "/skills")

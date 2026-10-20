@@ -29,7 +29,8 @@ func requireRole(roleID uint) echo.MiddlewareFunc {
 
 			if user.RoleId != roleID {
 				if c.Request().Header.Get("HX-Request") == "true" {
-					return c.String(http.StatusForbidden, "Forbidden — this area is for administrators.")
+					utils.ShowAlertError(c, "Forbidden — this area is for administrators.")
+					return nil
 				}
 
 				return c.HTML(http.StatusForbidden,

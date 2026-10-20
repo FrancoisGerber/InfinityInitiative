@@ -57,7 +57,8 @@ func SaveLevel(c echo.Context) error {
 	levelDto := new(models.Level)
 
 	if err := c.Bind(levelDto); err != nil {
-		return c.String(http.StatusBadRequest, "bad request")
+		utils.ShowAlertError(c, "Could not read the form. Reload the page and try again.")
+		return nil
 	}
 
 	var err error
@@ -70,7 +71,8 @@ func SaveLevel(c echo.Context) error {
 	}
 
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "Could Not Save Level")
+		utils.ShowAlertError(c, "Could Not Save Level")
+		return nil
 	}
 
 	c.Response().Header().Set("HX-Redirect", "/levels")
@@ -109,7 +111,8 @@ func DeleteLevel(c echo.Context) error {
 	_, err := level.Delete()
 
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "Could Not Delete Level")
+		utils.ShowAlertError(c, "Could Not Delete Level")
+		return nil
 	}
 
 	c.Response().Header().Set("HX-Redirect", "/levels")

@@ -3,7 +3,7 @@
   {{if .Page.Name}} Edit {{else}} Create {{end}} Skill
 </h3>
 <div>
-  <form method="dialog" hx-post="/skills">
+  <form method="dialog" hx-swap="none" hx-post="/skills">
     <input type="hidden" name="ID" value="{{.Page.ID}}" />
     <input type="hidden" name="Runtime" value="0" />
 

@@ -1,9 +1,12 @@
 {{block "resource_item" .}}
 <li>
   <a
-    hx-trigger="click"
+    role="button"
+    tabindex="0"
+    hx-trigger="click, keyup[key=='Enter']"
     hx-swap="none"
     hx-get="/game/action/{{.ID}}"
+    aria-label="Select {{.Name}}"
     class="grid w-full grid-rows-2 grid-flow-col bg-base-100 {{if eq .ActiveItem.ID .ID}}active-neutral{{end}}" 
   >
     <div class="row-span-2">

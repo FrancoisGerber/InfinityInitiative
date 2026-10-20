@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"slices"
 	"time"
 )
@@ -136,11 +137,11 @@ func (model *Game) CharacterHasItems(character Character, recipeItems []Recipe) 
 			inventoryItem := inventory.GetInventoryItemForCharacter(int64(recipeItem.ItemId), int64(character.ID))
 
 			if inventoryItem.ID == 0 {
-				return "You do not have enough resources to make this Item!"
+				return fmt.Sprintf("You need %d %s", recipeItem.Amount, recipeItem.Item.Name)
 			}
 
 			if inventoryItem.Amount < recipeItem.Amount {
-				return "Not enough resources to make this Item!"
+				return fmt.Sprintf("You need %d more %s", recipeItem.Amount-inventoryItem.Amount, recipeItem.Item.Name)
 			}
 		}
 	}

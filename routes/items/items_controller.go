@@ -73,7 +73,8 @@ func SaveItem(c echo.Context) error {
 	itemDto := new(models.Item)
 
 	if err := c.Bind(itemDto); err != nil {
-		return c.String(http.StatusBadRequest, "bad request")
+		utils.ShowAlertError(c, "Could not read the form. Reload the page and try again.")
+		return nil
 	}
 
 	var err error
@@ -83,7 +84,8 @@ func SaveItem(c echo.Context) error {
 		runtimeDuration, err := time.ParseDuration(item.RuntimeString)
 
 		if err != nil {
-			return c.String(http.StatusBadRequest, "Cant Parse Runtime")
+			utils.ShowAlertError(c, `The runtime must be a duration such as "3s" or "1m".`)
+			return nil
 		}
 
 		item.Runtime = runtimeDuration
@@ -110,7 +112,8 @@ func SaveItem(c echo.Context) error {
 	}
 
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "Could Not Save Item")
+		utils.ShowAlertError(c, "Could Not Save Item")
+		return nil
 	}
 
 	c.Response().Header().Set("HX-Redirect", "/items")
@@ -164,7 +167,8 @@ func DeleteItem(c echo.Context) error {
 	_, err := item.Delete()
 
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "Could Not Delete Item")
+		utils.ShowAlertError(c, "Could Not Delete Item")
+		return nil
 	}
 
 	c.Response().Header().Set("HX-Redirect", "/items")
@@ -233,7 +237,8 @@ func SaveRecipe(c echo.Context) error {
 	_, err := recipe.DeleteRecipesOfParentItem(int64(utils.ParseInt(parentItemId)))
 
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "Could Not Delete Recipes for Parent Item"+err.Error())
+		utils.ShowAlertError(c, "Could not replace the recipe. Try again.")
+		return nil
 	}
 
 	for index, itemId := range form["ItemId"] {
@@ -246,7 +251,8 @@ func SaveRecipe(c echo.Context) error {
 		_, err = recipe.Create()
 
 		if err != nil {
-			return c.String(http.StatusInternalServerError, "Could Not Save Recipe")
+			utils.ShowAlertError(c, "Could Not Save Recipe")
+			return nil
 		}
 	}
 

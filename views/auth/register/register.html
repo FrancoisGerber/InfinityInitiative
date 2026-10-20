@@ -7,27 +7,28 @@
       <h1 class="text-5xl font-bold">Register</h1>
     </div>
     <div class="card bg-neutral text-neutral-content shadow-xl w-full max-w-sm shrink-0">
-      <form class="card-body" hx-post="/register">
+      <form class="card-body" hx-swap="none" hx-post="/register">
         <div class="flex-col">
-          <label class="label">
+          <label class="label" for="Email">
             <span>Email</span>
           </label>
-          <input type="email" name="Email" placeholder="Email" class="input" required />
+          <input type="email" name="Email" id="Email" placeholder="Email" class="input" required />
         </div>
         <div class="flex-col">
-          <label class="label">
+          <label class="label" for="Username">
             <span>Username</span>
           </label>
-          <input type="text" name="Username" placeholder="Username" class="input" required />
+          <input type="text" name="Username" id="Username" placeholder="Username" class="input" required />
         </div>
 
         <div class="flex-col">
-          <label class="label">
+          <label class="label" for="CharacterName">
             <span>Character Name</span>
           </label>
           <input
             type="text"
             name="CharacterName"
+            id="CharacterName"
             placeholder="Character Name"
             class="input"
             minlength="3"
@@ -36,17 +37,17 @@
           />
         </div>
         <div class="flex-col">
-          <label class="label">
+          <label class="label" for="Class">
             <span>Class</span>
           </label>
-          <select name="Class" class="select">
+          <select name="Class" id="Class" class="select">
             {{range .DropdownData.Classes}}
             <option value="{{.}}">{{.}}</option>
             {{end}}
           </select>
         </div>
         <div class="flex-col">
-          <label class="label">
+          <label class="label" for="Password">
             <span>Password</span>
           </label>
           <input
@@ -59,7 +60,7 @@
           />
         </div>
         <div class="flex-col">
-          <label class="label">
+          <label class="label" for="VerifyPassword">
             <span>Verify Password</span>
           </label>
           <input

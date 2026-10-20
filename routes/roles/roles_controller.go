@@ -57,7 +57,8 @@ func SaveRole(c echo.Context) error {
 	roleDto := new(models.Role)
 
 	if err := c.Bind(roleDto); err != nil {
-		return c.String(http.StatusBadRequest, "bad request")
+		utils.ShowAlertError(c, "Could not read the form. Reload the page and try again.")
+		return nil
 	}
 
 	var err error
@@ -70,7 +71,8 @@ func SaveRole(c echo.Context) error {
 	}
 
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "Could Not Save Role")
+		utils.ShowAlertError(c, "Could Not Save Role")
+		return nil
 	}
 
 	c.Response().Header().Set("HX-Redirect", "/roles")
@@ -109,7 +111,8 @@ func DeleteRole(c echo.Context) error {
 	_, err := role.Delete()
 
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "Could Not Delete Role")
+		utils.ShowAlertError(c, "Could Not Delete Role")
+		return nil
 	}
 
 	c.Response().Header().Set("HX-Redirect", "/roles")

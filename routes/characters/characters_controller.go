@@ -65,7 +65,8 @@ func EditCharacter(c echo.Context) error {
 func SaveCharacter(c echo.Context) error {
 	characterDto := new(models.Character)
 	if err := c.Bind(characterDto); err != nil {
-		return c.String(http.StatusBadRequest, "bad request")
+		utils.ShowAlertError(c, "Could not read the form. Reload the page and try again.")
+		return nil
 	}
 
 	character := models.InitCharacter(characterDto)
@@ -89,7 +90,8 @@ func SaveCharacter(c echo.Context) error {
 	}
 
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "Could Not Save Character")
+		utils.ShowAlertError(c, "Could Not Save Character")
+		return nil
 	}
 
 	c.Response().Header().Set("HX-Redirect", "/characters")
@@ -143,7 +145,8 @@ func DeleteCharacter(c echo.Context) error {
 	_, err := character.Delete()
 
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "Could Not Delete Character")
+		utils.ShowAlertError(c, "Could Not Delete Character")
+		return nil
 	}
 
 	c.Response().Header().Set("HX-Redirect", "/characters")

@@ -61,6 +61,23 @@
           element.classList.remove(classToAdd);
         }
       }
+
+      // Every resolved action sends an HX-Trigger event with its log line. Append it under
+      // the action panel and keep the last 20, so the log reads like a clicker feed.
+      document.addEventListener("actionResolved", function (event) {
+        var log = document.getElementById("action-log");
+        if (!log) return;
+
+        var placeholder = log.querySelector("[data-log-placeholder]");
+        if (placeholder) placeholder.remove();
+
+        var line = document.createElement("li");
+        line.textContent = event.detail.text;
+        log.appendChild(line);
+
+        while (log.children.length > 20) log.removeChild(log.firstChild);
+        log.scrollTop = log.scrollHeight;
+      });
     </script>
   </body>
 </html>

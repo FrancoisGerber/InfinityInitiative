@@ -5,8 +5,10 @@ import (
 	"InfinityInitiative/utils"
 	templates "InfinityInitiative/views"
 	"errors"
+	"fmt"
 	"net/http"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -185,6 +187,8 @@ func CreateCharacter(c echo.Context) error {
 		return err
 	}
 
+	utils.ShowAlertSuccess(c, character.Name+" joined the Initiative.")
+
 	return GetCharacterPanel(c)
 }
 
@@ -238,6 +242,8 @@ func RunActiveAction(c echo.Context) error {
 			return nil
 		}
 
+		setActionLog(c, result)
+
 		character = activeCharacter(c, userId)
 
 		// Keep the panel on the item that just finished.
@@ -285,6 +291,8 @@ func CollectActiveAction(c echo.Context) error {
 		return nil
 	}
 
+	setActionLog(c, result)
+
 	character = activeCharacter(c, userId)
 
 	// Render the panel around the item that was just collected, so it does not fall back to
@@ -298,6 +306,34 @@ func CollectActiveAction(c echo.Context) error {
 	}
 
 	return renderActionFragments(c, userId, character, itemID)
+}
+
+// setActionLog sends the HX-Trigger event the page appends to the action log:
+// "+1 Oak Log · 25 XP", plus the new skill level when the click crossed a threshold.
+func setActionLog(c echo.Context, result models.ActionResult) {
+	if result.Gained.Name == "" {
+		return
+	}
+
+	line := fmt.Sprintf("+1 %s · %d XP", result.Gained.Name, result.Gained.ExperienceGained)
+
+	skill := models.NewSkill()
+	if result.LeveledUp {
+		skill = skill.GetSkill(int64(result.SkillID))
+		line = fmt.Sprintf("%s · %s level %d", line, skill.Name, result.SkillLevel)
+	}
+
+	// HTTP header values are decoded as Latin-1, so a raw "·" arrives as mojibake and the
+	// log shows "Â·". Escape the line to \u sequences; JSON.parse restores the character.
+	payload := fmt.Sprintf(`{"actionResolved":{"text":%s}}`, strconv.QuoteToASCII(line))
+
+	// Headers must be set before anything is rendered: RenderGroup writes the status and
+	// flushes, and a later Set() is ignored.
+	c.Response().Header().Set("HX-Trigger", payload)
+
+	if result.LeveledUp {
+		utils.ShowAlertSuccess(c, fmt.Sprintf("%s is now level %d!", skill.Name, result.SkillLevel))
+	}
 }
 
 // withPacing marks the data as "an action is running" so the action button renders as a
@@ -391,7 +427,8 @@ func GetActiveAction(c echo.Context) error {
 	character.ActiveItemId = &item.ID
 	_, err := character.Update()
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "Could Not Update Character")
+		utils.ShowAlertError(c, "Could not save the character. Try again.")
+		return nil
 	}
 
 	// Get viewmodel ready
@@ -421,7 +458,8 @@ func SetGameNotes(c echo.Context) error {
 	character.Notes = c.FormValue("Notes")
 	_, err := character.Update()
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "Could Not Update Character")
+		utils.ShowAlertError(c, "Could not save the character. Try again.")
+		return nil
 	}
 
 	return nil
@@ -456,7 +494,8 @@ func SetGameState(c echo.Context) error {
 	}
 
 	if err := utils.SetGameState(c, gameState); err != nil {
-		return c.String(http.StatusBadRequest, "bad request")
+		utils.ShowAlertError(c, "Could not save the panel state. Reload the page.")
+		return nil
 	}
 
 	if c.Param("name") == "InventoryState" || c.Param("name") == "InventoryTabState" || c.Param("name") == "EquipmentTabState" || c.Param("name") == "CharacterTabState" {
@@ -502,6 +541,8 @@ func SetEquipedItem(c echo.Context) error {
 		utils.ShowAlertError(c, msg)
 		return nil
 	}
+
+	utils.ShowAlertSuccess(c, "Equipped "+item.Name+".")
 
 	// Get Viewmodel ready
 	data := models.Data{

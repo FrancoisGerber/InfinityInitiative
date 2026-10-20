@@ -34,7 +34,8 @@ func PostLogin(c echo.Context) error {
 	userDto := new(models.User)
 
 	if err := c.Bind(userDto); err != nil {
-		return c.String(http.StatusBadRequest, "bad request")
+		utils.ShowAlertError(c, "Could not read the login form. Reload the page and try again.")
+		return nil
 	}
 
 	user := models.InitUser(userDto)
@@ -42,22 +43,27 @@ func PostLogin(c echo.Context) error {
 	dbUser := user.GetUserByEmail(user.Email)
 
 	if dbUser.ID == 0 || dbUser.Password == "" {
-		return c.String(http.StatusBadRequest, "Email not registered!")
+		utils.ShowAlertError(c, "Email not registered!")
+		return nil
 	}
 
 	verified := utils.VerifyPassword(user.Password, dbUser.Password)
 
 	if !verified {
-		return c.String(http.StatusUnauthorized, "Password is incorrect!")
+		utils.ShowAlertError(c, "Password is incorrect!")
+		return nil
 	}
 
 	err := utils.SetSessionUser(c, dbUser.ID)
 
 	if err != nil {
-		return c.String(http.StatusInternalServerError, err.Error())
+		utils.ShowAlertError(c, "Could not start a session. Try again.")
+		return nil
 	}
 
-	c.Response().Header().Set("HX-Redirect", "/characters")
+	// "/" resolves to the player's first skill. Redirecting to /characters sent every
+	// non-admin to the admin CRUD screen, which answers with the 403 page.
+	c.Response().Header().Set("HX-Redirect", "/")
 	c.Response().WriteHeader(300)
 
 	return nil
@@ -121,7 +127,8 @@ func PostRegister(c echo.Context) error {
 	roleModel := models.NewRole()
 	userRole := roleModel.GetRoleByName("User")
 	if userRole.ID == 0 {
-		return c.String(http.StatusInternalServerError, "Registration is not configured: the User role is missing")
+		utils.ShowAlertError(c, "Registration is not configured: the User role is missing")
+		return nil
 	}
 
 	user := models.InitUser(&models.User{
@@ -167,6 +174,9 @@ func PostRegister(c echo.Context) error {
 	return nil
 }
 
+// ClearAlert empties the alert container after its toast has been shown. It must not
+// remove the container itself: htmx could then never target it again, and every later
+// alert on that page would silently disappear.
 func ClearAlert(c echo.Context) error {
-	return templates.RenderGroup(c, http.StatusOK, "oob-alert-empty", nil, authViewPatterns)
+	return c.NoContent(http.StatusOK)
 }

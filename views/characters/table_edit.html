@@ -1,7 +1,7 @@
 {{block "table-edit" .}}
 <h3 class="text-lg font-bold">{{if .Page.ID}} Edit {{else}} Create {{end}} Character</h3>
 <div>
-  <form method="dialog" hx-post="/characters">
+  <form method="dialog" hx-swap="none" hx-post="/characters">
     <input type="hidden" name="ID" value="{{.Page.ID}}" />
     <input type="hidden" name="ActiveItemId" value="{{.Page.ActiveItemId}}" />
     <input type="hidden" name="Notes" value="{{.Page.Notes}}" />

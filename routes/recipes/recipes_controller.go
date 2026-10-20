@@ -64,7 +64,8 @@ func SaveRecipe(c echo.Context) error {
 	recipeDto := new(models.Recipe)
 
 	if err := c.Bind(recipeDto); err != nil {
-		return c.String(http.StatusBadRequest, "bad request")
+		utils.ShowAlertError(c, "Could not read the form. Reload the page and try again.")
+		return nil
 	}
 
 	var err error
@@ -77,7 +78,8 @@ func SaveRecipe(c echo.Context) error {
 	}
 
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "Could Not Save Recipe")
+		utils.ShowAlertError(c, "Could Not Save Recipe")
+		return nil
 	}
 
 	c.Response().Header().Set("HX-Redirect", "/recipes")
@@ -126,7 +128,8 @@ func DeleteRecipe(c echo.Context) error {
 	_, err := recipe.Delete()
 
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "Could Not Delete Recipe")
+		utils.ShowAlertError(c, "Could Not Delete Recipe")
+		return nil
 	}
 
 	c.Response().Header().Set("HX-Redirect", "/recipes")

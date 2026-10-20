@@ -1,5 +1,9 @@
 # 05 — Rendering and UX
 
+**Status:** implemented on branch `improvements/05-rendering-and-ux` (2026-10-20). See
+[Implementation](#implementation-2026-10-20) at the end for what changed, the two bugs found during the
+live pass, and the verification run.
+
 **Fixes:** B16 (per-request renderer swap + full re-parse), B19 (two payloads in one response), B22
 (UI state in the cookie), B29 (claims the PWA does not deliver) · **Effort:** S–M
 
@@ -79,3 +83,59 @@ rings survive the dark theme.
 - No handler calls both `c.Render` and `c.String` on the same request.
 - Spinner appears on click and disappears on response.
 - Layout usable at 390 px with no horizontal scroll.
+
+## Implementation (2026-10-20)
+
+**Template pipeline.** `templates.Preload()` is called at boot (`app.go`), and `templates.Groups()`
+derives every route group from the views tree, so a template syntax error panics at startup instead of
+500ing the first request. `views/templates.go` now has `Parse()` (returns the error) and `load()` (one
+parse per group per process); `ParseCount()` exposes the counter the test asserts on. Handlers still
+render through `RenderGroup`, never through `c.Echo().Renderer`.
+
+**Response contract.** Every `c.String` error reply is gone (`grep -rn "c.String" --include=*.go` is
+empty): auth, game and all eight admin controllers answer with a single alert fragment. The auth shell
+gained the `#alerts` container it was missing, and every form whose response is an OOB swap carries
+`hx-swap="none"` (`login`, `register`, all `table_edit.html`, `recipe_edit.html`), so an alert no longer
+wipes the form it came from. `oob-alert-empty` was dead and is deleted.
+
+**Two live bugs found and fixed along the way:**
+
+- **The alert container deleted itself.** The OOB wrappers used `hx-swap="delete"` with the 5-second
+  `/clearalert` timer, so after the first toast `#alerts` was gone and every later alert on that page
+  silently vanished (htmx had no target). Clearing now swaps `innerHTML`; `ClearAlert` returns an empty
+  200 and the container stays.
+- **`HX-Trigger` was set after the first render.** `setActionLog` called `ShowAlertSuccess` and then set
+  the header; `RenderGroup` had already written the status, so the header was dropped and level-ups got
+  a toast but no log line. The header is now set before anything renders.
+
+**Clicker feel.** `input.css` defines the real htmx indicator contract (hidden by default, `opacity: 1`
+for `.htmx-request .htmx-indicator` / `.htmx-request.htmx-indicator`) and drops the stray
+`.htmx-request{display:block !important}`; progress bars transition their fill over 150 ms. The action
+panel carries a `#action-log` (`hx-preserve`, `aria-live="polite"`); each resolved click sets an
+`HX-Trigger: actionResolved` event (`" +1 Coal · 100 XP"`, plus ` · Mining level 7` on a level) and the
+layout listener appends the line, trimming to the last 20. The line is escaped with
+`strconv.QuoteToASCII` because header values decode as Latin-1 — a raw `·` arrived as `Â·`. Success
+toasts now cover equips, character creation and level-ups.
+
+**Errors that explain themselves.** `MissingIngredientError` (`data/models/action.go`) wraps
+`ErrNotEnoughItems`, so both the click path (`checkAffordable`) and the spend path (`applyAction`,
+affected-rows check) answer "You need 2 more Coal" instead of "not enough resources".
+`CharacterHasItems` names the ingredient too.
+
+**Layout, mobile, accessibility.** Verified at 390 px and 1280 px on a copied DB: no horizontal scroll
+(`scrollWidth == clientWidth`), chat toggle hidden below `md`, everything stacks under the action card.
+Sidebar toggle, chat, notifications and account menu have `aria-label`s; auth labels are bound with
+`for`/`id`; resource rows and both action surfaces are keyboard reachable (`role="button"`,
+`tabindex="0"`, `keyup[key=='Enter']`); focus-visible outlines survive the dark theme.
+
+**Login redirect.** `PostLogin` used to `HX-Redirect` to `/characters`, the admin CRUD screen: every
+non-admin landed on the 403 page. It redirects to `/`, which resolves to the first skill.
+
+**Verification.** `go test -race ./tests/` passes with 50 concurrent requests across the game and items
+groups (`TestConcurrentRequestsAcrossTemplateGroups`), one parse per group
+(`TestTemplateSetsAreParsedOnce`), a single alert payload for a refused action
+(`TestInsufficientIngredientsAnswerWithOneAlert`) and the ingredient name on the selection path. Live
+pass on `DBNAME=/tmp/ii-05.db`: register → login → select Coal → click → log line, XP bar, level-up
+toast, log capped at 20, indicator opacity 0→1, alert container survives clearing, a second alert still
+lands, and both breakpoints screenshot clean.
+

@@ -57,12 +57,33 @@
   max-height: 10% !important;
 }
 
-.htmx-request {
-  display: block !important;
+/* htmx's indicator contract: hidden by default, visible while its request runs. The
+   rule here used to be an empty comment, and an extra `.htmx-request{display:block}`
+   forced the triggering element to block instead. */
+.htmx-indicator {
+  opacity: 0;
+  transition: opacity 120ms ease-in;
 }
 
-.htmx-indicator {
-  /* display: none; */
+.htmx-request .htmx-indicator,
+.htmx-request.htmx-indicator {
+  opacity: 1;
+}
+
+/* The XP bar and health bar grow into their new value instead of jumping. */
+progress::-webkit-progress-value {
+  transition: width 150ms ease-out;
+}
+
+progress::-moz-progress-bar {
+  transition: width 150ms ease-out;
+}
+
+/* daisyUI buttons have their own ring; bare links and selects need one that survives
+   the dark theme. */
+:where(a, summary, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
 }
 
 .tab {
