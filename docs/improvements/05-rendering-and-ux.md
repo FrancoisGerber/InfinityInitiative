@@ -124,6 +124,10 @@ affected-rows check) answer "You need 2 more Coal" instead of "not enough resour
 
 **Layout, mobile, accessibility.** Verified at 390 px and 1280 px on a copied DB: no horizontal scroll
 (`scrollWidth == clientWidth`), chat toggle hidden below `md`, everything stacks under the action card.
+The first 390 px pass in Brave caught what the headless run missed: daisyUI menu items are
+`flex: 0 0 auto`, so the two-row grid inside each resource row could not shrink and the page scrolled
+sideways. Below 640 px the resource row is now a wrapping flex line (`input.css`). Character and chat
+avatars use the local class portraits, so no image depends on the daisyUI stock CDN.
 Sidebar toggle, chat, notifications and account menu have `aria-label`s; auth labels are bound with
 `for`/`id`; resource rows and both action surfaces are keyboard reachable (`role="button"`,
 `tabindex="0"`, `keyup[key=='Enter']`); focus-visible outlines survive the dark theme.
