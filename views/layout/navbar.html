@@ -62,9 +62,9 @@
       <div tabindex="0" role="button" aria-label="Account menu" class="btn btn-ghost btn-circle avatar">
         <div class="w-10 rounded-full">
           {{if .Character.User.Image}}
-          <img src="{{.Character.User.Image}}" />
+          <img src="{{.Character.User.Image}}" alt="{{.Character.Name}}" />
           {{else}}
-          <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg" />
+          <img src="/assets/img/classes/{{.Character.Class}}.png" alt="{{.Character.Class}}" />
           {{end}}
         </div>
       </div>

@@ -103,3 +103,23 @@ progress::-moz-progress-bar {
   line-height: 1.25rem;
   white-space: nowrap;
 }
+
+/* daisyUI menu items are `flex: 0 0 auto`, so the two-row grid inside a resource row
+   could not shrink below its content: on a 390 px phone the page scrolled sideways.
+   Below 640 px the row becomes a wrapping flex line instead of a grid. */
+@media (max-width: 40rem) {
+  #recipesSection li {
+    min-width: 0;
+  }
+
+  #recipesSection li > a {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  #recipesSection li > a > div {
+    min-width: 0;
+  }
+}

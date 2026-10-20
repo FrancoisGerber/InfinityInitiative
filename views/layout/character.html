@@ -2,7 +2,11 @@
 <div class="flex">
   <div class="avatar mr-3">
     <div class="w-24 rounded">
-      <img src="{{.Character.Image}}"/>
+      {{if .Character.Image}}
+      <img src="{{.Character.Image}}" alt="{{.Character.Name}}" />
+      {{else}}
+      <img src="/assets/img/classes/{{.Character.Class}}.png" alt="{{.Character.Class}}" />
+      {{end}}
     </div>
   </div>
   <div class="w-full">
