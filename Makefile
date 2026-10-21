@@ -18,3 +18,5 @@ cgo-build:
 
 cgo-run:
 	env CGO_ENABLED=1 go run . -tags enablecgo
+
+test
