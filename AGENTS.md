@@ -38,7 +38,7 @@ The server listens on `:8069` (hardcoded in `app.go`).
 | Old School RuneScape wiki | https://oldschool.runescape.wiki/ |
 | RuneScape wiki | https://runescape.wiki/ |
 | Game-system plans (this repo) | `docs/game-systems/` |
-| Improvement plans for the systems that already exist | `docs/improvements/` |
+| Improvement plans for the systems that already exist | `docs/improvements/` — the index marks implemented plans; **05 (rendering/UX) is implemented** on `improvements/05-rendering-and-ux`, read its `Implementation` section before touching templates, controllers or `input.css` |
 | Bug list (audited, with severity and file:line) | `docs/BUGS.md` |
 
 ## Architecture map
@@ -98,4 +98,21 @@ Combat *stats* exist on `characters` (`Health`, `MaxHealth`, `Attack`, `Strength
 - **Never let Tailwind scan its own output.** `input.css` carries `@source not "../views/assets/css"` (and `.../assets/js`); without it, every emitted class becomes a permanent candidate and dead classes never disappear from the bundle.
 - **Tailwind 4 browser floor:** Chrome/Safari 16.4+/Firefox 128+.
 - **Experiments get a throwaway DB:** `DBNAME=/tmp/ii-scratch.db ./InfinityInitiative`. The repo's `InfinityInitiative.db` holds real data; `.env` holds `DBNAME` + a Turso token and must never be committed.
+- **The alert container must survive its own clear.** Toasts clear themselves with a 5-second
+  `hx-get="/clearalert"`; `ClearAlert` returns an empty 200 and the swap is `innerHTML`. An
+  `hx-swap="delete"` there removes `#alerts` itself, after which htmx has no OOB target and every
+  later alert on that page disappears silently. Success toasts re-arm the timer from the OOB wrapper;
+  retargeted error fragments carry it themselves (`hx-get="/clearalert" hx-target="#alerts"
+  hx-swap="innerHTML" hx-trigger="load delay:5s"`) because the static containers have no timer.
+- **`HX-Trigger` must be set before the first render.** `templates.RenderGroup` writes the status and
+  flushes, so a `Header().Set` after any fragment is dropped. Build the trigger JSON first, then call
+  the alert helper.
+- **Errors keep their HTTP status.** `utils.ShowAlertError(c, status, msg)` renders one alert fragment
+  with that status and retargets it at `#alerts` (`HX-Retarget`/`HX-Reswap`); both shells configure
+  `htmx.config.responseHandling` to swap 4xx/5xx. Do not answer a refused request with `200 OK` — the
+  status is the only server-side signal that it failed.
+- **Templates are parsed once per process at boot.** `templates.Preload()` in `app.go` walks
+  `views/*`; a syntax error stops startup. Render with `templates.RenderGroup`, never by assigning
+  `c.Echo().Renderer` (shared state), and keep the controller `viewPatterns` in step with the
+  directory grouping `templates.Groups()` derives.
 - `tailwindcss/node_modules` is gitignored; `views/assets/css/styles.css` is committed and must be regenerated with `npm run prod` whenever templates or `input.css` change.

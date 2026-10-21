@@ -18,9 +18,11 @@ func TestUser(t *testing.T) {
 		t.Fatal("User role was not seeded")
 	}
 
+	handle := uniqueName("test")
+
 	u := models.InitUser(&models.User{
-		Username: "Test",
-		Email:    "test@test.com",
+		Username: handle,
+		Email:    handle + "@test.local",
 		Password: utils.HashPassword("Passw0rd!123"),
 		RoleId:   userRole.ID,
 	})
@@ -45,7 +47,7 @@ func TestUser(t *testing.T) {
 
 	t.Log("All Users: ", len(users))
 
-	u.Username = "Test2"
+	u.Username = uniqueName("test-updated")
 	rows, err = u.Update()
 
 	if err != nil {

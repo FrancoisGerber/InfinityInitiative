@@ -1,7 +1,7 @@
 {{block "recipe-edit" .}}
 <h3 class="text-lg font-bold">Setup Recipe</h3>
 <div>
-  <form method="dialog" hx-post="/items/recipe">
+  <form method="dialog" hx-swap="none" hx-post="/items/recipe">
     <input type="hidden" name="ParentItemID" value="{{.Id}}" />
 
     <div id="recipeItemsList">{{range .Page}} {{template "recipe-edit-row" .}} {{end}}</div>

@@ -116,6 +116,18 @@ piece is purely the role check.
 and every model shares one SQLite handle (WAL, `busy_timeout`, `MaxOpenConns(1)`) instead of opening a
 pool per model construction — the data-layer half of the improvement plans.
 
+**Found and fixed in the rendering/UX pass (`improvements/05-rendering-and-ux`):**
+
+- Every toast after the first disappeared: the 5-second clear ran with `hx-swap="delete"` on `#alerts`,
+  so the container itself was removed and htmx had no target for later alerts. The clear now swaps
+  `innerHTML` and `ClearAlert` returns an empty 200.
+- `HX-Trigger` was written after `ShowAlertSuccess` had already rendered, so the header was dropped:
+  a level-up showed the toast but never the log line. The header is set before the first render.
+- `PostLogin` redirected to `/characters`, the admin CRUD screen, so every non-admin landed on the 403
+  page right after logging in. It redirects to `/`.
+- Auth pages had no `#alerts` container, and forms whose responses are OOB swaps had no
+  `hx-swap="none"`, so an alert could replace the form with nothing.
+
 **All audited bugs are closed.** Remaining work is the *design* backlog from `docs/game-systems/`
 and `docs/improvements/` — there is no combat endpoint, and the 11 sidebar entries still have no
 model, route or table.

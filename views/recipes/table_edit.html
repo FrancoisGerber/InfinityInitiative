@@ -1,7 +1,7 @@
 {{block "table-edit" .}}
 <h3 class="text-lg font-bold">{{if .Page.ID}} Edit {{else}} Create {{end}} Recipe</h3>
 <div>
-  <form method="dialog" hx-post="/recipes">
+  <form method="dialog" hx-swap="none" hx-post="/recipes">
     <input type="hidden" name="ID" value="{{.Page.ID}}" />
 
     <label class="gap-2 mt-5 mb-5 w-full flex-col">

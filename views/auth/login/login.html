@@ -7,15 +7,15 @@
       <h1 class="text-5xl font-bold">Login</h1>
     </div>
     <div class="card bg-neutral text-neutral-content shadow-xl w-full max-w-sm shrink-0">
-      <form class="card-body" hx-post="/login">
+      <form class="card-body" hx-swap="none" hx-post="/login">
         <div class="flex-col">
-          <label class="label">
+          <label class="label" for="Email">
             <span>Email</span>
           </label>
-          <input type="email" name="Email" placeholder="Email" class="input" required />
+          <input type="email" name="Email" id="Email" placeholder="Email" class="input" required />
         </div>
         <div class="flex-col">
-          <label class="label">
+          <label class="label" for="Password">
             <span>Password</span>
           </label>
           <input

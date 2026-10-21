@@ -73,7 +73,7 @@ func SaveItem(c echo.Context) error {
 	itemDto := new(models.Item)
 
 	if err := c.Bind(itemDto); err != nil {
-		return c.String(http.StatusBadRequest, "bad request")
+		return utils.ShowAlertError(c, http.StatusBadRequest, "Could not read the form. Reload the page and try again.")
 	}
 
 	var err error
@@ -83,7 +83,7 @@ func SaveItem(c echo.Context) error {
 		runtimeDuration, err := time.ParseDuration(item.RuntimeString)
 
 		if err != nil {
-			return c.String(http.StatusBadRequest, "Cant Parse Runtime")
+			return utils.ShowAlertError(c, http.StatusBadRequest, `The runtime must be a duration such as "3s" or "1m".`)
 		}
 
 		item.Runtime = runtimeDuration
@@ -92,15 +92,13 @@ func SaveItem(c echo.Context) error {
 	// The form offers a <select>, but nothing validated the posted value: an unknown type
 	// saved an item that could never be equipped or crafted, with no error to explain it.
 	if !slices.Contains(models.ItemTypes, item.Type) {
-		utils.ShowAlertError(c, "Unknown item type. Pick one of: "+strings.Join(models.ItemTypes, ", "))
-		return nil
+		return utils.ShowAlertError(c, http.StatusBadRequest, "Unknown item type. Pick one of: "+strings.Join(models.ItemTypes, ", "))
 	}
 
 	// A resource that belongs to a skill is an action. Without a runtime it resolves
 	// instantly, so every click is free XP and a free copy of itself (B20).
 	if item.Type == "Resource" && item.SkillId != 0 && item.Runtime <= 0 {
-		utils.ShowAlertError(c, `A resource needs a runtime, e.g. "3s".`)
-		return nil
+		return utils.ShowAlertError(c, http.StatusBadRequest, `A resource needs a runtime, e.g. "3s".`)
 	}
 
 	if item.ID != 0 {
@@ -110,7 +108,7 @@ func SaveItem(c echo.Context) error {
 	}
 
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "Could Not Save Item")
+		return utils.ShowAlertError(c, http.StatusInternalServerError, "Could Not Save Item")
 	}
 
 	c.Response().Header().Set("HX-Redirect", "/items")
@@ -164,7 +162,7 @@ func DeleteItem(c echo.Context) error {
 	_, err := item.Delete()
 
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "Could Not Delete Item")
+		return utils.ShowAlertError(c, http.StatusInternalServerError, "Could Not Delete Item")
 	}
 
 	c.Response().Header().Set("HX-Redirect", "/items")
@@ -233,7 +231,7 @@ func SaveRecipe(c echo.Context) error {
 	_, err := recipe.DeleteRecipesOfParentItem(int64(utils.ParseInt(parentItemId)))
 
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "Could Not Delete Recipes for Parent Item"+err.Error())
+		return utils.ShowAlertError(c, http.StatusInternalServerError, "Could not replace the recipe. Try again.")
 	}
 
 	for index, itemId := range form["ItemId"] {
@@ -246,7 +244,7 @@ func SaveRecipe(c echo.Context) error {
 		_, err = recipe.Create()
 
 		if err != nil {
-			return c.String(http.StatusInternalServerError, "Could Not Save Recipe")
+			return utils.ShowAlertError(c, http.StatusInternalServerError, "Could Not Save Recipe")
 		}
 	}
 

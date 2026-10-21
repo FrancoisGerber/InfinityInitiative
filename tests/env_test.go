@@ -1,13 +1,21 @@
 package tests
 
 import (
+	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"InfinityInitiative/utils"
 
 	"github.com/joho/godotenv"
 )
+
+// uniqueName keeps fixture usernames/emails distinct when the suite runs more than once
+// in one process (`-count=2`); the throwaway DB survives between those runs.
+func uniqueName(base string) string {
+	return fmt.Sprintf("%s-%d", base, time.Now().UnixNano())
+}
 
 // The suite must always talk to a throwaway database — a stray run once wrote a test
 // account into the developer's real data.

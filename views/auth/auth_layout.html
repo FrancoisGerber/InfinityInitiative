@@ -8,6 +8,14 @@
     <link rel="icon" type="image/x-icon" href="/assets/img/favicon.png" />
     <link href="/assets/css/styles.css" rel="stylesheet" />
     <script src="/assets/js/htmx.min.js"></script>
+    <script>
+      // Errors keep their HTTP status (401, 500…) and still swap their alert fragment.
+      htmx.config.responseHandling = [
+        { code: "204", swap: false },
+        { code: "[23]..", swap: true },
+        { code: "[45]..", swap: true, error: true },
+      ];
+    </script>
     <link rel="manifest" href="/assets/manifest.json" />
     <meta name="theme-color" content="#0f192d" />
     <script>
@@ -22,6 +30,7 @@
     </script>
   </head>
   <body>
+    <div id="alerts" class="absolute top-16 right-2 z-50"></div>
     {{block "auth_content" .}}{{end}}
   </body>
 </html>

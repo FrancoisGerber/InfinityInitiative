@@ -14,6 +14,37 @@ var (
 	ErrNoCharacter    = errors.New("this account has no character yet")
 )
 
+// MissingIngredientError names the ingredient that blocked an action and how many more
+// are needed, so the click can explain itself instead of saying "not enough resources".
+type MissingIngredientError struct {
+	Name    string
+	Missing int64
+}
+
+func (e *MissingIngredientError) Error() string {
+	if e.Missing <= 0 {
+		return fmt.Sprintf("You need more %s", e.Name)
+	}
+
+	return fmt.Sprintf("You need %d more %s", e.Missing, e.Name)
+}
+
+// Unwrap keeps errors.Is(err, ErrNotEnoughItems) working for callers that branch on it.
+func (e *MissingIngredientError) Unwrap() error {
+	return ErrNotEnoughItems
+}
+
+// missingIngredient builds the error with the ingredient's display name. When the name
+// cannot be read it falls back to the generic sentinel.
+func missingIngredient(tx *gorm.DB, itemID uint, missing int64) error {
+	var ingredient Item
+	if err := tx.First(&ingredient, "id = ?", itemID).Error; err != nil || ingredient.Name == "" {
+		return ErrNotEnoughItems
+	}
+
+	return &MissingIngredientError{Name: ingredient.Name, Missing: missing}
+}
+
 // ActionResult describes one resolved click: what was made, what the skill looks like
 // afterwards, and whether a level was gained.
 type ActionResult struct {
@@ -73,7 +104,15 @@ func (model *Game) applyAction(tx *gorm.DB, character *Character, item *Item) (A
 		}
 
 		if res.RowsAffected == 0 {
-			return result, ErrNotEnoughItems
+			// Someone spent the stack between the check and this update, or the stack was
+			// too small to begin with; re-read it to name the shortfall.
+			var have int64
+			tx.Raw(
+				`select coalesce(sum(amount), 0) from inventories where character_id = ? and item_id = ? and deleted_at is null`,
+				character.ID, recipe.ItemId,
+			).Scan(&have)
+
+			return result, missingIngredient(tx, recipe.ItemId, recipe.Amount-have)
 		}
 
 		tx.Exec(`DELETE FROM inventories WHERE character_id = ? AND item_id = ? AND amount <= 0`, character.ID, recipe.ItemId)
@@ -142,7 +181,7 @@ func (model *Game) checkAffordable(tx *gorm.DB, character *Character, item *Item
 		}
 
 		if have < recipe.Amount {
-			return ErrNotEnoughItems
+			return missingIngredient(tx, recipe.ItemId, recipe.Amount-have)
 		}
 	}
 

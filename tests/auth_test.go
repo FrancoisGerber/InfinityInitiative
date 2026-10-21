@@ -80,9 +80,11 @@ func TestAdminRoutesRequireAdminRole(t *testing.T) {
 		t.Fatal("User role was not seeded")
 	}
 
+	handle := uniqueName("pleb")
+
 	user := models.InitUser(&models.User{
-		Username: "pleb",
-		Email:    "pleb@test.local",
+		Username: handle,
+		Email:    handle + "@test.local",
 		Password: utils.HashPassword("Passw0rd!123"),
 		RoleId:   role.ID,
 	})
@@ -113,9 +115,11 @@ func TestAdminRoutesAllowAdminRole(t *testing.T) {
 		t.Fatal("Admin role was not seeded")
 	}
 
+	handle := uniqueName("boss")
+
 	user := models.InitUser(&models.User{
-		Username: "boss",
-		Email:    "boss@test.local",
+		Username: handle,
+		Email:    handle + "@test.local",
 		Password: utils.HashPassword("Passw0rd!123"),
 		RoleId:   role.ID,
 	})
@@ -142,9 +146,11 @@ func TestLoginSurvivesAnUndecodableSessionCookie(t *testing.T) {
 	roleModel := models.NewRole()
 	role := roleModel.GetRoleByName("User")
 
+	handle := uniqueName("stale")
+
 	user := models.InitUser(&models.User{
-		Username: "stale",
-		Email:    "stale@test.local",
+		Username: handle,
+		Email:    handle + "@test.local",
 		Password: utils.HashPassword("Passw0rd!123"),
 		RoleId:   role.ID,
 	})
@@ -154,7 +160,7 @@ func TestLoginSurvivesAnUndecodableSessionCookie(t *testing.T) {
 
 	e, _ := newTestServer()
 
-	form := url.Values{"Email": {"stale@test.local"}, "Password": {"Passw0rd!123"}}
+	form := url.Values{"Email": {handle + "@test.local"}, "Password": {"Passw0rd!123"}}
 	req := httptest.NewRequest(http.MethodPost, "/login", strings.NewReader(form.Encode()))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationForm)
 	// A value no session store can decode.

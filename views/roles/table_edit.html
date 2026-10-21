@@ -3,7 +3,7 @@
   {{if .Page.Name}} Edit {{else}} Create {{end}} Role
 </h3>
 <div>
-  <form method="dialog" hx-post="/roles">
+  <form method="dialog" hx-swap="none" hx-post="/roles">
     <input type="hidden" name="ID" value="{{.Page.ID}}" />
 
     <label class="input flex items-center gap-2 mb-5 mt-5">

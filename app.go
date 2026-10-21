@@ -6,6 +6,7 @@ import (
 	"InfinityInitiative/data/models"
 	"InfinityInitiative/routes"
 	"InfinityInitiative/utils"
+	templates "InfinityInitiative/views"
 	"fmt"
 	"log"
 	"net/http"
@@ -35,6 +36,12 @@ func main() {
 	// Session signing key: an empty key makes cookies forgeable, a short one is weak.
 	if len(utils.Secret()) == 0 {
 		panic("SECRET must be set (32+ random bytes), e.g. openssl rand -base64 48")
+	}
+
+	// Parse every template set before serving: a syntax error used to 500 the first
+	// request that needed the broken file, and the same files were re-read per request.
+	if err := templates.Preload(); err != nil {
+		panic(err)
 	}
 
 	// Setup Echo

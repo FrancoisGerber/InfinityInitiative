@@ -60,7 +60,7 @@ func SaveUser(c echo.Context) error {
 	userDto := new(models.User)
 
 	if err := c.Bind(userDto); err != nil {
-		return c.String(http.StatusBadRequest, "bad request")
+		return utils.ShowAlertError(c, http.StatusBadRequest, "Could not read the form. Reload the page and try again.")
 	}
 
 	var err error
@@ -75,7 +75,7 @@ func SaveUser(c echo.Context) error {
 	}
 
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "Could Not Save User")
+		return utils.ShowAlertError(c, http.StatusInternalServerError, "Could Not Save User")
 	}
 
 	c.Response().Header().Set("HX-Redirect", "/users")
@@ -114,7 +114,7 @@ func DeleteUser(c echo.Context) error {
 	_, err := user.Delete()
 
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "Could Not Delete User")
+		return utils.ShowAlertError(c, http.StatusInternalServerError, "Could Not Delete User")
 	}
 
 	c.Response().Header().Set("HX-Redirect", "/users")

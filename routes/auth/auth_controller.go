@@ -34,7 +34,7 @@ func PostLogin(c echo.Context) error {
 	userDto := new(models.User)
 
 	if err := c.Bind(userDto); err != nil {
-		return c.String(http.StatusBadRequest, "bad request")
+		return utils.ShowAlertError(c, http.StatusBadRequest, "Could not read the login form. Reload the page and try again.")
 	}
 
 	user := models.InitUser(userDto)
@@ -42,22 +42,24 @@ func PostLogin(c echo.Context) error {
 	dbUser := user.GetUserByEmail(user.Email)
 
 	if dbUser.ID == 0 || dbUser.Password == "" {
-		return c.String(http.StatusBadRequest, "Email not registered!")
+		return utils.ShowAlertError(c, http.StatusUnauthorized, "Email not registered!")
 	}
 
 	verified := utils.VerifyPassword(user.Password, dbUser.Password)
 
 	if !verified {
-		return c.String(http.StatusUnauthorized, "Password is incorrect!")
+		return utils.ShowAlertError(c, http.StatusUnauthorized, "Password is incorrect!")
 	}
 
 	err := utils.SetSessionUser(c, dbUser.ID)
 
 	if err != nil {
-		return c.String(http.StatusInternalServerError, err.Error())
+		return utils.ShowAlertError(c, http.StatusInternalServerError, "Could not start a session. Try again.")
 	}
 
-	c.Response().Header().Set("HX-Redirect", "/characters")
+	// "/" resolves to the player's first skill. Redirecting to /characters sent every
+	// non-admin to the admin CRUD screen, which answers with the 403 page.
+	c.Response().Header().Set("HX-Redirect", "/")
 	c.Response().WriteHeader(300)
 
 	return nil
@@ -100,8 +102,7 @@ func PostRegister(c echo.Context) error {
 	}
 
 	if len(dto.Password) < 8 {
-		utils.ShowAlertError(c, "Password must be at least 8 characters.")
-		return nil
+		return utils.ShowAlertError(c, http.StatusBadRequest, "Password must be at least 8 characters.")
 	}
 
 	characterName := strings.TrimSpace(dto.CharacterName)
@@ -110,8 +111,7 @@ func PostRegister(c echo.Context) error {
 	}
 
 	if len(characterName) < 3 || len(characterName) > 24 {
-		utils.ShowAlertError(c, "Character name must be between 3 and 24 characters.")
-		return nil
+		return utils.ShowAlertError(c, http.StatusBadRequest, "Character name must be between 3 and 24 characters.")
 	}
 
 	if !slices.Contains(models.Classes, dto.Class) {
@@ -121,7 +121,7 @@ func PostRegister(c echo.Context) error {
 	roleModel := models.NewRole()
 	userRole := roleModel.GetRoleByName("User")
 	if userRole.ID == 0 {
-		return c.String(http.StatusInternalServerError, "Registration is not configured: the User role is missing")
+		return utils.ShowAlertError(c, http.StatusInternalServerError, "Registration is not configured: the User role is missing")
 	}
 
 	user := models.InitUser(&models.User{
@@ -134,8 +134,7 @@ func PostRegister(c echo.Context) error {
 	})
 
 	if _, err := user.Create(); err != nil {
-		utils.ShowAlertError(c, "That email or username is already taken.")
-		return nil
+		return utils.ShowAlertError(c, http.StatusConflict, "That email or username is already taken.")
 	}
 
 	level := models.NewLevel()
@@ -157,8 +156,7 @@ func PostRegister(c echo.Context) error {
 	if _, err := character.Create(); err != nil {
 		// The account would be unusable without a character, so do not keep it.
 		user.Delete()
-		utils.ShowAlertError(c, "Could not create the character, please try again.")
-		return nil
+		return utils.ShowAlertError(c, http.StatusInternalServerError, "Could not create the character, please try again.")
 	}
 
 	c.Response().Header().Set("HX-Redirect", "/login")
@@ -167,6 +165,9 @@ func PostRegister(c echo.Context) error {
 	return nil
 }
 
+// ClearAlert empties the alert container after its toast has been shown. It must not
+// remove the container itself: htmx could then never target it again, and every later
+// alert on that page would silently disappear.
 func ClearAlert(c echo.Context) error {
-	return templates.RenderGroup(c, http.StatusOK, "oob-alert-empty", nil, authViewPatterns)
+	return c.NoContent(http.StatusOK)
 }

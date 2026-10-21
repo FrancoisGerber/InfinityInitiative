@@ -1,5 +1,10 @@
 # 05 — Rendering and UX
 
+**Status:** **implemented** 2026-10-20 on branch `improvements/05-rendering-and-ux` (pushed; PR open,
+not merged). The plan text below is kept as written; what actually shipped, the two bugs found on the
+way and the verification run are in [Implementation](#implementation-2026-10-20) — read that before
+changing the templates, controllers or `input.css`. Do not re-plan this file.
+
 **Fixes:** B16 (per-request renderer swap + full re-parse), B19 (two payloads in one response), B22
 (UI state in the cookie), B29 (claims the PWA does not deliver) · **Effort:** S–M
 
@@ -79,3 +84,80 @@ rings survive the dark theme.
 - No handler calls both `c.Render` and `c.String` on the same request.
 - Spinner appears on click and disappears on response.
 - Layout usable at 390 px with no horizontal scroll.
+
+## Implementation (2026-10-20)
+
+**Template pipeline.** `templates.Preload()` is called at boot (`app.go`), and `templates.Groups()`
+derives every route group from the views tree, so a template syntax error panics at startup instead of
+500ing the first request. `Groups()` skips the fixed `layout` group (it was globbed twice) and returns
+directory read errors instead of silently dropping that group from preload. `views/templates.go` now has
+`Parse()` (returns the error) and `load()` (one parse per group per process); `ParseCount()` exposes the
+counter the test asserts on. Handlers still render through `RenderGroup`, never through
+`c.Echo().Renderer`.
+
+**Response contract.** Every `c.String` error reply is gone (`grep -rn "c.String" --include=*.go` is
+empty): auth, game and all eight admin controllers answer with a single alert fragment. The status is
+the real one — `ShowAlertError(c, status, message)` renders the fragment with 400 for bind/validation
+failures, 401 for a refused login, 403 for a forbidden htmx action, 404 for an unknown character, 409
+for conflicts, 500 for a failed write — and sets `HX-Retarget: #alerts` + `HX-Reswap: innerHTML` so the
+posting form keeps its contents. Both shells set `htmx.config.responseHandling` to swap `4xx`/`5xx`
+(with `error: true`), because htmx's default is not to swap error responses. The retargeted error
+fragment carries its own clear timer (`hx-get="/clearalert" hx-target="#alerts" hx-swap="innerHTML"
+hx-trigger="load delay:5s"`) — the static containers have no timer, so without it an error toast never
+leaves. Success toasts stay 200 and out-of-band. The auth shell gained the `#alerts` container it was
+missing, and every form whose response is an OOB swap carries `hx-swap="none"`
+(`login`, `register`, all `table_edit.html`, `recipe_edit.html`). `oob-alert-empty` was dead and is
+deleted.
+
+**Two live bugs found and fixed along the way:**
+
+- **The alert container deleted itself.** The OOB wrappers used `hx-swap="delete"` with the 5-second
+  `/clearalert` timer, so after the first toast `#alerts` was gone and every later alert on that page
+  silently vanished (htmx had no target). Clearing now swaps `innerHTML`; `ClearAlert` returns an empty
+  200 and the container stays.
+- **`HX-Trigger` was set after the first render.** `setActionLog` called `ShowAlertSuccess` and then set
+  the header; `RenderGroup` had already written the status, so the header was dropped and level-ups got
+  a toast but no log line. The header is now set before anything renders.
+
+**Clicker feel.** `input.css` defines the real htmx indicator contract (hidden by default, `opacity: 1`
+for `.htmx-request .htmx-indicator` / `.htmx-request.htmx-indicator`) and drops the stray
+`.htmx-request{display:block !important}`; progress bars transition their fill over 150 ms. The action
+panel carries a `#action-log` (`hx-preserve`, `aria-live="polite"`), hidden until the first result so
+an empty panel shows no heading or placeholder. It is rendered with daisyUI's `list` /
+`list-row` component: each resolved click sets an `HX-Trigger: actionResolved` event carrying the item
+name, its icon, the XP and (on a level) the skill and new level, and the layout listener **prepends** a
+row — icon, name, `+1` and `+200 XP` badges, plus a green skill badge and tinted row on a level-up.
+Newest is on top, the list holds the last 20 and the oldest falls off the bottom, so the latest result
+never scrolls out of view. Payload strings are escaped with `strconv.QuoteToASCII` because header
+values decode as Latin-1. Success toasts now cover equips, character creation and level-ups.
+
+**Errors that explain themselves.** `MissingIngredientError` (`data/models/action.go`) wraps
+`ErrNotEnoughItems`, so both the click path (`checkAffordable`) and the spend path (`applyAction`,
+affected-rows check) answer "You need 2 more Coal" instead of "not enough resources".
+`CharacterHasItems` names the ingredient too.
+
+**Layout, mobile, accessibility.** Verified at 390 px and 1280 px on a copied DB: no horizontal scroll
+(`scrollWidth == clientWidth`), chat toggle hidden below `md`, everything stacks under the action card.
+The first 390 px pass in Brave caught what the headless run missed: daisyUI menu items are
+`flex: 0 0 auto`, so the two-row grid inside each resource row could not shrink and the page scrolled
+sideways. Below 640 px the resource row is now a wrapping flex line (`input.css`). Character and chat
+avatars use the local class portraits, so no image depends on the daisyUI stock CDN.
+Sidebar toggle, chat, notifications and account menu have `aria-label`s; auth labels are bound with
+`for`/`id`; resource rows and both action surfaces are keyboard reachable (`role="button"`,
+`tabindex="0"`, `keyup[key=='Enter']`); focus-visible outlines survive the dark theme.
+
+**Login redirect.** `PostLogin` used to `HX-Redirect` to `/characters`, the admin CRUD screen: every
+non-admin landed on the 403 page. It redirects to `/`, which resolves to the first skill.
+
+**Verification.** `go test -race ./tests/` passes with 50 concurrent requests across the game and items
+groups (`TestConcurrentRequestsAcrossTemplateGroups`), one parse per group
+(`TestTemplateSetsAreParsedOnce`), a single alert payload with its 400 status for a refused action
+(`TestInsufficientIngredientsAnswerWithOneAlert`), the ingredient name on the selection path, the
+`HX-Trigger` log payload as JSON (`TestActionTriggerCarriesTheLogPayload`) and a 401 on a refused login
+(`TestFailedLoginKeepsItsStatus`). Fixture users get unique names, so the whole suite also passes
+`-count=2` (the throwaway DB survives between runs in one process). Live in Brave: wrong password → 401
+with the toast still swapped and the form intact; Bronze Bar → 400 + `You need 1 Willow Log`; Coal → 200,
+log row, no alert. Earlier pass on `DBNAME=/tmp/ii-05.db`: register → login → gather, level-up toast,
+log capped at 20, indicator opacity 0→1, alert container survives clearing, second alert lands, both
+breakpoints clean.
+

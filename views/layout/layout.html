@@ -8,6 +8,15 @@
     <link rel="icon" type="image/x-icon" href="/assets/img/favicon.png" />
     <link href="/assets/css/styles.css" rel="stylesheet" />
     <script src="/assets/js/htmx.min.js"></script>
+    <script>
+      // Errors keep their HTTP status (401, 403, 500…) and still swap their alert
+      // fragment; HX-Retarget points that swap at the toast container.
+      htmx.config.responseHandling = [
+        { code: "204", swap: false },
+        { code: "[23]..", swap: true },
+        { code: "[45]..", swap: true, error: true },
+      ];
+    </script>
     <link rel="manifest" href="/assets/manifest.json" />
     <meta name="theme-color" content="#1d293c" />
     <script>
@@ -61,6 +70,66 @@
           element.classList.remove(classToAdd);
         }
       }
+
+      // Every resolved action sends an HX-Trigger event. Render it as a daisyUI list row
+      // (icon, name, +1 and XP badges) and prepend it, so the newest click is always on
+      // top; keep the last 20 and let the oldest fall off the bottom. The list is hidden
+      // until the first result, so the empty panel has no placeholder or heading.
+      document.addEventListener("actionResolved", function (event) {
+        var log = document.getElementById("action-log");
+        if (!log) return;
+
+        var d = event.detail || {};
+
+        var row = document.createElement("li");
+        row.className = "list-row items-center gap-3 p-2" + (d.leveledUp ? " bg-success/10" : "");
+
+        var icon = document.createElement("img");
+        icon.className = "size-8 rounded-box bg-base-300 object-contain";
+        icon.src = d.image || "";
+        icon.alt = "";
+
+        var body = document.createElement("div");
+        body.className = "list-col-grow min-w-0";
+
+        var top = document.createElement("div");
+        top.className = "flex items-center justify-between gap-2";
+
+        var name = document.createElement("span");
+        name.className = "truncate text-sm font-medium";
+        name.textContent = d.item || "";
+
+        var gain = document.createElement("span");
+        gain.className = "badge badge-sm badge-primary";
+        gain.textContent = "+1";
+
+        top.appendChild(name);
+        top.appendChild(gain);
+        body.appendChild(top);
+
+        var meta = document.createElement("div");
+        meta.className = "mt-0.5 flex items-center gap-2 text-xs opacity-70";
+
+        var xp = document.createElement("span");
+        xp.textContent = "+" + (d.xp || 0) + " XP";
+        meta.appendChild(xp);
+
+        if (d.leveledUp && d.skill) {
+          var level = document.createElement("span");
+          level.className = "badge badge-xs badge-success";
+          level.textContent = d.skill + " " + d.level;
+          meta.appendChild(level);
+        }
+
+        body.appendChild(meta);
+        row.appendChild(icon);
+        row.appendChild(body);
+
+        log.prepend(row);
+        log.classList.remove("hidden");
+
+        while (log.children.length > 20) log.removeChild(log.lastElementChild);
+      });
     </script>
   </body>
 </html>

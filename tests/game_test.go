@@ -55,7 +55,7 @@ func gameFixture(t *testing.T) (models.User, models.Character, models.Item, mode
 		t.Fatal("User role was not seeded")
 	}
 
-	handle := strings.ToLower(strings.ReplaceAll(t.Name(), "/", "-"))
+	handle := strings.ToLower(strings.ReplaceAll(t.Name(), "/", "-")) + "-" + strconv.FormatInt(time.Now().UnixNano(), 10)
 
 	user := models.InitUser(&models.User{
 		Username: handle,
@@ -207,10 +207,10 @@ func TestRunActionIsAtomic(t *testing.T) {
 	}
 
 	// The third click cannot be paid for: it must report the shortfall and leave the
-	// bag exactly as it was.
+	// bag exactly as it was. The message names the ingredient now, not "resources".
 	rec := doRequest(e, http.MethodPost, craftPath, &cookie)
-	if !strings.Contains(strings.ToLower(rec.Body.String()), "resources") {
-		t.Fatalf("expected a shortfall message, got %q", rec.Body.String())
+	if !strings.Contains(rec.Body.String(), "You need 1 more "+gather.Name) {
+		t.Fatalf("expected the shortfall to name %s, got %q", gather.Name, rec.Body.String())
 	}
 
 	remaining = inventoryItemFor(gather.ID, character.ID)
@@ -364,9 +364,11 @@ func TestGameRepo(t *testing.T) {
 func TestRegistrationCreatesCharacter(t *testing.T) {
 	e, _ := newTestServer()
 
+	handle := uniqueName("newbie")
+
 	form := url.Values{
-		"Email":         {"newbie@test.local"},
-		"Username":      {"newbie"},
+		"Email":         {handle + "@test.local"},
+		"Username":      {handle},
 		"Password":      {"Passw0rd!123"},
 		"CharacterName": {"Newbie"},
 		"Class":         {"Mage"},
@@ -382,7 +384,7 @@ func TestRegistrationCreatesCharacter(t *testing.T) {
 	}
 
 	userModel := models.NewUser()
-	user := userModel.GetUserByEmail("newbie@test.local")
+	user := userModel.GetUserByEmail(handle + "@test.local")
 	if user.ID == 0 {
 		t.Fatal("registration did not create the user")
 	}

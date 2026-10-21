@@ -24,8 +24,11 @@
       id="action-button-main"
       class="w-5/12"
       style="cursor: url({{.Page.Skill.Image}}), auto;"
+      role="button"
+      tabindex="0"
+      aria-label="Perform {{.Page.ActiveItem.Name}}"
       hx-indicator=".running-action"
-      hx-trigger="click"
+      hx-trigger="click, keyup[key=='Enter']"
       hx-swap="none"
       hx-post="/game/action/{{.Page.ActiveItem.ID}}"
     />
@@ -45,6 +48,14 @@
       <span class="join-item rounded bg-gray-700 p-1">{{.Page.NextLevel.ExperienceNeeded}} XP Needed</span>
       <span class="join-item rounded bg-gray-900 p-1">{{.Page.ExperiencePoints}} XP</span>
     </div>
+
+    <ul
+      id="action-log"
+      hx-preserve="true"
+      aria-live="polite"
+      aria-label="Recent actions"
+      class="list mt-4 hidden w-full max-h-44 overflow-y-auto rounded-box bg-base-200/50"
+    ></ul>
   </div>
 </div>
 
