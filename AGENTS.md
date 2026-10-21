@@ -99,9 +99,11 @@ Combat *stats* exist on `characters` (`Health`, `MaxHealth`, `Attack`, `Strength
 - **Tailwind 4 browser floor:** Chrome/Safari 16.4+/Firefox 128+.
 - **Experiments get a throwaway DB:** `DBNAME=/tmp/ii-scratch.db ./InfinityInitiative`. The repo's `InfinityInitiative.db` holds real data; `.env` holds `DBNAME` + a Turso token and must never be committed.
 - **The alert container must survive its own clear.** Toasts clear themselves with a 5-second
-  `hx-get="/clearalert"`; `ClearAlert` returns an empty 200 and the wrappers swap `innerHTML`. An
+  `hx-get="/clearalert"`; `ClearAlert` returns an empty 200 and the swap is `innerHTML`. An
   `hx-swap="delete"` there removes `#alerts` itself, after which htmx has no OOB target and every
-  later alert on that page disappears silently.
+  later alert on that page disappears silently. Success toasts re-arm the timer from the OOB wrapper;
+  retargeted error fragments carry it themselves (`hx-get="/clearalert" hx-target="#alerts"
+  hx-swap="innerHTML" hx-trigger="load delay:5s"`) because the static containers have no timer.
 - **`HX-Trigger` must be set before the first render.** `templates.RenderGroup` writes the status and
   flushes, so a `Header().Set` after any fragment is dropped. Build the trigger JSON first, then call
   the alert helper.

@@ -147,12 +147,22 @@ func TestInsufficientIngredientsAnswerWithOneAlert(t *testing.T) {
 		t.Fatalf("refused action is not retargeted at the toast container: %q", rec.Header().Get("HX-Retarget"))
 	}
 
-	if !strings.HasPrefix(strings.TrimSpace(body), `<div role="alert"`) {
+	if strings.Contains(body, `<div id="alerts"`) {
+		t.Fatalf("refused action returned the OOB wrapper, not a single retargeted fragment: %q", truncate(body, 200))
+	}
+
+	if !strings.Contains(body, `role="alert"`) {
 		t.Fatalf("refused action did not return an alert fragment: %q", truncate(body, 200))
 	}
 
 	if strings.Count(body, `role="alert"`) != 1 {
 		t.Fatalf("response carried %d payloads, want 1: %q", strings.Count(body, `role="alert"`), truncate(body, 300))
+	}
+
+	// The retargeted fragment must carry its own clear timer; the static containers have
+	// none, and without this the error toast stays forever.
+	if !strings.Contains(body, `hx-get="/clearalert"`) || !strings.Contains(body, `hx-target="#alerts"`) {
+		t.Fatalf("error alert does not re-arm the clear timer: %q", truncate(body, 300))
 	}
 
 	// The alert must name the ingredient and the shortfall, not say "not enough resources".
@@ -260,5 +270,9 @@ func TestFailedLoginKeepsItsStatus(t *testing.T) {
 
 	if !strings.Contains(rec.Body.String(), "Password is incorrect!") {
 		t.Fatalf("failed login did not answer with the alert fragment: %q", truncate(rec.Body.String(), 200))
+	}
+
+	if !strings.Contains(rec.Body.String(), `hx-get="/clearalert"`) {
+		t.Fatalf("login alert does not re-arm the clear timer: %q", truncate(rec.Body.String(), 200))
 	}
 }

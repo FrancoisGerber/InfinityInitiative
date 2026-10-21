@@ -101,10 +101,13 @@ the real one — `ShowAlertError(c, status, message)` renders the fragment with 
 failures, 401 for a refused login, 403 for a forbidden htmx action, 404 for an unknown character, 409
 for conflicts, 500 for a failed write — and sets `HX-Retarget: #alerts` + `HX-Reswap: innerHTML` so the
 posting form keeps its contents. Both shells set `htmx.config.responseHandling` to swap `4xx`/`5xx`
-(with `error: true`), because htmx's default is not to swap error responses. Success toasts stay 200 and
-out-of-band. The auth shell gained the `#alerts` container it was missing, and every form whose response
-is an OOB swap carries `hx-swap="none"` (`login`, `register`, all `table_edit.html`, `recipe_edit.html`).
-`oob-alert-empty` was dead and is deleted.
+(with `error: true`), because htmx's default is not to swap error responses. The retargeted error
+fragment carries its own clear timer (`hx-get="/clearalert" hx-target="#alerts" hx-swap="innerHTML"
+hx-trigger="load delay:5s"`) — the static containers have no timer, so without it an error toast never
+leaves. Success toasts stay 200 and out-of-band. The auth shell gained the `#alerts` container it was
+missing, and every form whose response is an OOB swap carries `hx-swap="none"`
+(`login`, `register`, all `table_edit.html`, `recipe_edit.html`). `oob-alert-empty` was dead and is
+deleted.
 
 **Two live bugs found and fixed along the way:**
 

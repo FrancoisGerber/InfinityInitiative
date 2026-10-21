@@ -16,7 +16,14 @@
 {{end}}
 
 {{block "alert-error" .}}
-<div role="alert" class="alert alert-error">
+<div
+  role="alert"
+  class="alert alert-error"
+  hx-get="/clearalert"
+  hx-target="#alerts"
+  hx-swap="innerHTML"
+  hx-trigger="load delay:5s"
+>
   <svg
     xmlns="http://www.w3.org/2000/svg"
     class="h-6 w-6 shrink-0 stroke-current"
