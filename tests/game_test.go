@@ -364,9 +364,11 @@ func TestGameRepo(t *testing.T) {
 func TestRegistrationCreatesCharacter(t *testing.T) {
 	e, _ := newTestServer()
 
+	handle := uniqueName("newbie")
+
 	form := url.Values{
-		"Email":         {"newbie@test.local"},
-		"Username":      {"newbie"},
+		"Email":         {handle + "@test.local"},
+		"Username":      {handle},
 		"Password":      {"Passw0rd!123"},
 		"CharacterName": {"Newbie"},
 		"Class":         {"Mage"},
@@ -382,7 +384,7 @@ func TestRegistrationCreatesCharacter(t *testing.T) {
 	}
 
 	userModel := models.NewUser()
-	user := userModel.GetUserByEmail("newbie@test.local")
+	user := userModel.GetUserByEmail(handle + "@test.local")
 	if user.ID == 0 {
 		t.Fatal("registration did not create the user")
 	}

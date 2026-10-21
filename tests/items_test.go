@@ -21,9 +21,11 @@ func TestSaveItemRejectsUnknownType(t *testing.T) {
 		t.Fatal("Admin role was not seeded")
 	}
 
+	handle := uniqueName("item-admin")
+
 	user := models.InitUser(&models.User{
-		Username: "item-admin",
-		Email:    "item-admin@test.local",
+		Username: handle,
+		Email:    handle + "@test.local",
 		Password: utils.HashPassword("Passw0rd!123"),
 		RoleId:   role.ID,
 	})

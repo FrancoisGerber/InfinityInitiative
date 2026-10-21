@@ -147,12 +147,14 @@ Sidebar toggle, chat, notifications and account menu have `aria-label`s; auth la
 non-admin landed on the 403 page. It redirects to `/`, which resolves to the first skill.
 
 **Verification.** `go test -race ./tests/` passes with 50 concurrent requests across the game and items
-groups (`TestConcurrentRequestsAcrossTemplateGroups`, repeatable under `-count=2`), one parse per group
+groups (`TestConcurrentRequestsAcrossTemplateGroups`), one parse per group
 (`TestTemplateSetsAreParsedOnce`), a single alert payload with its 400 status for a refused action
 (`TestInsufficientIngredientsAnswerWithOneAlert`), the ingredient name on the selection path, the
 `HX-Trigger` log payload as JSON (`TestActionTriggerCarriesTheLogPayload`) and a 401 on a refused login
-(`TestFailedLoginKeepsItsStatus`). Live in Brave: wrong password → 401 with the toast still swapped and
-the form intact; Bronze Bar → 400 + `You need 1 Willow Log`; Coal → 200, log row, no alert. Earlier
-pass on `DBNAME=/tmp/ii-05.db`: register → login → gather, level-up toast, log capped at 20, indicator
-opacity 0→1, alert container survives clearing, second alert lands, both breakpoints clean.
+(`TestFailedLoginKeepsItsStatus`). Fixture users get unique names, so the whole suite also passes
+`-count=2` (the throwaway DB survives between runs in one process). Live in Brave: wrong password → 401
+with the toast still swapped and the form intact; Bronze Bar → 400 + `You need 1 Willow Log`; Coal → 200,
+log row, no alert. Earlier pass on `DBNAME=/tmp/ii-05.db`: register → login → gather, level-up toast,
+log capped at 20, indicator opacity 0→1, alert container survives clearing, second alert lands, both
+breakpoints clean.
 
