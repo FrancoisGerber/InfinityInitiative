@@ -12,7 +12,7 @@ Read `../BUGS.md` alongside — each plan names the bug IDs it closes.
 | 02 | [Items, inventory, crafting](02-items-inventory-crafting.md) | B10, B11, B12, B20 | M | — |
 | 03 | [Progression and balance](03-progression-and-balance.md) | B9, B14, B15 | M | — |
 | 04 | [Security and admin](04-security-and-admin.md) | B1, B2, B6, B17, B24 | M | — |
-| 05 | [Rendering and UX](05-rendering-and-ux.md) | B16, B19, B22, B29 | S–M | **Implemented** 2026-10-20 (`improvements/05-rendering-and-ux`; PR open, not merged) |
+| 05 | [Rendering and UX](05-rendering-and-ux.md) | B16, B19, B22, B29 | S–M | **Implemented and merged** 2026-10-21 (`d84833e`, PR #3) |
 | 06 | [Data layer and tests](06-data-layer-and-tests.md) | B5, B13, B27, B28 | M | — |
 | 07 | [Character switcher UI](07-character-switcher-ui.md) | — (finishes B7 in the UI) | S | Deferred by the owner |
 
@@ -35,7 +35,7 @@ the plans that are still open.
    both touch `character_skills` and `inventories`, so do them in one branch.
 4. **06 throughout.** The single-DB-handle and transaction helpers are the tools 01–03 need; land them
    early and reuse.
-5. **05 done.** Rendering and UX landed on `improvements/05-rendering-and-ux`; keep new templates on
+5. **05 merged.** Rendering and UX landed on `main` in `d84833e`; keep new templates on
    `templates.RenderGroup`, `templates.Preload()` and the alert/indicator rules it established.
 
 ## The rule everything here serves

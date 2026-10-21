@@ -1,8 +1,8 @@
 # 05 — Rendering and UX
 
-**Status:** **implemented** 2026-10-20 on branch `improvements/05-rendering-and-ux` (pushed; PR open,
-not merged). The plan text below is kept as written; what actually shipped, the two bugs found on the
-way and the verification run are in [Implementation](#implementation-2026-10-20) — read that before
+**Status:** **implemented and merged** into `main` on 2026-10-21 (merge commit `d84833e`,
+PR #3). The plan text below is kept as written; what actually shipped, the two bugs found on the way
+and the verification run are in [Implementation](#implementation-2026-10-20) — read that before
 changing the templates, controllers or `input.css`. Do not re-plan this file.
 
 **Fixes:** B16 (per-request renderer swap + full re-parse), B19 (two payloads in one response), B22
