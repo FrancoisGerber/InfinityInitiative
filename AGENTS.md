@@ -105,6 +105,10 @@ Combat *stats* exist on `characters` (`Health`, `MaxHealth`, `Attack`, `Strength
 - **`HX-Trigger` must be set before the first render.** `templates.RenderGroup` writes the status and
   flushes, so a `Header().Set` after any fragment is dropped. Build the trigger JSON first, then call
   the alert helper.
+- **Errors keep their HTTP status.** `utils.ShowAlertError(c, status, msg)` renders one alert fragment
+  with that status and retargets it at `#alerts` (`HX-Retarget`/`HX-Reswap`); both shells configure
+  `htmx.config.responseHandling` to swap 4xx/5xx. Do not answer a refused request with `200 OK` — the
+  status is the only server-side signal that it failed.
 - **Templates are parsed once per process at boot.** `templates.Preload()` in `app.go` walks
   `views/*`; a syntax error stops startup. Render with `templates.RenderGroup`, never by assigning
   `c.Echo().Renderer` (shared state), and keep the controller `viewPatterns` in step with the

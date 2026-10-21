@@ -63,8 +63,7 @@ func SaveMonster(c echo.Context) error {
 	monsterDto := new(models.Monster)
 
 	if err := c.Bind(monsterDto); err != nil {
-		utils.ShowAlertError(c, "Could not read the form. Reload the page and try again.")
-		return nil
+		return utils.ShowAlertError(c, http.StatusBadRequest, "Could not read the form. Reload the page and try again.")
 	}
 
 	var err error
@@ -77,8 +76,7 @@ func SaveMonster(c echo.Context) error {
 	}
 
 	if err != nil {
-		utils.ShowAlertError(c, "Could Not Save Monster")
-		return nil
+		return utils.ShowAlertError(c, http.StatusInternalServerError, "Could Not Save Monster")
 	}
 
 	c.Response().Header().Set("HX-Redirect", "/monsters")
@@ -128,8 +126,7 @@ func DeleteMonster(c echo.Context) error {
 	_, err := monster.Delete()
 
 	if err != nil {
-		utils.ShowAlertError(c, "Could Not Delete Monster")
-		return nil
+		return utils.ShowAlertError(c, http.StatusInternalServerError, "Could Not Delete Monster")
 	}
 
 	c.Response().Header().Set("HX-Redirect", "/monsters")

@@ -34,8 +34,7 @@ func PostLogin(c echo.Context) error {
 	userDto := new(models.User)
 
 	if err := c.Bind(userDto); err != nil {
-		utils.ShowAlertError(c, "Could not read the login form. Reload the page and try again.")
-		return nil
+		return utils.ShowAlertError(c, http.StatusBadRequest, "Could not read the login form. Reload the page and try again.")
 	}
 
 	user := models.InitUser(userDto)
@@ -43,22 +42,19 @@ func PostLogin(c echo.Context) error {
 	dbUser := user.GetUserByEmail(user.Email)
 
 	if dbUser.ID == 0 || dbUser.Password == "" {
-		utils.ShowAlertError(c, "Email not registered!")
-		return nil
+		return utils.ShowAlertError(c, http.StatusUnauthorized, "Email not registered!")
 	}
 
 	verified := utils.VerifyPassword(user.Password, dbUser.Password)
 
 	if !verified {
-		utils.ShowAlertError(c, "Password is incorrect!")
-		return nil
+		return utils.ShowAlertError(c, http.StatusUnauthorized, "Password is incorrect!")
 	}
 
 	err := utils.SetSessionUser(c, dbUser.ID)
 
 	if err != nil {
-		utils.ShowAlertError(c, "Could not start a session. Try again.")
-		return nil
+		return utils.ShowAlertError(c, http.StatusInternalServerError, "Could not start a session. Try again.")
 	}
 
 	// "/" resolves to the player's first skill. Redirecting to /characters sent every
@@ -106,8 +102,7 @@ func PostRegister(c echo.Context) error {
 	}
 
 	if len(dto.Password) < 8 {
-		utils.ShowAlertError(c, "Password must be at least 8 characters.")
-		return nil
+		return utils.ShowAlertError(c, http.StatusBadRequest, "Password must be at least 8 characters.")
 	}
 
 	characterName := strings.TrimSpace(dto.CharacterName)
@@ -116,8 +111,7 @@ func PostRegister(c echo.Context) error {
 	}
 
 	if len(characterName) < 3 || len(characterName) > 24 {
-		utils.ShowAlertError(c, "Character name must be between 3 and 24 characters.")
-		return nil
+		return utils.ShowAlertError(c, http.StatusBadRequest, "Character name must be between 3 and 24 characters.")
 	}
 
 	if !slices.Contains(models.Classes, dto.Class) {
@@ -127,8 +121,7 @@ func PostRegister(c echo.Context) error {
 	roleModel := models.NewRole()
 	userRole := roleModel.GetRoleByName("User")
 	if userRole.ID == 0 {
-		utils.ShowAlertError(c, "Registration is not configured: the User role is missing")
-		return nil
+		return utils.ShowAlertError(c, http.StatusInternalServerError, "Registration is not configured: the User role is missing")
 	}
 
 	user := models.InitUser(&models.User{
@@ -141,8 +134,7 @@ func PostRegister(c echo.Context) error {
 	})
 
 	if _, err := user.Create(); err != nil {
-		utils.ShowAlertError(c, "That email or username is already taken.")
-		return nil
+		return utils.ShowAlertError(c, http.StatusConflict, "That email or username is already taken.")
 	}
 
 	level := models.NewLevel()
@@ -164,8 +156,7 @@ func PostRegister(c echo.Context) error {
 	if _, err := character.Create(); err != nil {
 		// The account would be unusable without a character, so do not keep it.
 		user.Delete()
-		utils.ShowAlertError(c, "Could not create the character, please try again.")
-		return nil
+		return utils.ShowAlertError(c, http.StatusInternalServerError, "Could not create the character, please try again.")
 	}
 
 	c.Response().Header().Set("HX-Redirect", "/login")

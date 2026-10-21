@@ -63,8 +63,10 @@
         <div class="w-10 rounded-full">
           {{if .Character.User.Image}}
           <img src="{{.Character.User.Image}}" alt="{{.Character.Name}}" />
-          {{else}}
+          {{else if .Character.Class}}
           <img src="/assets/img/classes/{{.Character.Class}}.png" alt="{{.Character.Class}}" />
+          {{else}}
+          <img src="/assets/img/favicon.png" alt="" />
           {{end}}
         </div>
       </div>

@@ -8,6 +8,15 @@
     <link rel="icon" type="image/x-icon" href="/assets/img/favicon.png" />
     <link href="/assets/css/styles.css" rel="stylesheet" />
     <script src="/assets/js/htmx.min.js"></script>
+    <script>
+      // Errors keep their HTTP status (401, 403, 500…) and still swap their alert
+      // fragment; HX-Retarget points that swap at the toast container.
+      htmx.config.responseHandling = [
+        { code: "204", swap: false },
+        { code: "[23]..", swap: true },
+        { code: "[45]..", swap: true, error: true },
+      ];
+    </script>
     <link rel="manifest" href="/assets/manifest.json" />
     <meta name="theme-color" content="#1d293c" />
     <script>

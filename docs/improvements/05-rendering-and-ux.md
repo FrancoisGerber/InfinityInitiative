@@ -89,15 +89,22 @@ rings survive the dark theme.
 
 **Template pipeline.** `templates.Preload()` is called at boot (`app.go`), and `templates.Groups()`
 derives every route group from the views tree, so a template syntax error panics at startup instead of
-500ing the first request. `views/templates.go` now has `Parse()` (returns the error) and `load()` (one
-parse per group per process); `ParseCount()` exposes the counter the test asserts on. Handlers still
-render through `RenderGroup`, never through `c.Echo().Renderer`.
+500ing the first request. `Groups()` skips the fixed `layout` group (it was globbed twice) and returns
+directory read errors instead of silently dropping that group from preload. `views/templates.go` now has
+`Parse()` (returns the error) and `load()` (one parse per group per process); `ParseCount()` exposes the
+counter the test asserts on. Handlers still render through `RenderGroup`, never through
+`c.Echo().Renderer`.
 
 **Response contract.** Every `c.String` error reply is gone (`grep -rn "c.String" --include=*.go` is
-empty): auth, game and all eight admin controllers answer with a single alert fragment. The auth shell
-gained the `#alerts` container it was missing, and every form whose response is an OOB swap carries
-`hx-swap="none"` (`login`, `register`, all `table_edit.html`, `recipe_edit.html`), so an alert no longer
-wipes the form it came from. `oob-alert-empty` was dead and is deleted.
+empty): auth, game and all eight admin controllers answer with a single alert fragment. The status is
+the real one — `ShowAlertError(c, status, message)` renders the fragment with 400 for bind/validation
+failures, 401 for a refused login, 403 for a forbidden htmx action, 404 for an unknown character, 409
+for conflicts, 500 for a failed write — and sets `HX-Retarget: #alerts` + `HX-Reswap: innerHTML` so the
+posting form keeps its contents. Both shells set `htmx.config.responseHandling` to swap `4xx`/`5xx`
+(with `error: true`), because htmx's default is not to swap error responses. Success toasts stay 200 and
+out-of-band. The auth shell gained the `#alerts` container it was missing, and every form whose response
+is an OOB swap carries `hx-swap="none"` (`login`, `register`, all `table_edit.html`, `recipe_edit.html`).
+`oob-alert-empty` was dead and is deleted.
 
 **Two live bugs found and fixed along the way:**
 
@@ -140,10 +147,12 @@ Sidebar toggle, chat, notifications and account menu have `aria-label`s; auth la
 non-admin landed on the 403 page. It redirects to `/`, which resolves to the first skill.
 
 **Verification.** `go test -race ./tests/` passes with 50 concurrent requests across the game and items
-groups (`TestConcurrentRequestsAcrossTemplateGroups`), one parse per group
-(`TestTemplateSetsAreParsedOnce`), a single alert payload for a refused action
-(`TestInsufficientIngredientsAnswerWithOneAlert`) and the ingredient name on the selection path. Live
-pass on `DBNAME=/tmp/ii-05.db`: register → login → select Coal → click → log line, XP bar, level-up
-toast, log capped at 20, indicator opacity 0→1, alert container survives clearing, a second alert still
-lands, and both breakpoints screenshot clean.
+groups (`TestConcurrentRequestsAcrossTemplateGroups`, repeatable under `-count=2`), one parse per group
+(`TestTemplateSetsAreParsedOnce`), a single alert payload with its 400 status for a refused action
+(`TestInsufficientIngredientsAnswerWithOneAlert`), the ingredient name on the selection path, the
+`HX-Trigger` log payload as JSON (`TestActionTriggerCarriesTheLogPayload`) and a 401 on a refused login
+(`TestFailedLoginKeepsItsStatus`). Live in Brave: wrong password → 401 with the toast still swapped and
+the form intact; Bronze Bar → 400 + `You need 1 Willow Log`; Coal → 200, log row, no alert. Earlier
+pass on `DBNAME=/tmp/ii-05.db`: register → login → gather, level-up toast, log capped at 20, indicator
+opacity 0→1, alert container survives clearing, second alert lands, both breakpoints clean.
 

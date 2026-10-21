@@ -55,7 +55,7 @@ func gameFixture(t *testing.T) (models.User, models.Character, models.Item, mode
 		t.Fatal("User role was not seeded")
 	}
 
-	handle := strings.ToLower(strings.ReplaceAll(t.Name(), "/", "-"))
+	handle := strings.ToLower(strings.ReplaceAll(t.Name(), "/", "-")) + "-" + strconv.FormatInt(time.Now().UnixNano(), 10)
 
 	user := models.InitUser(&models.User{
 		Username: handle,

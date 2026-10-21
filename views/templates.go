@@ -97,7 +97,12 @@ func load(patterns []string) (*Templates, error) {
 // Preload parses every route group up front, so a template syntax error stops the
 // process at boot instead of turning into a 500 on the first request that needs it.
 func Preload() error {
-	for _, patterns := range Groups() {
+	groups, err := Groups()
+	if err != nil {
+		return err
+	}
+
+	for _, patterns := range groups {
 		if _, err := load(patterns); err != nil {
 			return fmt.Errorf("templates %v: %w", patterns, err)
 		}
@@ -108,17 +113,20 @@ func Preload() error {
 
 // Groups lists the template set of every route group, derived from the views tree:
 // the layout plus each section directory, and the auth shell plus each auth screen.
-// It mirrors the per-controller viewPatterns without importing them.
-func Groups() [][]string {
+// It mirrors the per-controller viewPatterns without importing them. A directory that
+// cannot be read is an error: silently dropping its group would let its syntax errors
+// surface as a 500 on the first request, the failure mode Preload exists to remove.
+func Groups() ([][]string, error) {
 	groups := [][]string{{"views/layout/*.html"}}
 
 	entries, err := os.ReadDir("views")
 	if err != nil {
-		return groups
+		return nil, fmt.Errorf("read views directory: %w", err)
 	}
 
 	for _, entry := range entries {
-		if !entry.IsDir() || entry.Name() == "assets" {
+		// layout is already the fixed first group; assets holds no templates.
+		if !entry.IsDir() || entry.Name() == "assets" || entry.Name() == "layout" {
 			continue
 		}
 
@@ -127,7 +135,7 @@ func Groups() [][]string {
 		if entry.Name() == "auth" {
 			screens, err := os.ReadDir(dir)
 			if err != nil {
-				continue
+				return nil, fmt.Errorf("read auth screens: %w", err)
 			}
 
 			for _, screen := range screens {
@@ -143,7 +151,7 @@ func Groups() [][]string {
 		groups = append(groups, []string{"views/layout/*.html", filepath.Join(dir, "*.html")})
 	}
 
-	return groups
+	return groups, nil
 }
 
 // For returns the parsed template set for a group of file patterns, parsing it once per

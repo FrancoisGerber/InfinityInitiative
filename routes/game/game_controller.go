@@ -119,8 +119,7 @@ func SwitchCharacter(c echo.Context) error {
 	characterModel := models.NewCharacter()
 	character := characterModel.GetCharacterForUserAndId(int64(userId), int64(utils.ParseInt(c.Param("characterId"))))
 	if character.ID == 0 {
-		utils.ShowAlertError(c, "You do not have that character.")
-		return nil
+		return utils.ShowAlertError(c, http.StatusNotFound, "You do not have that character.")
 	}
 
 	if err := utils.SetSessionCharacter(c, character.ID); err != nil {
@@ -144,8 +143,7 @@ func CreateCharacter(c echo.Context) error {
 	characterModel := models.NewCharacter()
 
 	if characterModel.CountForUser(int64(userId)) >= models.MaxCharacters {
-		utils.ShowAlertError(c, "This account already has the maximum number of characters.")
-		return nil
+		return utils.ShowAlertError(c, http.StatusConflict, "This account already has the maximum number of characters.")
 	}
 
 	dto := newCharacterDto{
@@ -155,8 +153,7 @@ func CreateCharacter(c echo.Context) error {
 
 	dto.Name = strings.TrimSpace(dto.Name)
 	if len(dto.Name) < 3 || len(dto.Name) > 24 {
-		utils.ShowAlertError(c, "Character name must be between 3 and 24 characters.")
-		return nil
+		return utils.ShowAlertError(c, http.StatusBadRequest, "Character name must be between 3 and 24 characters.")
 	}
 
 	if !slices.Contains(models.Classes, dto.Class) {
@@ -187,7 +184,9 @@ func CreateCharacter(c echo.Context) error {
 		return err
 	}
 
-	utils.ShowAlertSuccess(c, character.Name+" joined the Initiative.")
+	if err := utils.ShowAlertSuccess(c, character.Name+" joined the Initiative."); err != nil {
+		return err
+	}
 
 	return GetCharacterPanel(c)
 }
@@ -238,8 +237,7 @@ func RunActiveAction(c echo.Context) error {
 		// The runtime has elapsed; this click collects what the action produced.
 		result, err := game.CollectAction(character.ID)
 		if err != nil {
-			utils.ShowAlertError(c, err.Error())
-			return nil
+			return utils.ShowAlertError(c, actionErrorStatus(err), err.Error())
 		}
 
 		setActionLog(c, result)
@@ -263,8 +261,7 @@ func RunActiveAction(c echo.Context) error {
 	default:
 		if err := game.StartAction(character.ID, itemID); err != nil {
 			if !errors.Is(err, models.ErrActionInProgress) {
-				utils.ShowAlertError(c, err.Error())
-				return nil
+				return utils.ShowAlertError(c, actionErrorStatus(err), err.Error())
 			}
 		}
 
@@ -284,8 +281,7 @@ func CollectActiveAction(c echo.Context) error {
 	result, err := game.CollectAction(character.ID)
 	if err != nil {
 		if !errors.Is(err, models.ErrActionInProgress) {
-			utils.ShowAlertError(c, err.Error())
-			return nil
+			return utils.ShowAlertError(c, actionErrorStatus(err), err.Error())
 		}
 
 		return nil
@@ -340,7 +336,25 @@ func setActionLog(c echo.Context, result models.ActionResult) {
 	c.Response().Header().Set("HX-Trigger", payload)
 
 	if result.LeveledUp {
-		utils.ShowAlertSuccess(c, fmt.Sprintf("%s is now level %d!", skillName, result.SkillLevel))
+		if err := utils.ShowAlertSuccess(c, fmt.Sprintf("%s is now level %d!", skillName, result.SkillLevel)); err != nil {
+			// The log line is already on its way in the header; a failed toast must not
+			// take the action panel down with it.
+			c.Logger().Error(err)
+		}
+	}
+}
+
+// actionErrorStatus maps a refused action to its HTTP status: problems the player can fix
+// are 4xx, anything else is an internal failure.
+func actionErrorStatus(err error) int {
+	switch {
+	case errors.Is(err, models.ErrNotEnoughItems),
+		errors.Is(err, models.ErrInventoryFull),
+		errors.Is(err, models.ErrNoCharacter),
+		errors.Is(err, models.ErrActionInProgress):
+		return http.StatusBadRequest
+	default:
+		return http.StatusInternalServerError
 	}
 }
 
@@ -417,14 +431,12 @@ func GetActiveAction(c echo.Context) error {
 	// Check character skill level
 	if characterSkill.Level.Name < item.Level.Name {
 		// One response only: the alert fragment is the payload htmx swaps in.
-		utils.ShowAlertError(c, "You don't have the required level for this Item!")
-		return nil
+		return utils.ShowAlertError(c, http.StatusBadRequest, "You don't have the required level for this Item!")
 	}
 
 	// Check if character has required items for the action
 	if errorMessage := game.CharacterHasItems(character, recipeItems); errorMessage != "" {
-		utils.ShowAlertError(c, errorMessage)
-		return nil
+		return utils.ShowAlertError(c, http.StatusBadRequest, errorMessage)
 	}
 
 	// Set active action that may be performed
@@ -435,8 +447,7 @@ func GetActiveAction(c echo.Context) error {
 	character.ActiveItemId = &item.ID
 	_, err := character.Update()
 	if err != nil {
-		utils.ShowAlertError(c, "Could not save the character. Try again.")
-		return nil
+		return utils.ShowAlertError(c, http.StatusInternalServerError, "Could not save the character. Try again.")
 	}
 
 	// Get viewmodel ready
@@ -466,8 +477,7 @@ func SetGameNotes(c echo.Context) error {
 	character.Notes = c.FormValue("Notes")
 	_, err := character.Update()
 	if err != nil {
-		utils.ShowAlertError(c, "Could not save the character. Try again.")
-		return nil
+		return utils.ShowAlertError(c, http.StatusInternalServerError, "Could not save the character. Try again.")
 	}
 
 	return nil
@@ -502,8 +512,7 @@ func SetGameState(c echo.Context) error {
 	}
 
 	if err := utils.SetGameState(c, gameState); err != nil {
-		utils.ShowAlertError(c, "Could not save the panel state. Reload the page.")
-		return nil
+		return utils.ShowAlertError(c, http.StatusInternalServerError, "Could not save the panel state. Reload the page.")
 	}
 
 	if c.Param("name") == "InventoryState" || c.Param("name") == "InventoryTabState" || c.Param("name") == "EquipmentTabState" || c.Param("name") == "CharacterTabState" {
@@ -546,11 +555,12 @@ func SetEquipedItem(c echo.Context) error {
 	// Equip the item
 	msg := game.EquipItem(int64(character.ID), int64(item.ID), inventory)
 	if msg != "" {
-		utils.ShowAlertError(c, msg)
-		return nil
+		return utils.ShowAlertError(c, http.StatusBadRequest, msg)
 	}
 
-	utils.ShowAlertSuccess(c, "Equipped "+item.Name+".")
+	if err := utils.ShowAlertSuccess(c, "Equipped "+item.Name+"."); err != nil {
+		return err
+	}
 
 	// Get Viewmodel ready
 	data := models.Data{
